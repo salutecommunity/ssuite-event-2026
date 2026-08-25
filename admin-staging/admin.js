@@ -115,6 +115,7 @@ function render(tab, payload) {
   if (tab === "overview") return renderOverview(host, payload.overview);
   if (tab === "tables") return renderTables(host, payload);
   if (tab === "audit") return renderAudit(host, payload);
+  if (tab === "attendees") host.append(adminAttendeeButton());
   const searchable = ["orders", "attendees", "email", "auction", "donations"].includes(tab);
   if (searchable) host.append(searchToolbar(tab));
   const configByTab = {
@@ -166,6 +167,7 @@ function invitationLabel(seat) {
   return "Prepared — not sent";
 }
 function renderTables(host, payload) {
+  const create = element("button", "button dark admin-action", "Add ten-seat table"); create.type = "button"; create.addEventListener("click", tableCreateForm); host.append(create, element("p", "fineprint", "Protected staging operations create pending records only. Nothing is emailed or sent, and no payment, consent, credential, or secure link is created."));
   if (!payload.data?.length) { host.append(element("p", "empty", "No authoritative operational table records are available.")); return; }
   const list = element("div", "table-list");
   for (const table of payload.data || []) {
@@ -175,7 +177,7 @@ function renderTables(host, payload) {
     title.append(element("span", "record-label", table.table_number ? `Table ${table.table_number}` : "Table number not assigned"), element("h3", "", text(table.name || "Unassigned table")));
     const occupied = (table.table_seats || []).filter((seat) => seat.attendee_id).length;
     const meta = element("div", "table-meta"); meta.append(chip(table.status), element("strong", "", `${occupied} of ${table.seat_count || table.table_seats?.length || 0} seats named`));
-    heading.append(title, meta); card.append(heading);
+    const controls = element("div", "table-controls"); const add = element("button", "quiet compact", "Add attendee"); add.type = "button"; add.addEventListener("click", () => { const open = (table.table_seats || []).find((seat) => !seat.attendee_id && !seat.locked); if (!open) return status("There is no open seat on this table.", "error"); attendeeCreateForm(table, open.seat_number); }); const editTable = element("button", "quiet compact", "Edit table"); editTable.type = "button"; editTable.addEventListener("click", () => tableEditForm(table)); const leadButton = element("button", "quiet compact", "Set lead"); leadButton.type = "button"; leadButton.addEventListener("click", () => setLeadForm(table)); controls.append(add, editTable, leadButton); meta.append(controls); heading.append(title, meta); card.append(heading);
 
     const lead = (table.table_seats || []).find((seat) => seat.attendee?.is_table_lead)?.attendee;
     const access = table.lead_access; const accessDelivery = access?.delivery;
@@ -199,13 +201,65 @@ function renderTables(host, payload) {
       const values = [seat.seat_number, guestName, recipient, organization, registration, inviteStatus, activity ? date(activity) : "—"];
       values.forEach((value, index) => { const td = document.createElement("td"); if (index === 4 || index === 5) td.append(chip(value)); else td.textContent = text(value); tr.append(td); });
       const action = document.createElement("td");
-      if (attendee) { const edit = element("button", "quiet compact", "View / edit"); edit.type = "button"; edit.addEventListener("click", () => showAttendee(attendee.id)); action.append(edit); }
-      else action.textContent = "—";
+      if (attendee) { const edit = element("button", "quiet compact", "View / edit"); edit.type = "button"; edit.addEventListener("click", () => showAttendee(attendee.id)); const move = element("button", "quiet compact", "Move"); move.type = "button"; move.addEventListener("click", () => seatMoveForm(table, seat, payload.data)); const clearSeat = element("button", "quiet compact", "Clear"); clearSeat.type = "button"; clearSeat.addEventListener("click", async () => { if (!confirm("Clear this pending seat assignment? Nothing will be sent and no attendee record will be deleted.")) return; try { await call({ action: "admin_seat_set", table_id: table.id, seat_number: seat.seat_number, attendee_id: null }); status("Seat cleared. Nothing was sent.", "success"); await loadTab("tables", currentPage, lastSearch); } catch (error) { status(error.message || "The seat could not be cleared.", "error"); } }); action.append(edit, move, clearSeat); }
+      else { const add = element("button", "quiet compact", "Add attendee"); add.type = "button"; add.disabled = Boolean(seat.locked); add.addEventListener("click", () => attendeeCreateForm(table, seat.seat_number)); const assign = element("button", "quiet compact", "Assign pending"); assign.type = "button"; assign.disabled = Boolean(seat.locked); assign.addEventListener("click", () => seatAssignForm(table, seat)); action.append(add, assign); }
       tr.append(action); tbody.append(tr);
     }
     roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. Secure links and token values are never displayed.")); list.append(card);
   }
   host.append(list); host.append(pagination(payload));
+}
+function selectField(labelText, name, values, value = "", required = true) {
+  const label = document.createElement("label"); label.textContent = labelText; const select = document.createElement("select"); select.name = name; select.required = required;
+  for (const item of values) { const option = document.createElement("option"); option.value = item.value; option.textContent = item.label; option.selected = item.value === value; select.append(option); }
+  label.append(select); return label;
+}
+function openOperation(title, intro, build) {
+  const host = $("attendee-detail"); clear(host); host.append(element("p", "eyebrow", "Protected staging operation"), element("h2", "", title), element("p", "fineprint", intro));
+  const form = build(); host.append(form); if (!$("attendee-dialog").open) $("attendee-dialog").showModal();
+}
+function operationActions(form, submitLabel, handler) {
+  const note = element("p", "notice", "Nothing will be sent and no consent, payment, Stripe record, credential, or secure link will be created."); note.setAttribute("role", "status");
+  const actions = element("div", "dialog-actions"); const cancel = element("button", "button outline", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => $("attendee-dialog").close()); const save = element("button", "button dark", submitLabel); save.type = "submit"; actions.append(cancel, save); form.append(note, actions);
+  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; if (!confirm("Confirm this protected staging change. Nothing will be sent and no payment, consent, access credential, or secure link will be created.")) return; setBusy(save, true); note.textContent = "Saving protected staging operation…"; note.className = "notice"; try { await handler(new FormData(form)); note.textContent = "Saved. Nothing was sent."; note.className = "notice success"; await loadTab(activeTab, currentPage, lastSearch); } catch (error) { note.textContent = error.message || "The operation could not be saved."; note.className = "notice error"; } finally { setBusy(save, false); } });
+  return form;
+}
+function provenanceFields(form, locked = "") {
+  const options = locked ? [{ value: locked, label: locked.replaceAll("_", " ") }] : ["complimentary","sponsor","honoree","staff","pre_existing_paid"].map((value) => ({ value, label: value.replaceAll("_", " ") }));
+  form.append(selectField("Provenance", "provenance", options, locked || "complimentary"), formField("Reason (reserved records)", "reason", "", { required: !locked || locked !== "pre_existing_paid", multiline: true, max: 2000 }), formField("Approver (reserved records)", "approver", "", { required: !locked || locked !== "pre_existing_paid", max: 300 }));
+}
+function adminAttendeeButton() { const button = element("button", "button dark admin-action", "Add attendee"); button.type = "button"; button.addEventListener("click", () => attendeeCreateForm()); return button; }
+function attendeeCreateForm(table = null, seatNumber = null) {
+  const requestId = crypto.randomUUID(); const paid = Boolean(table?.order_id); const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid");
+  grid.append(formField("First name", "first_name", "", { required: true, max: 200 }), formField("Last name", "last_name", "", { required: true, max: 200 }), formField("Email", "email", "", { required: true, type: "email", max: 320 }), formField("Phone (optional)", "phone", "", { type: "tel", max: 100 }), formField("Job title (optional)", "job_title", "", { max: 300 }), formField("Company (optional)", "company", "", { max: 300 })); form.append(grid);
+  if (table) { const details = element("p", "fineprint", `This guest will be created pending in Table ${table.table_number}, seat ${seatNumber}.`); form.append(details); }
+  provenanceFields(form, paid ? "pre_existing_paid" : "");
+  operationActions(form, "Create pending attendee", async (data) => { const record = Object.fromEntries(data.entries()); if (table) { record.table_id = table.id; record.seat_number = String(seatNumber); } const payload = await call({ action: "admin_attendee_create", request_id: requestId, record }); if (payload?.result?.attendee_id) { status("Pending attendee created. Nothing was sent.", "success"); } });
+  openOperation("Add pending attendee", "New attendees remain pending. Optional needs are not collected here; this action creates no consent or completion record.", () => form);
+}
+function tableCreateForm() {
+  const requestId = crypto.randomUUID(); const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid"); grid.append(formField("Table number", "table_number", "", { required: true, type: "number", max: 4 }), formField("Table name", "name", "", { required: true, max: 300 })); form.append(grid); provenanceFields(form);
+  const paidOrder = selectField("Existing paid table order (pre-existing paid only)", "order_id", [{ value: "", label: "None — manually reserved table" }], "", false); form.append(paidOrder);
+  call({ action: "eligible_paid_table_orders" }).then((payload) => { for (const order of payload.data || []) { const option = document.createElement("option"); option.value = order.order_id; option.textContent = `${text(order.purchaser_first_name)} ${text(order.purchaser_last_name)} · ${text(order.purchaser_email)} · ${order.unassigned_entitlements} unassigned`; paidOrder.querySelector("select").append(option); } }).catch(() => {});
+  operationActions(form, "Create ten-seat table", async (data) => { const record = Object.fromEntries(data.entries()); if (record.provenance === "pre_existing_paid" && !record.order_id) throw new Error("Select an eligible existing paid table order."); if (record.provenance !== "pre_existing_paid") record.order_id = ""; await call({ action: "admin_table_create", request_id: requestId, record }); status("Ten-seat table created. Nothing was sent.", "success"); });
+  openOperation("Add ten-seat table", "Manual tables reserve ten seats once. A paid table only links an existing same-event paid table order; it never creates or changes an order or Stripe ID.", () => form);
+}
+function tableEditForm(table) {
+  const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid"); grid.append(formField("Table number", "table_number", table.table_number, { required: true, type: "number", max: 4 }), formField("Table name", "name", table.name, { required: true, max: 300 }), selectField("Status", "status", ["active","locked","cancelled"].map((value) => ({ value, label: value })), table.status)); form.append(grid);
+  operationActions(form, "Save table", async (data) => { await call({ action: "admin_table_update", table_id: table.id, record: Object.fromEntries(data.entries()) }); status("Table updated. Nothing was sent.", "success"); }); openOperation("Edit table", "Cancelling is blocked when guests, active invitations, or a manual reserved-capacity claim exist.", () => form);
+}
+function seatAssignForm(table, seat) {
+  const form = element("form", "attendee-edit"); const pending = selectField("Eligible pending attendee", "attendee_id", [{ value: "", label: "Loading eligible attendees…" }], "", true); form.append(pending);
+  const select = pending.querySelector("select"); select.disabled = true;
+  call({ action: "admin_unseated_attendees" }).then((payload) => { clear(select); const empty = document.createElement("option"); empty.value = ""; empty.textContent = "Choose matching-provenance attendee"; select.append(empty); for (const attendee of payload.data || []) { const option = document.createElement("option"); option.value = attendee.attendee_id; option.textContent = `${text(attendee.first_name)} ${text(attendee.last_name)} · ${text(attendee.email)} · ${text(attendee.provenance).replaceAll("_", " ")}`; select.append(option); } select.disabled = false; }).catch(() => { select.options[0].textContent = "Eligible attendees unavailable"; });
+  operationActions(form, "Assign pending attendee", async (data) => { const attendeeId = data.get("attendee_id"); if (!attendeeId) throw new Error("Choose an eligible pending attendee."); await call({ action: "admin_seat_set", table_id: table.id, seat_number: seat.seat_number, attendee_id: attendeeId }); status("Seat assignment saved. Nothing was sent.", "success"); }); openOperation("Assign existing pending attendee", "Only a pending attendee with matching reserved provenance can be assigned to a manual table. A standalone reserved allocation is released so capacity is not double-counted.", () => form);
+}
+function seatMoveForm(table, seat, tables) {
+  const form = element("form", "attendee-edit"); const options = (tables || []).filter((candidate) => candidate.status === "active").map((candidate) => ({ value: candidate.id, label: `Table ${candidate.table_number} · ${text(candidate.name)}` })); form.append(selectField("Destination table", "table_id", options, table.id), formField("Destination seat number", "seat_number", "", { required: true, type: "number", max: 2 }));
+  operationActions(form, "Move pending attendee", async (data) => { const destination = Object.fromEntries(data.entries()); const n = Number(destination.seat_number); if (!Number.isInteger(n) || n < 1 || n > 10) throw new Error("Choose a seat number from 1 to 10."); await call({ action: "admin_seat_set", table_id: destination.table_id, seat_number: n, attendee_id: seat.attendee_id }); status("Seat assignment saved. Nothing was sent.", "success"); }); openOperation("Move pending attendee", "Moves are atomic. Paid and manually-reserved capacity models cannot be mixed, and active invitations are protected.", () => form);
+}
+function setLeadForm(table) {
+  const seated = (table.table_seats || []).filter((seat) => seat.attendee).map((seat) => ({ value: seat.attendee.id, label: `${text(seat.attendee.first_name)} ${text(seat.attendee.last_name)} · seat ${seat.seat_number}` })); const form = element("form", "attendee-edit"); form.append(selectField("Table lead", "attendee_id", [{ value: "", label: "Clear table lead" }, ...seated], table.lead_attendee_id || "", false)); operationActions(form, "Save table lead", async (data) => { const value = data.get("attendee_id"); await call({ action: "admin_table_lead_set", table_id: table.id, attendee_id: value || null }); status("Table lead updated. Nothing was sent.", "success"); }); openOperation("Set or clear table lead", "The selected lead must occupy a seat. The operation is blocked while an active table-management credential exists; no credential is created, changed, revoked, or sent.", () => form);
 }
 function renderAudit(host, payload) { host.append(element("p", "fineprint", payload.note || "Bounded audit view.")); for (const item of payload.data || []) { const row = element("article", "audit-item"); row.append(element("strong", "", `${text(item.action)} · ${text(item.entity_type)}`), element("span", "", `${date(item.occurred_at)} · ${text(item.log)} log · ${text(item.actor_type || item.actor_user_id)}`)); host.append(row); } if (!payload.data?.length) host.append(element("p", "empty", "No audit records are available.")); }
 function exportButton(kind) { const button = element("button", "button outline", `Download ${kind} CSV (max 5,000)`); button.type = "button"; button.addEventListener("click", async () => { setBusy(button, true); status("Preparing secure CSV export…"); try { const blob = await call({ action: "export", kind }, true); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `ssuite-${kind}-export.csv`; link.click(); URL.revokeObjectURL(link.href); status("CSV export downloaded.", "success"); } catch (error) { status(error.message || "Export failed.", "error"); } finally { setBusy(button, false); } }); return button; }
