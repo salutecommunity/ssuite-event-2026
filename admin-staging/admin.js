@@ -34,7 +34,7 @@ async function initialize() {
     authStatus("Private sign-in is unavailable until the deployment supplies the public Supabase URL, anon key, and API base URL.", "error");
     return;
   }
-  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: true } });
+  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: true, storage: window.sessionStorage, autoRefreshToken: true, detectSessionInUrl: true } });
   supabase.auth.onAuthStateChange((_event, nextSession) => { if (nextSession) openDashboard(nextSession); });
   const { data } = await supabase.auth.getSession();
   if (data.session) await openDashboard(data.session);
