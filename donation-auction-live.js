@@ -52,14 +52,12 @@
     const ready = donationReadiness(); if (!ready.ok) { status("donation-live-status", ready.reason, "error"); return; }
     if (!form.reportValidity()) return;
     const amount = donationAmount(), donorName = text(form.elements.donor_name?.value), address = text(form.elements.email?.value).toLowerCase();
-    const dedicated = Boolean(byId("dedication-toggle")?.checked), kind = dedicated ? text(form.elements.dedication_type?.value) : "none", honoree = dedicated ? text(form.elements.honoree_name?.value) : "";
-    if (!money.test(amount) || !donorName || !email.test(address) || (dedicated && (!honoree || !["in_honor_of", "in_memory_of"].includes(kind)))) { status("donation-live-status", "Please complete a valid donation amount and donor details.", "error"); return; }
-    if (byId("employer-match")?.checked) { status("donation-live-status", "Employer matching is not available. Remove that request before continuing.", "error"); return; }
+    if (!money.test(amount) || !donorName || !email.test(address)) { status("donation-live-status", "Please complete a valid donation amount and donor details.", "error"); return; }
     const submit = byId("donate-button");
     try {
       submit.disabled = true; status("donation-live-status", "Preparing secure donation checkout…", "working");
       const turnstileToken = await token("donation-turnstile", donationConfig().turnstileAction);
-      const response = await post("donation-create-checkout", idempotencyKey(), { donor_name: donorName, email: address, amount, frequency: document.querySelector(".segmented button.selected")?.dataset.frequency === "Monthly" ? "recurring_monthly" : "one_time", dedication_type: kind, honoree_name: dedicated ? honoree : null, employer_match_requested: false, turnstile_token: turnstileToken });
+      const response = await post("donation-create-checkout", idempotencyKey(), { donor_name: donorName, email: address, amount, frequency: document.querySelector(".segmented button.selected")?.dataset.frequency === "Monthly" ? "recurring_monthly" : "one_time", turnstile_token: turnstileToken });
       const payload = await response.json().catch(() => ({})); if (!response.ok || typeof payload.checkout_url !== "string") throw new Error(text(payload.error) || "Donation checkout could not be started.");
       const destination = new URL(payload.checkout_url); if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout returned an unsafe redirect and was stopped.");
       status("donation-live-status", "Redirecting to secure checkout…", "working"); location.assign(destination.toString());

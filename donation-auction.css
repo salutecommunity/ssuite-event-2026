@@ -1,10 +1,18 @@
 /* Small, accessible additions for the protected donation and auction forms.
    The existing palette and form primitives provide the primary visual system. */
 .donation-fields { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:16px 0; }
-.dedication-fields { padding:14px; border:1px solid var(--line,#b6b1aa); }
-.employer-match-note { margin-top:-6px; }
-.live-status[data-kind="error"] { color:#242424; font-weight:700; }
-.live-status[data-kind="success"] { color:#242424; font-weight:700; }
-.live-status[data-kind="working"] { color:#303030; }
+.custom-amount { height:auto; min-height:57px; display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; row-gap:3px; padding:8px 18px; }
+.custom-amount input { min-width:0; }
+.custom-amount small { grid-column:1/-1; font:11px/1.3 var(--sans,Arial,sans-serif); color:#666; }
+.employer-match-card { margin:18px 0; padding:20px; border:1px solid var(--line,#b6b1aa); background:#f4f4f4; }
+.employer-match-card h3 { margin:5px 0 10px; font-size:clamp(20px,2.2vw,28px); }
+.employer-match-card > p:not(.micro) { margin:0 0 14px; line-height:1.5; }
+.matching-details { display:grid; gap:3px; padding-top:12px; border-top:1px solid var(--line,#b6b1aa); }
+.matching-details span { font-size:13px; }
+.matching-copy { margin-top:2px; }
+.matching-status { margin:10px 0 0!important; }
+.live-status[data-kind="error"] { border-color:#000; background:#f4f4f4; color:#000; font-weight:700; }
+.live-status[data-kind="success"] { border-color:#000; background:#f4f4f4; color:#000; font-weight:700; }
+.live-status[data-kind="working"] { border-color:#000; background:#f4f4f4; color:#303030; }
 .honeypot { position:absolute!important; width:1px!important; height:1px!important; padding:0!important; margin:-1px!important; overflow:hidden!important; clip:rect(0,0,0,0)!important; white-space:nowrap!important; border:0!important; }
-@media (max-width:640px){.donation-fields{grid-template-columns:1fr}}
+@media(max-width:640px){.donation-fields{grid-template-columns:1fr}}

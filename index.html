@@ -90,7 +90,7 @@
       <div class="giving-story">
         <p class="eyebrow">YOUR SUPPORT</p>
         <h2>Every contribution creates room for more women to be seen, heard, and supported.</h2>
-        <p>Give once, sustain the work monthly, or make a gift in honor of someone who has opened doors for others.</p>
+        <p>Give once or sustain the work monthly. Your support advances SALUTE’s programs, community, and leadership work.</p>
         <div class="impact-list"><span>Community</span><span>Visibility</span><span>Leadership</span></div>
       </div>
       <form class="giving-form" id="donation-form" novalidate>
@@ -106,13 +106,14 @@
           <label class="field"><span>YOUR NAME</span><input name="donor_name" autocomplete="name" maxlength="200" required></label>
           <label class="field"><span>EMAIL</span><input name="email" type="email" autocomplete="email" maxlength="320" required></label>
         </div>
-        <label class="check"><input id="dedication-toggle" type="checkbox"> <span>Dedicate this gift</span></label>
-        <div id="dedication-fields" class="donation-fields dedication-fields" hidden>
-          <label class="field"><span>DEDICATION</span><select name="dedication_type"><option value="in_honor_of">In honor of</option><option value="in_memory_of">In memory of</option></select></label>
-          <label class="field"><span>HONOREE NAME</span><input name="honoree_name" maxlength="200"></label>
-        </div>
-        <label class="check employer-match"><input id="employer-match" type="checkbox" disabled aria-describedby="employer-match-note"> <span>Employer matching <strong>(unavailable)</strong></span></label>
-        <p id="employer-match-note" class="fineprint employer-match-note">Employer matching is unavailable until an approved provider is configured. No matching request can be submitted.</p>
+        <section class="employer-match-card" aria-labelledby="employer-match-title">
+          <p class="micro" id="employer-match-title">EMPLOYER MATCHING</p>
+          <h3>Your gift may go twice as far.</h3>
+          <p>SALUTE Foundation is listed in employer matching-gift databases. After donating, search for <strong>SALUTE Foundation</strong> in your employer’s matching portal and submit your donation receipt. Eligibility and match amounts are determined by your employer.</p>
+          <p class="matching-details"><strong>EIN 92-2955808</strong><span>12 East 49th Street, 11th Floor, New York, NY 10017</span></p>
+          <button class="button button-outline matching-copy" type="button" id="copy-matching-details">Copy matching details</button>
+          <p class="fineprint matching-status" id="matching-status" role="status" aria-live="polite" hidden></p>
+        </section>
         <div class="gift-summary"><span id="frequency-summary">One-time gift</span><strong id="amount-summary">$250</strong></div>
         <p id="donation-live-status" class="live-status" role="status" aria-live="polite" hidden></p>
         <button class="button button-dark full" type="submit" id="donate-button">Preview giving flow — $250</button>
@@ -277,8 +278,7 @@ document.querySelectorAll('.segmented button').forEach(b=>b.addEventListener('cl
 document.querySelectorAll('.amounts button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});b.classList.add('selected');b.setAttribute('aria-pressed','true');customAmount.value='';amount=Number(b.dataset.amount);updateGift()}));
 customAmount.addEventListener('input',e=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});const parsed=Number(e.target.value);amount=Number.isFinite(parsed)?Math.max(0,parsed):0;updateGift()});
 document.querySelector('#donation-form').addEventListener('submit',e=>{e.preventDefault();if(window.SSuiteDonation?.enabled()){window.SSuiteDonation.submit(e.currentTarget);return}if(amount<1)return notify('Please choose a gift amount.');notify('Preview only — no donation, payment, or receipt was recorded.')});
-document.querySelector('#dedication-toggle').addEventListener('change',e=>{const details=document.querySelector('#dedication-fields'),honoree=details.querySelector('[name="honoree_name"]');details.hidden=!e.currentTarget.checked;honoree.required=e.currentTarget.checked});
-// Employer matching is intentionally unavailable until an approved provider exists; the disabled control and persistent note must remain visible.
+document.querySelector('#copy-matching-details').addEventListener('click',async()=>{const details='SALUTE Foundation\nEIN: 92-2955808\n12 East 49th Street, 11th Floor\nNew York, NY 10017',ok=await copyText(details),status=document.querySelector('#matching-status');status.textContent=ok?'Matching details copied. Open your employer’s matching-gift portal and search for SALUTE Foundation.':'Copy unavailable. Please select and copy the organization details above.';status.hidden=false;notify(ok?'Matching details copied.':'Copy unavailable — organization details remain visible.');});
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
