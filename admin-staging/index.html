@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta http-equiv="Referrer-Policy" content="same-origin">
   <title>S.Suite — Private Administration</title>
-  <link rel="stylesheet" href="admin.css?v=20260825-4">
+  <link rel="stylesheet" href="admin.css?v=20260825-5">
 </head>
 <body>
   <a class="skip" href="#workspace">Skip to dashboard</a>
@@ -20,17 +20,13 @@
     <section class="auth-shell" id="auth-shell" aria-labelledby="auth-title">
       <p class="eyebrow">Restricted workspace</p>
       <h1 id="auth-title">Private administration.</h1>
-      <p>This workspace is restricted to the approved S.Suite administrator. Use the passwordless sign-in link or one-time code sent to the locked address below.</p>
+      <p>This workspace is restricted to S.Suite Admin. We’ll email a private sign-in link to the approved address below.</p>
       <form id="magic-form" novalidate>
         <label>Email address<input id="admin-email" type="email" value="ssuite@salute.community" readonly aria-readonly="true"></label>
-        <button class="button dark" id="send-link" type="submit">Send secure sign-in link</button>
-      </form>
-      <form id="otp-form" novalidate>
-        <label>One-time code <input id="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="12" placeholder="Enter code if supplied"></label>
-        <button class="button outline" id="verify-code" type="submit">Verify code</button>
+        <button class="button dark" id="send-link" type="submit">Email my sign-in link</button>
       </form>
       <p class="notice" id="auth-status" role="status" aria-live="polite">Checking private dashboard configuration…</p>
-      <p class="fineprint">No password is collected here. Sign-in configuration uses only a public Supabase project URL and anon key; the service-role credential remains exclusively in the server function.</p>
+      <p class="fineprint">No password is needed. The private sign-in link works once and only for the approved administrator.</p>
     </section>
 
     <section id="workspace" class="workspace" hidden aria-live="polite">
