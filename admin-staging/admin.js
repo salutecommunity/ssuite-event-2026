@@ -192,7 +192,26 @@ function renderTables(host, payload) {
     const buyer = table.purchaser;
     const buyerLine = element("p", "buyer-line", buyer ? `Table purchaser: ${text(buyer.purchaser_first_name)} ${text(buyer.purchaser_last_name)} · ${text(buyer.purchaser_email)} · ${money(buyer.total_cents, buyer.currency)} paid ${date(buyer.paid_at)}` : "Table purchaser: No linked purchase — staff-reserved table");
     const leadLine = element("p", "lead-line", `Table lead: ${lead ? `${text(lead.first_name)} ${text(lead.last_name)} · ${text(lead.email)}` : "Not assigned"} · ${accessLabel}`);
-    card.append(buyerLine, leadLine, element("h4", "roster-title", "Guest order · numbered seats 1–10"));
+    card.append(buyerLine, leadLine);
+    if (lead) {
+      const reveal = element("button", "quiet compact", "Show / copy management link"); reveal.type = "button";
+      const linkBox = element("div", "management-link-box"); linkBox.hidden = true;
+      reveal.addEventListener("click", async () => {
+        if (!confirm(`Reveal the private management link for ${text(lead.first_name)} ${text(lead.last_name)}? This grants full control of this table. No email will be sent.`)) return;
+        setBusy(reveal, true);
+        try {
+          const result = await call({ action: "table_management_link_reveal", table_id: table.id });
+          const input = document.createElement("input"); input.type = "text"; input.readOnly = true; input.value = result.table_management_url; input.setAttribute("aria-label", "Private table management link");
+          const copy = element("button", "button dark compact", "Copy link"); copy.type = "button";
+          copy.addEventListener("click", async () => { try { await navigator.clipboard.writeText(input.value); status("Private management link copied. Nothing was emailed.", "success"); } catch { input.focus(); input.select(); status("Select and copy the highlighted private link. Nothing was emailed."); } });
+          linkBox.replaceChildren(element("p", "fineprint", `Private management access for ${text(result.recipient)}. Share only with the named table lead. Nothing was emailed.`), input, copy); linkBox.hidden = false; input.focus(); input.select();
+          status("Private management link revealed and recorded in the audit log. Nothing was emailed.", "success");
+        } catch (error) { status(error.message || "The private management link could not be prepared.", "error"); }
+        finally { setBusy(reveal, false); }
+      });
+      card.append(reveal, linkBox);
+    }
+    card.append(element("h4", "roster-title", "Guest order · numbered seats 1–10"));
 
     const wrap = element("div", "table-wrap roster-wrap"); const roster = document.createElement("table");
     const thead = document.createElement("thead"); const hr = document.createElement("tr");
@@ -213,7 +232,7 @@ function renderTables(host, payload) {
       else { const add = element("button", "quiet compact", "Add attendee"); add.type = "button"; add.disabled = Boolean(seat.locked); add.addEventListener("click", () => attendeeCreateForm(table, seat.seat_number)); const assign = element("button", "quiet compact", "Assign existing guest"); assign.type = "button"; assign.disabled = Boolean(seat.locked); assign.addEventListener("click", () => seatAssignForm(table, seat)); action.append(add, assign); }
       tr.append(action); tbody.append(tr);
     }
-    roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. Secure links and token values are never displayed.")); list.append(card);
+    roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. A management link is displayed only after the sole administrator explicitly reveals it; the raw link is never stored in the dashboard or audit log.")); list.append(card);
   }
   host.append(list); host.append(pagination(payload));
 }
