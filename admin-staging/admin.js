@@ -154,7 +154,56 @@ function renderDataTable(host, payload, columns, attendeeRows) {
 
 function pagination(payload) { const row = element("div", "pagination"); row.append(element("span", "", `Showing page ${payload.page} of ${Math.max(1, Math.ceil(payload.total / payload.limit))} · ${payload.total} records`)); const controls = element("div", "pager-controls"); const previous = element("button", "quiet", "Previous"); previous.disabled = payload.page <= 1; previous.addEventListener("click", () => loadTab(activeTab, payload.page - 1, lastSearch)); const next = element("button", "quiet", "Next"); next.disabled = !payload.has_more; next.addEventListener("click", () => loadTab(activeTab, payload.page + 1, lastSearch)); controls.append(previous, next); row.append(controls); return row; }
 
-function renderTables(host, payload) { if (!payload.data?.length) { host.append(element("p", "empty", "No authoritative operational table records are available.")); return; } const list = element("div", "table-list"); for (const table of payload.data || []) { const card = element("article", "table-card"); card.append(element("span", "record-label", `Table ${text(table.table_number)}`), element("h3", "", text(table.name || "Unassigned table")), chip(table.status)); const seats = element("div", "seats"); for (const seat of table.table_seats || []) { const dot = element("span", "seat"); dot.title = `Seat ${seat.seat_number}: ${seat.locked ? "locked" : seat.attendee_id ? "occupied" : "open"}`; dot.classList.toggle("filled", !!seat.attendee_id); dot.classList.toggle("locked", !!seat.locked); seats.append(dot); } card.append(seats, element("p", "", "Visual occupancy only. Seating edits are deliberately unavailable in this read-only administration package.")); list.append(card); } host.append(list); host.append(pagination(payload)); }
+function invitationLabel(seat) {
+  const invite = seat.invitation; const delivery = invite?.delivery;
+  if (!invite) return "Not invited";
+  if (invite.revoked_at || invite.status === "revoked") return "Revoked";
+  if (delivery?.bounced_at || delivery?.status === "bounced") return "Bounced";
+  if (delivery?.suppressed_at || delivery?.status === "suppressed") return "Suppressed";
+  if (delivery?.delivered_at || delivery?.status === "delivered") return "Delivered";
+  if (delivery?.accepted_at || delivery?.status === "accepted") return "Accepted by provider";
+  if (invite.first_sent_at || Number(invite.send_count) > 0) return "Sent";
+  return "Prepared — not sent";
+}
+function renderTables(host, payload) {
+  if (!payload.data?.length) { host.append(element("p", "empty", "No authoritative operational table records are available.")); return; }
+  const list = element("div", "table-list");
+  for (const table of payload.data || []) {
+    const card = element("article", "table-card roster-card");
+    const heading = element("div", "table-heading");
+    const title = element("div");
+    title.append(element("span", "record-label", table.table_number ? `Table ${table.table_number}` : "Table number not assigned"), element("h3", "", text(table.name || "Unassigned table")));
+    const occupied = (table.table_seats || []).filter((seat) => seat.attendee_id).length;
+    const meta = element("div", "table-meta"); meta.append(chip(table.status), element("strong", "", `${occupied} of ${table.seat_count || table.table_seats?.length || 0} seats named`));
+    heading.append(title, meta); card.append(heading);
+
+    const lead = (table.table_seats || []).find((seat) => seat.attendee?.is_table_lead)?.attendee;
+    const access = table.lead_access; const accessDelivery = access?.delivery;
+    let accessLabel = "No management credential";
+    if (access) accessLabel = access.revoked_at || access.status === "revoked" ? "Management access revoked" : accessDelivery?.delivered_at ? "Management access delivered" : accessDelivery?.accepted_at ? "Management access accepted by provider" : "Management access held — not sent";
+    const leadLine = element("p", "lead-line", `Table lead: ${lead ? `${text(lead.first_name)} ${text(lead.last_name)} · ${text(lead.email)}` : "Not assigned"} · ${accessLabel}`);
+    card.append(leadLine);
+
+    const wrap = element("div", "table-wrap roster-wrap"); const roster = document.createElement("table");
+    const thead = document.createElement("thead"); const hr = document.createElement("tr");
+    for (const label of ["Seat", "Guest", "Email", "Organization / title", "Registration", "Invitation", "Last activity"]) hr.append(element("th", "", label));
+    thead.append(hr); roster.append(thead); const tbody = document.createElement("tbody");
+    for (const seat of table.table_seats || []) {
+      const tr = document.createElement("tr"); const attendee = seat.attendee; const invite = seat.invitation; const delivery = invite?.delivery;
+      const guestName = attendee ? `${text(attendee.first_name)} ${text(attendee.last_name)}${attendee.is_table_lead ? " · Lead" : ""}` : seat.locked ? "Locked" : "Open";
+      const recipient = attendee?.email || invite?.recipient_email || "—";
+      const organization = attendee ? [attendee.company, attendee.job_title].filter(Boolean).join(" · ") || "—" : "—";
+      const registration = attendee?.registration_status || (invite ? "Invited — not registered" : "Open");
+      const inviteStatus = invitationLabel(seat);
+      const activity = delivery?.delivered_at || delivery?.accepted_at || invite?.last_sent_at || invite?.first_sent_at || attendee?.completed_at || "";
+      const values = [seat.seat_number, guestName, recipient, organization, registration, inviteStatus, activity ? date(activity) : "—"];
+      values.forEach((value, index) => { const td = document.createElement("td"); if (index === 4 || index === 5) td.append(chip(value)); else td.textContent = text(value); tr.append(td); });
+      tbody.append(tr);
+    }
+    roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. Secure links and token values are never displayed.")); list.append(card);
+  }
+  host.append(list); host.append(pagination(payload));
+}
 function renderAudit(host, payload) { host.append(element("p", "fineprint", payload.note || "Bounded audit view.")); for (const item of payload.data || []) { const row = element("article", "audit-item"); row.append(element("strong", "", `${text(item.action)} · ${text(item.entity_type)}`), element("span", "", `${date(item.occurred_at)} · ${text(item.log)} log · ${text(item.actor_type || item.actor_user_id)}`)); host.append(row); } if (!payload.data?.length) host.append(element("p", "empty", "No audit records are available.")); }
 function exportButton(kind) { const button = element("button", "button outline", `Download ${kind} CSV (max 5,000)`); button.type = "button"; button.addEventListener("click", async () => { setBusy(button, true); status("Preparing secure CSV export…"); try { const blob = await call({ action: "export", kind }, true); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `ssuite-${kind}-export.csv`; link.click(); URL.revokeObjectURL(link.href); status("CSV export downloaded.", "success"); } catch (error) { status(error.message || "Export failed.", "error"); } finally { setBusy(button, false); } }); return button; }
 
