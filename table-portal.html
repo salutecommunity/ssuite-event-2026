@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+  <title>S.Suite — Table portal</title><link rel="stylesheet" href="./live-pages.css"><script src="./config.js"></script>
+</head>
+<body>
+<header class="masthead"><div class="shell"><img src="./assets/ssuite-logo-header.png" alt="S.Suite"><span>Private table portal</span></div></header>
+<main class="shell">
+  <section class="card"><p class="eyebrow">Private table access</p><h1>Manage your table.</h1><p class="lede">This page uses a private access link. The access token is removed from the browser address immediately and is never stored by this page.</p><p id="status" class="notice" role="status" aria-live="polite">Checking secure access…</p></section>
+  <section id="portal" class="card" hidden>
+    <p class="eyebrow">Table overview</p><h2 id="table-name"></h2><div id="table-meta" class="table-meta"></div>
+    <div class="actions"><button id="refresh" type="button" class="secondary">Refresh table</button><button id="revoke-access" type="button" class="danger">Revoke this access link</button></div>
+    <div id="seats" class="seat-grid" aria-live="polite"></div>
+    <form id="invite-form" class="invite-form" novalidate>
+      <p class="eyebrow">Invite an open seat</p><h2>Send a secure registration invitation.</h2><p class="lede">Only a queued request is confirmed here. Email delivery is not claimed unless the configured server queue and provider accept it.</p>
+      <div class="fields"><label class="field"><span>RECIPIENT EMAIL</span><input name="recipient_email" type="email" required maxlength="320" autocomplete="email"></label><label class="field"><span>OPEN SEAT</span><select name="seat_number" required></select></label><label class="field full"><span>PERSONAL NOTE <em>(optional)</em></span><textarea name="personal_note" maxlength="2000"></textarea></label></div>
+      <div class="actions"><button type="submit">Queue invitation</button></div>
+    </form>
+  </section>
+</main>
+<script src="./table-portal.js"></script>
+</body></html>

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f4efe8">
+  <meta name="referrer" content="no-referrer">
+  <title>S.Suite — Attend</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./donation-auction.css">
+  <script src="./config.js"></script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<header class="site-header">
+  <a class="brand" href="#attend" aria-label="S.Suite home">
+    <img src="./assets/ssuite-logo-header.png" alt="S.Suite">
+  </a>
+  <nav class="event-nav" aria-label="Event navigation">
+    <a href="#attend" data-route="attend">Attend</a>
+    <a href="#give" data-route="give">Give</a>
+    <a href="#auction" data-route="auction">Auction</a>
+  </nav>
+  <a class="back-link" href="https://ssuite.org/">S.SUITE.ORG <span>↗</span></a>
+</header>
+
+<main id="content">
+  <article class="page" data-page="attend">
+    <section class="hero attend-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">S.SUITE / NEW YORK CITY</p>
+        <h1>Join the <em>room.</em></h1>
+        <p class="hero-lede">An evening honoring South Asian women leaders and allies across business, capital, and culture.</p>
+        <a class="text-link" href="#tickets">Choose your ticket ↓</a>
+      </div>
+      <div class="hero-mark" aria-hidden="true"><img src="./assets/ssuite-mark.png" alt=""></div>
+    </section>
+
+    <section class="facts" aria-label="Event details">
+      <div><span>Date</span><strong>Friday, November 20, 2026</strong></div>
+      <div><span>Place</span><strong>Prince George Ballroom</strong></div>
+      <div><span>City</span><strong>New York, NY</strong></div>
+    </section>
+
+    <section class="section-shell ticket-section" id="tickets">
+      <header class="section-heading">
+        <p class="eyebrow">ATTEND</p>
+        <h2>Choose how you’ll join us.</h2>
+        <p>Design preview only — live ticket sales and Stripe checkout are not connected. No registration or payment is saved.</p>
+      </header>
+      <div class="ticket-grid">
+        <article class="ticket-card">
+          <div><p class="micro">EARLY BIRD / INDIVIDUAL</p><h3>SALUTE Member Ticket</h3><div class="price-row"><p class="price">$275</p><p class="original-price"><span class="sr-only">Original price </span>$350</p></div><p class="price-note">Early-bird price</p></div>
+          <p>For current SALUTE members. We’ll verify membership with the email used at checkout.</p>
+          <button class="button button-outline choose" data-ticket="SALUTE Member Ticket" data-ticket-code="salute_member" data-price="275">Preview ticket flow</button>
+        </article>
+        <article class="ticket-card featured">
+          <div class="flag">INDIVIDUAL</div>
+          <div><p class="micro">EARLY BIRD / GENERAL ADMISSION</p><h3>Community Ticket</h3><div class="price-row"><p class="price">$350</p><p class="original-price"><span class="sr-only">Original price </span>$400</p></div><p class="price-note">Early-bird price</p></div>
+          <p>One reserved seat, event communications, and access to the full evening.</p>
+          <button class="button button-dark choose" data-ticket="Community Ticket" data-ticket-code="community" data-price="350">Preview ticket flow</button>
+        </article>
+        <article class="ticket-card table-card">
+          <div><p class="micro">EARLY BIRD / HOST THE TABLE</p><h3>Table for ten</h3><div class="price-row"><p class="price">$5,000</p><p class="original-price"><span class="sr-only">Original price </span>$7,500</p></div><p class="price-note">Early-bird price</p></div>
+          <p>Ten seats plus a private link to invite guests, collect details, and manage your table.</p>
+          <button class="button button-light choose" data-ticket="Table for ten" data-ticket-code="full_table" data-price="5000">Preview table flow</button>
+        </article>
+      </div>
+      <div class="trust-row" aria-label="Features planned for live sales"><span>Planned: promotion codes</span><span>Planned: live availability</span><span>Planned: email receipt</span></div>
+    </section>
+
+    <section class="editorial-band">
+      <p class="eyebrow">THE EVENING</p>
+      <blockquote>“A room built for recognition, connection, and what comes next.”</blockquote>
+      <div class="editorial-actions"><a href="#give">Support the work →</a><a href="#auction">Auction details →</a></div>
+    </section>
+  </article>
+
+  <article class="page" data-page="give">
+    <section class="hero give-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">SALUTE / GIVE</p>
+        <h1>Move the work <em>forward.</em></h1>
+        <p class="hero-lede">Your gift expands the visibility, connection, and leadership of South Asian women.</p>
+      </div>
+
+    </section>
+
+    <section class="section-shell giving-layout">
+      <div class="giving-story">
+        <p class="eyebrow">YOUR SUPPORT</p>
+        <h2>Every contribution creates room for more women to be seen, heard, and supported.</h2>
+        <p>Give once, sustain the work monthly, or make a gift in honor of someone who has opened doors for others.</p>
+        <div class="impact-list"><span>Community</span><span>Visibility</span><span>Leadership</span></div>
+      </div>
+      <form class="giving-form" id="donation-form" novalidate>
+        <div class="segmented" role="group" aria-label="Donation frequency">
+          <button type="button" class="selected" data-frequency="One-time">One time</button>
+          <button type="button" data-frequency="Monthly">Monthly</button>
+        </div>
+        <fieldset><legend>Choose an amount</legend>
+          <div class="amounts"><button type="button" data-amount="100">$100</button><button type="button" class="selected" data-amount="250">$250</button><button type="button" data-amount="500">$500</button><button type="button" data-amount="1000">$1,000</button></div>
+        </fieldset>
+        <label class="custom-amount"><span>$</span><input id="custom-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="Other amount" aria-label="Other donation amount"></label>
+        <div class="donation-fields" aria-label="Donor details">
+          <label class="field"><span>YOUR NAME</span><input name="donor_name" autocomplete="name" maxlength="200" required></label>
+          <label class="field"><span>EMAIL</span><input name="email" type="email" autocomplete="email" maxlength="320" required></label>
+        </div>
+        <label class="check"><input id="dedication-toggle" type="checkbox"> <span>Dedicate this gift</span></label>
+        <div id="dedication-fields" class="donation-fields dedication-fields" hidden>
+          <label class="field"><span>DEDICATION</span><select name="dedication_type"><option value="in_honor_of">In honor of</option><option value="in_memory_of">In memory of</option></select></label>
+          <label class="field"><span>HONOREE NAME</span><input name="honoree_name" maxlength="200"></label>
+        </div>
+        <label class="check employer-match"><input id="employer-match" type="checkbox"> <span>I'd like to request employer matching</span></label>
+        <p id="employer-match-note" class="fineprint employer-match-note" hidden>Employer matching is not available until an approved provider is configured. This request cannot be submitted.</p>
+        <div class="gift-summary"><span id="frequency-summary">One-time gift</span><strong id="amount-summary">$250</strong></div>
+        <p id="donation-live-status" class="live-status" role="status" aria-live="polite" hidden></p>
+        <button class="button button-dark full" type="submit" id="donate-button">Preview giving flow — $250</button>
+        <p class="fineprint" id="donation-preview-note">Preview only — no donation is submitted, charged, or receipted.</p>
+        <p class="fineprint" id="donation-receipt-policy" hidden><a href="#" rel="noopener" target="_blank">Donation receipt and tax-information policy</a></p>
+      </form>
+    </section>
+  </article>
+
+  <article class="page" data-page="auction">
+    <section class="hero auction-hero">
+      <div class="hero-copy">
+        <p class="eyebrow">SILENT AUCTION / SALUTE</p>
+        <h1>Bid with <em>purpose.</em></h1>
+        <p class="hero-lede">Distinctive experiences and objects from the S.Suite community. Every winning bid supports SALUTE.</p>
+      </div>
+      <div class="auction-signal" aria-hidden="true"><span>AUCTION</span><strong>—</strong><span>COMING SOON</span></div>
+    </section>
+
+    <section class="auction-open">
+      <div><p class="eyebrow">AUCTION SUBMISSIONS</p><h2>Help shape the auction.</h2><p>Offer an item or experience for consideration by the auction committee.</p></div>
+      <button class="button button-outline" data-modal="submission">Submit an item</button>
+    </section>
+
+    <section class="section-shell lots-section" hidden aria-hidden="true" data-approved-auction-template>
+      <header class="section-heading compact"><p class="eyebrow">SELECTED LOTS</p><h2>A first look.</h2></header>
+      <div class="lots">
+        <article class="lot"><div class="lot-visual v1"><b>ESCAPE</b></div><p class="micro">TRAVEL & EXPERIENCE</p><h3>A private weekend in the Hudson Valley</h3><div class="lot-meta"><span>Est. value $2,400</span><span>Preview</span></div></article>
+        <article class="lot"><div class="lot-visual v2"><b>CREATE</b></div><p class="micro">ART & CULTURE</p><h3>Studio visit and commissioned portrait</h3><div class="lot-meta"><span>Est. value $1,800</span><span>Preview</span></div></article>
+        <article class="lot"><div class="lot-visual v3"><b>GATHER</b></div><p class="micro">FOOD & HOSPITALITY</p><h3>Chef’s table for six in New York City</h3><div class="lot-meta"><span>Est. value $1,500</span><span>Preview</span></div></article>
+      </div>
+    </section>
+
+    <section class="submit-band"><div><p class="eyebrow">CONTRIBUTE</p><h2>Have something special to offer?</h2><p>Submit an item or experience for consideration by the auction committee.</p></div><button class="button button-light" data-modal="submission">Submit an item</button></section>
+  </article>
+</main>
+
+<footer>
+  <div class="footer-brand"><img src="./assets/salute-wordmark-white-hires.png" alt="SALUTE"><span>NEW YORK CITY</span></div>
+  <div class="footer-links"><a href="#attend">Attend</a><a href="#give">Give</a><a href="#auction">Auction</a><a href="https://ssuite.org/">S.Suite.org ↗</a></div>
+  <p>Prince George Ballroom · New York City</p>
+</footer>
+
+<div class="drawer-backdrop" hidden></div>
+<aside class="checkout-drawer" aria-hidden="true" aria-labelledby="checkout-title">
+  <button class="close" aria-label="Close registration">×</button>
+  <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p>Complete attendee details to preview the registration flow. Live Stripe checkout is disabled, and no registration or payment is saved.</p></div>
+  <form id="registration-form">
+    <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">QUANTITY<select id="ticket-quantity" aria-label="Ticket quantity"><option>1</option><option>2</option><option>3</option><option>4</option></select></label></div>
+    <div id="guest-fields"></div>
+    <section class="table-options" hidden>
+      <div class="form-section-head"><p class="micro">TABLE MANAGEMENT / PREVIEW</p><h3>Preview your table setup.</h3><p>In production, paid table leads would receive secure dashboard access. This preview does not create access, invite guests, or save a table.</p></div>
+      <div class="management-choices">
+        <label><input type="radio" name="table-method" value="manual" checked><span><b>Add guests myself</b><small>Enter and update guest details from your table dashboard.</small></span></label>
+        <label><input type="radio" name="table-method" value="invite"><span><b>Send registration links</b><small>Guests complete their own details and join your table automatically.</small></span></label>
+        <label><input type="radio" name="table-method" value="both"><span><b>Use both</b><small>Manually add some guests and invite the rest.</small></span></label>
+      </div>
+      <label class="field full-field"><span>TABLE NAME <i>OPTIONAL</i></span><input name="table-name" placeholder="e.g. The Singh Table"></label>
+      <div class="table-preview"><div><p class="micro">YOUR PRIVATE TABLE PAGE / PREVIEW</p><strong>10 seats · Sample guest status · Local seating controls</strong></div><button class="text-button" type="button" id="preview-dashboard">Preview dashboard →</button></div>
+    </section>
+    <section class="legal-consent" aria-label="Registration agreement">
+      <label><input type="checkbox" required><span>I agree to the <a data-policy-link="terms" href="#">Terms &amp; Conditions</a>, <a data-policy-link="privacy" href="#">Privacy Policy</a>, and <a data-policy-link="media" href="#">Media, Photo &amp; Video Release</a> for myself and, where applicable, on behalf of the guests included in this registration.</span></label>
+    </section>
+    <div class="total"><span>Total</span><strong id="ticket-total">$350</strong></div>
+    <div id="checkout-turnstile" class="turnstile-slot" aria-live="polite"></div>
+    <p id="live-checkout-status" class="live-status" role="status" aria-live="polite" hidden></p>
+    <button class="button button-dark full" type="submit">Preview checkout (no charge)</button>
+    <button class="test-fill" type="button" id="fill-test-details">Fill with test details</button>
+    <p class="fineprint">Preview only — this simulated payment makes no charge and does not create a registration.</p>
+  </form>
+  <section class="checkout-step" id="checkout-step" hidden>
+    <button class="step-back" type="button" id="back-to-registration">← Back to guest details</button>
+    <p class="eyebrow">CHECKOUT PREVIEW / NO CHARGE</p><h2>Review the preview.</h2>
+    <div class="order-review"><div><span id="review-ticket">Community Ticket</span><small id="review-count">1 attendee</small></div><strong id="review-total">$350</strong></div>
+    <div class="payment-preview"><div class="payment-label"><span>PAYMENT DETAILS</span><small>Stripe preview</small></div><label>CARD NUMBER<input value="4242 4242 4242 4242" readonly></label><div class="payment-row"><label>EXPIRY<input value="12 / 30" readonly></label><label>CVC<input value="123" readonly></label></div><label>NAME ON CARD<input value="Test Guest" readonly></label></div>
+    <button class="button button-dark full" type="button" id="complete-test-payment">Complete preview (no charge)</button>
+    <p class="fineprint">No charge will be made in this design preview.</p>
+  </section>
+  <section class="confirmation-step" id="confirmation-step" hidden>
+    <div class="success-mark">✓</div><p class="eyebrow">PREVIEW COMPLETE / NOT SAVED</p><h2>Registration flow previewed.</h2><p id="confirmation-copy">No registration, payment, email, or receipt was created. Connect the approved checkout and email backends before launch.</p>
+    <div class="confirmation-number"><span>PREVIEW REFERENCE / NOT SAVED</span><strong>DEMO-1120-084</strong></div>
+    <button class="button button-dark full" type="button" id="open-dashboard-after-payment" hidden>Open table dashboard preview</button>
+    <button class="button button-outline full" type="button" id="finish-preview">Return to Attend</button>
+  </section>
+</aside>
+
+<section class="table-dashboard" id="table-dashboard" hidden aria-label="Private table dashboard">
+  <header class="dashboard-header"><button type="button" id="close-dashboard">← Back to event</button><img src="assets/ssuite-logo-header.png" alt="S.Suite"><span>PRIVATE TABLE / PREVIEW</span></header>
+  <main class="dashboard-main">
+    <div class="dashboard-title"><div><p class="eyebrow">TABLE DASHBOARD / PREVIEW</p><h1>The Singh Table</h1><p>Preview guest management, invitations, and seating. Changes are local to this design preview and are not saved.</p></div><div class="completion-ring"><strong>3</strong><span>OF 10<br>REGISTERED</span></div></div>
+    <div class="dashboard-grid">
+      <section class="dashboard-panel invite-panel"><p class="micro">INVITE A GUEST / PREVIEW</p><h2>Preview a personal invitation.</h2><p>Review a designed S.Suite and SALUTE invitation. Email delivery and secure guest registration are disabled until the production backend is verified.</p><div class="panel-actions"><button class="button button-dark" type="button" id="open-table-invitation">Preview guest invitation</button></div><div class="share-guest-link"><p class="micro">SHARE A PRIVATE GUEST LINK / PREVIEW</p><p>Copy the sample link to inspect the interaction. It is not a live token and does not grant guest access.</p><div class="copy-field"><input id="share-guest-link" value="https://ssuite.events/r/singh-table-guest" readonly aria-label="Private guest registration link"><button type="button" id="copy-share-guest-link">Copy sample link</button></div><p class="inline-copy-status" id="share-link-status" hidden></p></div></section>
+      <section class="dashboard-panel table-status"><p class="micro">TABLE STATUS</p><div class="status-row"><span>Registered</span><strong>3</strong></div><div class="status-row"><span>Invited / awaiting details</span><strong>2</strong></div><div class="status-row"><span>Open seats</span><strong>5</strong></div><div class="progress"><i></i></div></section>
+    </div>
+    <section class="add-guest-panel inline-guest-accordion dashboard-panel" id="add-guest-panel" hidden><div class="panel-heading"><div><p class="micro">MANUAL ENTRY</p><h2 id="add-guest-title">Add a guest.</h2><p>Enter their complete registration details, or invite them by email to complete their own registration.</p></div><button type="button" id="hide-add-guest" aria-label="Close guest form">×</button></div><form id="manual-guest-form"><input type="hidden" id="manual-seat" value="6"><div class="form-grid"><label class="field"><span>FIRST NAME</span><input name="manual-first" autocomplete="given-name" required></label><label class="field"><span>LAST NAME</span><input name="manual-last" autocomplete="family-name" required></label><label class="field"><span>EMAIL</span><input name="manual-email" type="email" autocomplete="email" required></label><label class="field"><span>SECONDARY EMAIL <i>OPTIONAL</i></span><input name="manual-secondary" type="email" placeholder="Assistant or alternate email"></label><label class="field"><span>JOB TITLE</span><input name="manual-title" required></label><label class="field"><span>COMPANY</span><input name="manual-company" required></label><label class="field full-field"><span>MEAL PREFERENCE</span><select name="manual-meal" required><option value="">Select</option><option>Vegetarian</option><option>Non-vegetarian</option></select></label><label class="condition-check full-field"><input type="checkbox" data-manual-detail="dietary"><span>This guest has allergies or additional dietary needs</span></label><label class="field conditional-field full-field" data-manual-detail-fields="dietary" hidden><span>ALLERGIES / DIETARY NEEDS</span><input name="manual-dietary" placeholder="Please be specific"></label><label class="condition-check full-field"><input type="checkbox" data-manual-detail="accessibility"><span>This guest has accessibility requirements</span></label><label class="field conditional-field full-field" data-manual-detail-fields="accessibility" hidden><span>ACCESSIBILITY REQUIREMENTS</span><input name="manual-accessibility" placeholder="Tell us what would be helpful"></label></div><p class="manual-legal">Preview only — a table lead cannot record attendee-self consent. In the live workflow, each guest must use their secure link and personally accept the final policies.</p><div class="manual-form-actions"><button class="button button-dark" type="submit">Preview add guest (not saved)</button><button class="button button-outline" type="button" id="manual-send-link">Preview invitation (not sent)</button></div></form></section>
+    <section class="dashboard-panel seating-chart-panel">
+      <div class="panel-heading"><div><p class="micro">SEATING MAP</p><h2>Your table at a glance.</h2><p>Change any seat number below and the guest moves here automatically.</p></div><span class="saved-state">Preview only — changes are not saved</span></div>
+      <div class="round-table-map" id="round-table-map" aria-label="Round table seating chart"><div class="table-center"><span>THE SINGH TABLE</span><strong>10</strong><small>SEATS</small></div></div>
+    </section>
+    <section class="guest-list dashboard-panel"><div class="panel-heading"><div><p class="micro">GUESTS &amp; SEAT NUMBERS / PREVIEW</p><h2>Place your guests locally.</h2></div><span class="seat-help">Select a number to move a guest</span></div>
+      <div class="seat-row" data-guest="Neha Singh" data-initials="NS"><select class="seat-select" aria-label="Seat for Neha Singh"><option value="1" selected>01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><div class="guest-avatar">NS</div><div class="guest-info"><strong>Neha Singh</strong><span>neha@salute.community · Founder · SALUTE</span></div><span class="status complete">Registered</span><button type="button" data-demo-action="Guest editor opened">Edit</button></div>
+      <div class="seat-row" data-guest="Alex Morgan" data-initials="AM"><select class="seat-select" aria-label="Seat for Alex Morgan"><option value="1">01</option><option value="2" selected>02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><div class="guest-avatar">AM</div><div class="guest-info"><strong>Alex Morgan</strong><span>alex@example.com · Creative Director · Morgan Studio</span></div><span class="status complete">Registered</span><button type="button" data-demo-action="Guest editor opened">Edit</button></div>
+      <div class="seat-row" data-guest="Jordan Rivera" data-initials="JR"><select class="seat-select" aria-label="Seat for Jordan Rivera"><option value="1">01</option><option value="2">02</option><option value="3" selected>03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><div class="guest-avatar">JR</div><div class="guest-info"><strong>Jordan Rivera</strong><span>jordan@example.com · Managing Partner · Rivera Group</span></div><span class="status complete">Registered</span><button type="button" data-demo-action="Guest editor opened">Edit</button></div>
+      <div class="seat-row" data-guest="Taylor Chen" data-initials="TC"><select class="seat-select" aria-label="Seat for Taylor Chen"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4" selected>04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><div class="guest-avatar pending-avatar">?</div><div class="guest-info"><strong>Taylor Chen</strong><span>Sample invitation dated Aug 19 · Details pending</span></div><span class="status pending">Sample invited</span><button type="button" data-demo-action="Invitation resend previewed">Preview resend</button></div>
+      <div class="seat-row" data-guest="Sam Williams" data-initials="SW"><select class="seat-select" aria-label="Seat for Sam Williams"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5" selected>05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><div class="guest-avatar pending-avatar">?</div><div class="guest-info"><strong>Sam Williams</strong><span>Sample invitation dated Aug 19 · Details pending</span></div><span class="status pending">Sample invited</span><button type="button" data-demo-action="Invitation resend previewed">Preview resend</button></div>
+      <div class="seat-row open-seat" data-guest="" data-initials=""><select class="seat-select" aria-label="Open seat 6"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6" selected>06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><button type="button" class="guest-avatar guest-add-icon seat-add" aria-label="Add a guest to this seat" aria-controls="add-guest-panel" aria-expanded="false">+</button><div class="guest-info"><strong>Open seat</strong><span>Add details or invite by email</span></div><span class="status">Available</span></div>
+      <div class="seat-row open-seat" data-guest="" data-initials=""><select class="seat-select" aria-label="Open seat 7"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7" selected>07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option></select><button type="button" class="guest-avatar guest-add-icon seat-add" aria-label="Add a guest to this seat" aria-controls="add-guest-panel" aria-expanded="false">+</button><div class="guest-info"><strong>Open seat</strong><span>Add details or invite by email</span></div><span class="status">Available</span></div>
+      <div class="seat-row open-seat" data-guest="" data-initials=""><select class="seat-select" aria-label="Open seat 8"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8" selected>08</option><option value="9">09</option><option value="10">10</option></select><button type="button" class="guest-avatar guest-add-icon seat-add" aria-label="Add a guest to this seat" aria-controls="add-guest-panel" aria-expanded="false">+</button><div class="guest-info"><strong>Open seat</strong><span>Add details or invite by email</span></div><span class="status">Available</span></div>
+      <div class="seat-row open-seat" data-guest="" data-initials=""><select class="seat-select" aria-label="Open seat 9"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9" selected>09</option><option value="10">10</option></select><button type="button" class="guest-avatar guest-add-icon seat-add" aria-label="Add a guest to this seat" aria-controls="add-guest-panel" aria-expanded="false">+</button><div class="guest-info"><strong>Open seat</strong><span>Add details or invite by email</span></div><span class="status">Available</span></div>
+      <div class="seat-row open-seat" data-guest="" data-initials=""><select class="seat-select" aria-label="Open seat 10"><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10" selected>10</option></select><button type="button" class="guest-avatar guest-add-icon seat-add" aria-label="Add a guest to this seat" aria-controls="add-guest-panel" aria-expanded="false">+</button><div class="guest-info"><strong>Open seat</strong><span>Add details or invite by email</span></div><span class="status">Available</span></div>
+    </section>
+  </main>
+</section>
+
+<dialog id="form-dialog"><button class="close dialog-close" aria-label="Close">×</button><p class="eyebrow" id="dialog-eyebrow">AUCTION SUBMISSION</p><h2 id="dialog-title">Share an item or experience.</h2><form method="dialog" id="auction-submission-form" novalidate><label>NAME<input name="name" type="text" autocomplete="name" maxlength="200" required placeholder="Your full name"></label><label>EMAIL<input name="email" type="email" autocomplete="email" maxlength="320" required placeholder="you@example.com"></label><label>JOB TITLE<input name="job_title" type="text" autocomplete="organization-title" maxlength="200" required></label><label>COMPANY<input name="company" type="text" autocomplete="organization" maxlength="250" required></label><label>ITEM OR EXPERIENCE<input name="item" type="text" maxlength="5000" required placeholder="Describe what you would like to offer"></label><label>ESTIMATED VALUE<input name="estimated_value" type="text" inputmode="decimal" required placeholder="$0.00"></label><input name="website" class="honeypot" type="text" tabindex="-1" autocomplete="off" aria-hidden="true"><div id="auction-turnstile" class="turnstile-slot" aria-live="polite"></div><p id="auction-live-status" class="live-status" role="status" aria-live="polite" hidden></p><button class="button button-dark full" value="submit" id="auction-submit-button">Preview submission (not saved)</button><p class="fineprint" id="auction-preview-note">Preview only — this form is not connected to the auction intake backend; nothing is sent or saved.</p></form></dialog>
+<dialog id="guest-registration-preview" class="guest-registration-preview"><button class="close" type="button" id="close-guest-preview" aria-label="Close">×</button><p class="eyebrow">PRIVATE GUEST REGISTRATION</p><h2>You’re invited.</h2><p class="guest-preview-context">S.Suite · The Singh Table · <span id="guest-preview-seat">Seat 06</span></p><p class="guest-preview-copy">This design preview shows the intended guest registration experience. No guest details are submitted, no agreement is recorded, and no table seat is changed.</p><div class="guest-preview-steps"><span>01 · Preview details</span><span>02 · Preview agreement</span><span>03 · No confirmation is sent</span></div><button class="button button-dark full" type="button" id="close-guest-preview-cta">Return to invitation preview</button></dialog>
+<dialog id="table-invitation-dialog" class="table-invitation-dialog"><button class="close" type="button" id="close-table-invitation" aria-label="Close">×</button><div class="invitation-dialog-head"><p class="eyebrow">GUEST INVITATION</p><h2>Invite a guest to your table.</h2><p>Choose their seat, add a personal note, and review the designed email. Sending is disabled in this preview.</p></div><div class="invitation-workspace"><form id="table-invitation-form" class="invitation-controls"><label class="field"><span>RECIPIENT EMAIL</span><input id="table-invite-email" type="email" placeholder="guest@example.com" required></label><label class="field"><span>ASSIGN TO OPEN SEAT</span><select id="table-invite-seat" required><option value="6">Seat 06</option><option value="7">Seat 07</option><option value="8">Seat 08</option><option value="9">Seat 09</option><option value="10">Seat 10</option></select></label><label class="field"><span>PERSONAL NOTE <i>OPTIONAL</i></span><textarea id="table-invite-note" rows="5" placeholder="I’d love for you to join my table."></textarea></label><p class="invite-explainer">In production, a secure, seat-specific registration button would be added to the email. This preview sends nothing and creates no guest access.</p><div class="invite-actions"><button class="button button-dark" type="submit">Preview invitation (not sent)</button><button class="button button-outline" type="button" id="cancel-table-invitation">Cancel</button></div><p class="invite-status" id="table-send-status" hidden></p></form><section class="email-preview-wrap" aria-label="Email preview"><p class="micro">EMAIL PREVIEW</p><div class="email-preview"><div class="email-browser-bar"><span></span><span></span><span></span><b>Invitation to S.Suite</b></div><div class="email-content"><div class="email-brand"><img src="assets/ssuite-logo-header.png" alt="S.Suite"></div><p class="email-kicker">A PRIVATE INVITATION</p><h3>You’re invited to join<br>Neha Singh.</h3><div class="email-rule"></div><p class="email-body">Neha Singh has reserved a place for you at <strong>The Singh Table</strong> for an evening with SALUTE at the S.Suite Honors Ceremony.</p><p class="email-note" id="email-preview-note">I’d love for you to join my table.</p><p class="email-about"><strong>ABOUT THE EVENING</strong>S.Suite is a community where senior women leaders connect, grow, and create meaningful change. SALUTE is a special evening centered on connection, recognition, and advancing the next generation of women leaders.</p><div class="email-details"><span>FRIDAY, NOVEMBER 20</span><strong>Prince George Ballroom</strong><small>New York City</small></div><a class="email-cta" href="#" role="button">PREVIEW GUEST REGISTRATION</a><p class="email-fineprint">In production, private registration would connect to The Singh Table. This design preview sends nothing and requires no payment.</p><div class="email-footer"><img src="assets/salute-wordmark-hires.png" alt="SALUTE"><span>Presented by SALUTE</span></div></div></div></section></div></dialog>
+<div class="toast" role="status" aria-live="polite"></div>
+<script>
+const pages=[...document.querySelectorAll('[data-page]')],links=[...document.querySelectorAll('[data-route]')],toast=document.querySelector('.toast');
+function route(){const name=['attend','give','auction'].includes(location.hash.slice(1))?location.hash.slice(1):'attend';pages.forEach(p=>p.classList.toggle('active',p.dataset.page===name));links.forEach(a=>{a.classList.toggle('active',a.dataset.route===name);a.setAttribute('aria-current',a.dataset.route===name?'page':'false')});document.title=`S.Suite — ${name[0].toUpperCase()+name.slice(1)}`;scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}
+addEventListener('hashchange',route);route();
+function notify(message){toast.textContent=message;toast.classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>toast.classList.remove('show'),2600)}
+const drawer=document.querySelector('.checkout-drawer'),backdrop=document.querySelector('.drawer-backdrop'),qty=document.querySelector('#ticket-quantity'),guestFields=document.querySelector('#guest-fields'),tableOptions=document.querySelector('.table-options');let unitPrice=350,isTable=false;
+const guestCard=(i)=>`<section class="guest-card"><div class="guest-number"><p class="micro">${i===0?'PURCHASER / ATTENDEE':'ADDITIONAL GUEST'}</p><strong>${i===0?'Your information':`Guest ${i+1}`}</strong></div><div class="form-grid"><label class="field"><span>FIRST NAME</span><input name="guest-${i}-first" autocomplete="given-name" required></label><label class="field"><span>LAST NAME</span><input name="guest-${i}-last" autocomplete="family-name" required></label><label class="field"><span>EMAIL</span><input name="guest-${i}-email" type="email" autocomplete="email" required></label><label class="field"><span>PHONE <i>OPTIONAL</i></span><input name="guest-${i}-phone" type="tel" autocomplete="tel" maxlength="100"></label><label class="field"><span>SECONDARY EMAIL <i>OPTIONAL</i></span><input name="guest-${i}-secondary-email" type="email" placeholder="Assistant or alternate email"></label><label class="field"><span>JOB TITLE</span><input name="guest-${i}-title" required></label><label class="field"><span>COMPANY</span><input name="guest-${i}-company" required></label>${i===0?`<label class="field full-field"><span>HOW DID YOU HEAR ABOUT S.SUITE?</span><select name="referral-source" required><option value="">Select</option><option>SALUTE community</option><option>S.Suite community or event</option><option>Friend or colleague</option><option>Email</option><option>Social media</option><option>Search</option><option>Other</option></select></label>`:''}<label class="field full-field"><span>MEAL PREFERENCE</span><select name="guest-${i}-meal" required><option value="">Select</option><option>Vegetarian</option><option>Non-vegetarian</option></select></label><label class="condition-check full-field"><input type="checkbox" data-detail="dietary-${i}"><span>This guest has allergies or additional dietary needs</span></label><label class="field conditional-field full-field" data-detail-fields="dietary-${i}" hidden><span>ALLERGIES / DIETARY NEEDS</span><input name="guest-${i}-dietary" placeholder="Please be specific"></label><label class="condition-check full-field"><input type="checkbox" data-detail="accessibility-${i}"><span>This guest has accessibility needs</span></label><label class="field conditional-field full-field" data-detail-fields="accessibility-${i}" hidden><span>ACCESSIBILITY NEEDS</span><textarea name="guest-${i}-accessibility" placeholder="Share any accommodations we should prepare."></textarea></label></div></section>`;
+function bindConditionalFields(){guestFields.querySelectorAll('[data-detail]').forEach(c=>c.addEventListener('change',()=>{const field=guestFields.querySelector(`[data-detail-fields="${c.dataset.detail}"]`);field.hidden=!c.checked;field.querySelectorAll('input,textarea').forEach(input=>input.required=c.checked)}))}
+function renderGuests(){const count=isTable?1:Number(qty.value);guestFields.innerHTML=Array.from({length:count},(_,i)=>guestCard(i)).join('');bindConditionalFields();tableOptions.hidden=!isTable;document.querySelector('#selection-note').textContent=isTable?'Full table registration':'Ticket selection'}
+function updateTotal(){document.querySelector('#ticket-total').textContent=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(isTable?unitPrice:unitPrice*Number(qty.value))}
+function closeDrawer(){drawer.setAttribute('aria-hidden','true');backdrop.hidden=true}
+document.querySelectorAll('.choose').forEach(b=>b.addEventListener('click',()=>{showDrawerStep('registration');unitPrice=Number(b.dataset.price);isTable=b.dataset.ticket==='Table for ten';document.querySelector('#ticket-name').textContent=b.dataset.ticket;qty.value='1';qty.closest('.quantity-wrap').hidden=isTable;renderGuests();updateTotal();backdrop.hidden=false;drawer.setAttribute('aria-hidden','false');drawer.scrollTop=0;setTimeout(()=>drawer.querySelector('input').focus(),320)}));qty.addEventListener('change',()=>{renderGuests();updateTotal()});drawer.querySelector('.close').addEventListener('click',closeDrawer);backdrop.addEventListener('click',closeDrawer);
+document.querySelectorAll('.legal-consent a').forEach(a=>a.addEventListener('click',e=>{if(a.dataset.policyLink&&window.SSuiteLive?.policy())return;e.preventDefault();notify('Policy documents are unavailable in this preview.')}));
+const registrationForm=document.querySelector('#registration-form'),checkoutStep=document.querySelector('#checkout-step'),confirmationStep=document.querySelector('#confirmation-step'),dashboard=document.querySelector('#table-dashboard');
+function showDrawerStep(step){registrationForm.hidden=step!=='registration';checkoutStep.hidden=step!=='checkout';confirmationStep.hidden=step!=='confirmation';drawer.scrollTop=0}
+registrationForm.addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.reportValidity())return;if(window.SSuiteLive?.checkoutEnabled()){window.SSuiteLive.submitCheckout(e.currentTarget);return}document.querySelector('#review-ticket').textContent=document.querySelector('#ticket-name').textContent;document.querySelector('#review-count').textContent=isTable?'Full table · 10 seats':`${qty.value} ${Number(qty.value)===1?'attendee':'attendees'}`;document.querySelector('#review-total').textContent=document.querySelector('#ticket-total').textContent;showDrawerStep('checkout')});
+document.querySelector('#fill-test-details').addEventListener('click',()=>{registrationForm.querySelectorAll('input[required]').forEach(input=>{if(input.type==='checkbox')input.checked=true;else if(input.type==='email')input.value='test@example.com';else input.value=input.name?.includes('last')?'Guest':input.name?.includes('company')?'S.Suite Community':input.name?.includes('title')?'Director':'Test'});registrationForm.querySelectorAll('select[required]').forEach(select=>select.selectedIndex=1);notify('Test details added — you can continue.')});
+document.querySelector('#back-to-registration').addEventListener('click',()=>showDrawerStep('registration'));
+document.querySelector('#complete-test-payment').addEventListener('click',()=>{document.querySelector('#confirmation-copy').textContent=isTable?'Preview complete — no charge, registration, receipt, email, or table-management access was created.':'Preview complete — no charge, registration, receipt, or email was created.';document.querySelector('#open-dashboard-after-payment').hidden=!isTable;showDrawerStep('confirmation')});
+document.querySelector('#finish-preview').addEventListener('click',()=>{closeDrawer();showDrawerStep('registration')});
+function openDashboard(){dashboard.hidden=false;document.body.style.overflow='hidden';closeDrawer()}
+function closeDashboard(){dashboard.hidden=true;document.body.style.overflow=''}
+document.querySelector('#preview-dashboard').addEventListener('click',openDashboard);document.querySelector('#open-dashboard-after-payment').addEventListener('click',openDashboard);document.querySelector('#close-dashboard').addEventListener('click',closeDashboard);
+async function copyText(value){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);return true}const temp=document.createElement('textarea');temp.value=value;temp.setAttribute('readonly','');temp.style.cssText='position:fixed;opacity:0;pointer-events:none';document.body.appendChild(temp);temp.select();const copied=document.execCommand('copy');temp.remove();return copied}catch{return false}}
+function showCopyStatus(element,ok=true){element.textContent=ok?'Preview link copied — not a live guest link':'Copy unavailable. Please try again.';element.hidden=false;clearTimeout(element.copyTimer);element.copyTimer=setTimeout(()=>element.hidden=true,3200)}
+const shareGuestLink=document.querySelector('#share-guest-link'),copyShareGuestLink=document.querySelector('#copy-share-guest-link'),shareLinkStatus=document.querySelector('#share-link-status');copyShareGuestLink.addEventListener('click',async()=>{const ok=await copyText(shareGuestLink.value);copyShareGuestLink.textContent=ok?'Copied sample link':'Copy failed';showCopyStatus(shareLinkStatus,ok);setTimeout(()=>copyShareGuestLink.textContent='Copy sample link',2600)});
+const addGuestPanel=document.querySelector('#add-guest-panel'),manualGuestForm=document.querySelector('#manual-guest-form'),manualSeat=document.querySelector('#manual-seat');let manualTargetRow;
+function showManualEntry(){manualGuestForm.hidden=false}
+function closeAddGuest(){addGuestPanel.hidden=true;showManualEntry();document.querySelectorAll('.seat-add[aria-expanded]').forEach(button=>button.setAttribute('aria-expanded','false'))}
+function showAddGuest(event){const target=event.currentTarget.closest('.seat-row');if(!target)return;const trigger=event.currentTarget;if(manualTargetRow===target&&!addGuestPanel.hidden){closeAddGuest();return}manualTargetRow=target;const seat=target.querySelector('.seat-select').value;manualSeat.value=seat;document.querySelector('#add-guest-title').textContent=`Add a guest to seat ${String(seat).padStart(2,'0')}.`;target.insertAdjacentElement('afterend',addGuestPanel);document.querySelectorAll('.seat-add[aria-expanded]').forEach(button=>button.setAttribute('aria-expanded',String(button===trigger)));addGuestPanel.hidden=false;setTimeout(()=>manualGuestForm.querySelector('input:not([type="hidden"])').focus(),180)}
+document.querySelectorAll('.seat-add').forEach(button=>button.addEventListener('click',showAddGuest));document.querySelector('#hide-add-guest').addEventListener('click',closeAddGuest);
+manualGuestForm.querySelectorAll('[data-manual-detail]').forEach(check=>check.addEventListener('change',()=>{const field=manualGuestForm.querySelector(`[data-manual-detail-fields="${check.dataset.manualDetail}"]`);field.hidden=!check.checked;field.querySelector('input').required=check.checked}));manualGuestForm.querySelectorAll('a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();notify('Policy documents are unavailable in this preview.')}));
+document.querySelector('#manual-send-link').addEventListener('click',()=>openGuestInvitation({seat:manualSeat.value,email:manualGuestForm.elements['manual-email'].value.trim(),row:manualTargetRow}));
+const guestPreview=document.querySelector('#guest-registration-preview');document.querySelector('#close-guest-preview').addEventListener('click',()=>guestPreview.close());document.querySelector('#close-guest-preview-cta').addEventListener('click',()=>guestPreview.close());document.querySelector('.email-cta').addEventListener('click',e=>{e.preventDefault();tableInvitationDialog.close();guestPreview.showModal()});
+const tableInvitationDialog=document.querySelector('#table-invitation-dialog'),tableInvitationForm=document.querySelector('#table-invitation-form'),tableInviteNote=document.querySelector('#table-invite-note'),tableInviteEmail=document.querySelector('#table-invite-email'),tableInviteSeat=document.querySelector('#table-invite-seat'),emailPreviewNote=document.querySelector('#email-preview-note');let invitationTargetRow=null;function openGuestInvitation({seat='6',email='',row=null}={}){invitationTargetRow=row;tableInviteEmail.value=email;tableInviteSeat.value=String(seat);document.querySelector('#guest-preview-seat').textContent=`Seat ${String(seat).padStart(2,'0')}`;document.querySelector('#table-send-status').hidden=true;tableInvitationDialog.showModal();setTimeout(()=>tableInviteEmail.focus(),100)}document.querySelector('#open-table-invitation').addEventListener('click',()=>openGuestInvitation());document.querySelector('#close-table-invitation').addEventListener('click',()=>tableInvitationDialog.close());document.querySelector('#cancel-table-invitation').addEventListener('click',()=>tableInvitationDialog.close());tableInviteNote.addEventListener('input',()=>{emailPreviewNote.textContent=tableInviteNote.value.trim()||'I’d love for you to join my table.'});tableInviteSeat.addEventListener('change',()=>{document.querySelector('#guest-preview-seat').textContent=`Seat ${String(tableInviteSeat.value).padStart(2,'0')}`});tableInvitationForm.addEventListener('submit',e=>{e.preventDefault();if(!tableInvitationForm.reportValidity())return;const recipient=tableInviteEmail.value,seat=tableInviteSeat.value,status=document.querySelector('#table-send-status');status.textContent=`Preview only — no invitation was sent to ${recipient}; sample seat ${String(seat).padStart(2,'0')} was updated locally.`;status.hidden=false;const row=invitationTargetRow||[...document.querySelectorAll('.seat-row.open-seat')].find(item=>item.querySelector('.seat-select').value===seat);if(row){const rowStatus=row.querySelector('.status');rowStatus.className='status pending';rowStatus.textContent='Preview only';row.querySelector('.guest-info').innerHTML=`<strong>Sample invited guest</strong><span>${recipient} · No email sent or registration created</span>`}notify('Preview only — no invitation email was sent.')});
+manualGuestForm.addEventListener('submit',e=>{e.preventDefault();if(!manualGuestForm.reportValidity()||!manualTargetRow)return;const data=new FormData(manualGuestForm),seat=manualSeat.value,first=data.get('manual-first').trim(),last=data.get('manual-last').trim(),name=`${first} ${last}`,initials=`${first[0]||''}${last[0]||''}`.toUpperCase(),company=data.get('manual-company');manualTargetRow.dataset.guest=name;manualTargetRow.dataset.initials=initials;manualTargetRow.classList.remove('open-seat');const avatar=manualTargetRow.querySelector('.guest-avatar');avatar.outerHTML=`<div class="guest-avatar">${initials}</div>`;manualTargetRow.querySelector('.guest-info').innerHTML=`<strong>${name}</strong><span>${data.get('manual-email')} · ${data.get('manual-title')} · ${company}</span>`;const status=manualTargetRow.querySelector('.status');status.className='status complete';status.textContent='Registered';const edit=document.createElement('button');edit.type='button';edit.textContent='Edit';edit.addEventListener('click',()=>notify('Preview only — guest editor is not connected or saved.'));manualTargetRow.appendChild(edit);renderSeatingMap();closeAddGuest();manualGuestForm.reset();manualGuestForm.querySelectorAll('[data-manual-detail-fields]').forEach(field=>field.hidden=true);notify(`Preview only — ${name} was added locally to sample seat ${String(seat).padStart(2,'0')}; nothing was saved.`)});
+document.querySelectorAll('[data-demo-action]').forEach(button=>button.addEventListener('click',()=>notify(`Preview only — ${button.dataset.demoAction}; no guest record or email was changed.`)));
+const seatSelects=[...document.querySelectorAll('.seat-select')],roundTableMap=document.querySelector('#round-table-map');
+function renderSeatingMap(){roundTableMap.querySelectorAll('.table-seat').forEach(el=>el.remove());[...document.querySelectorAll('.seat-row')].sort((a,b)=>Number(a.querySelector('.seat-select').value)-Number(b.querySelector('.seat-select').value)).forEach(row=>{const seat=Number(row.querySelector('.seat-select').value),name=row.dataset.guest,marker=document.createElement('div');marker.className=`table-seat${name?'':' open'}`;marker.style.setProperty('--i',seat-1);marker.innerHTML=`<b>SEAT ${String(seat).padStart(2,'0')}</b><strong>${name||'Open'}</strong><small>${name?row.dataset.initials:'Available'}</small>`;roundTableMap.appendChild(marker)})}
+seatSelects.forEach(select=>{select.dataset.previous=select.value;select.addEventListener('change',()=>{const oldSeat=select.dataset.previous,newSeat=select.value,other=seatSelects.find(item=>item!==select&&item.value===newSeat);if(other){other.value=oldSeat;other.dataset.previous=oldSeat}select.dataset.previous=newSeat;renderSeatingMap();notify(`Preview only — sample seat ${newSeat} assigned locally; seating changes are not saved.`)})});renderSeatingMap();
+let amount=250,frequency='One-time';const amountSummary=document.querySelector('#amount-summary'),frequencySummary=document.querySelector('#frequency-summary'),donateButton=document.querySelector('#donate-button');
+function updateGift(){const formatted=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(amount||0);amountSummary.textContent=formatted;frequencySummary.textContent=`${frequency} gift`;donateButton.textContent=`Preview giving flow — ${formatted}`}
+document.querySelectorAll('.segmented button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.segmented button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');frequency=b.dataset.frequency;updateGift()}));
+document.querySelectorAll('.amounts button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.amounts button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');document.querySelector('#custom-amount').value='';amount=Number(b.dataset.amount);updateGift()}));
+document.querySelector('#custom-amount').addEventListener('input',e=>{document.querySelectorAll('.amounts button').forEach(x=>x.classList.remove('selected'));amount=Math.max(0,Number(e.target.value)||0);updateGift()});
+document.querySelector('#donation-form').addEventListener('submit',e=>{e.preventDefault();if(window.SSuiteDonation?.enabled()){window.SSuiteDonation.submit(e.currentTarget);return}if(amount<1)return notify('Please choose a gift amount.');notify('Preview only — no donation, payment, or receipt was recorded.')});
+document.querySelector('#dedication-toggle').addEventListener('change',e=>{const details=document.querySelector('#dedication-fields'),honoree=details.querySelector('[name="honoree_name"]');details.hidden=!e.currentTarget.checked;honoree.required=e.currentTarget.checked});
+document.querySelector('#employer-match').addEventListener('change',e=>{document.querySelector('#employer-match-note').hidden=!e.currentTarget.checked});
+const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+</script>
+<script src="./live-chain.js"></script>
+<script src="./donation-auction-live.js"></script>
+</body></html>
