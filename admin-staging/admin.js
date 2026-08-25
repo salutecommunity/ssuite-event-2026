@@ -186,7 +186,7 @@ function renderTables(host, payload) {
 
     const wrap = element("div", "table-wrap roster-wrap"); const roster = document.createElement("table");
     const thead = document.createElement("thead"); const hr = document.createElement("tr");
-    for (const label of ["Seat", "Guest", "Email", "Organization / title", "Registration", "Invitation", "Last activity"]) hr.append(element("th", "", label));
+    for (const label of ["Seat", "Guest", "Email", "Organization / title", "Registration", "Invitation", "Last activity", "Action"]) hr.append(element("th", "", label));
     thead.append(hr); roster.append(thead); const tbody = document.createElement("tbody");
     for (const seat of table.table_seats || []) {
       const tr = document.createElement("tr"); const attendee = seat.attendee; const invite = seat.invitation; const delivery = invite?.delivery;
@@ -198,7 +198,10 @@ function renderTables(host, payload) {
       const activity = delivery?.delivered_at || delivery?.accepted_at || invite?.last_sent_at || invite?.first_sent_at || attendee?.completed_at || "";
       const values = [seat.seat_number, guestName, recipient, organization, registration, inviteStatus, activity ? date(activity) : "—"];
       values.forEach((value, index) => { const td = document.createElement("td"); if (index === 4 || index === 5) td.append(chip(value)); else td.textContent = text(value); tr.append(td); });
-      tbody.append(tr);
+      const action = document.createElement("td");
+      if (attendee) { const edit = element("button", "quiet compact", "View / edit"); edit.type = "button"; edit.addEventListener("click", () => showAttendee(attendee.id)); action.append(edit); }
+      else action.textContent = "—";
+      tr.append(action); tbody.append(tr);
     }
     roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. Secure links and token values are never displayed.")); list.append(card);
   }
@@ -207,12 +210,58 @@ function renderTables(host, payload) {
 function renderAudit(host, payload) { host.append(element("p", "fineprint", payload.note || "Bounded audit view.")); for (const item of payload.data || []) { const row = element("article", "audit-item"); row.append(element("strong", "", `${text(item.action)} · ${text(item.entity_type)}`), element("span", "", `${date(item.occurred_at)} · ${text(item.log)} log · ${text(item.actor_type || item.actor_user_id)}`)); host.append(row); } if (!payload.data?.length) host.append(element("p", "empty", "No audit records are available.")); }
 function exportButton(kind) { const button = element("button", "button outline", `Download ${kind} CSV (max 5,000)`); button.type = "button"; button.addEventListener("click", async () => { setBusy(button, true); status("Preparing secure CSV export…"); try { const blob = await call({ action: "export", kind }, true); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `ssuite-${kind}-export.csv`; link.click(); URL.revokeObjectURL(link.href); status("CSV export downloaded.", "success"); } catch (error) { status(error.message || "Export failed.", "error"); } finally { setBusy(button, false); } }); return button; }
 
-async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); const a = payload.attendee; const host = $("attendee-detail"); clear(host); host.append(element("p", "eyebrow", "Restricted attendee record"), element("h2", "", `${text(a.first_name)} ${text(a.last_name)}`)); const grid = element("div", "detail-grid"); for (const [label, value] of [["Email", a.email], ["Phone", a.phone], ["Organization", a.company], ["Title", a.job_title], ["Registration", a.registration_status], ["Table", a.event_tables?.table_number]]) { const cell = document.createElement("div"); cell.append(element("span", "record-label", label), element("b", "", text(value))); grid.append(cell); } host.append(grid);
-    const needs = element("section", "detail-section sensitive"); needs.append(element("h3", "", "Meal & access needs"), element("small", "", "Sensitive operational information — visible only after approved-admin server authorization.")); const n = payload.needs; needs.append(element("p", "", n ? `Meal: ${text(n.meal_preference)}\nDietary/allergy: ${n.has_dietary_or_allergy_needs ? text(n.dietary_or_allergy_details) : "None reported"}\nAccessibility: ${n.has_accessibility_needs ? text(n.accessibility_details) : "None reported"}` : "No needs record.")); host.append(needs);
-    const consent = element("section", "detail-section"); consent.append(element("h3", "", "Recorded consent"), element("p", "", payload.consents?.length ? payload.consents.map((c) => `${text(c.scope)} · accepted ${date(c.accepted_at)} · terms ${text(c.terms_version)}`).join("\n") : "No attendee-specific consent record.")); host.append(consent);
-    $("attendee-dialog").showModal(); status("");
-  } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); }
+function formField(labelText, name, value = "", options = {}) {
+  const label = document.createElement("label"); label.textContent = labelText;
+  const control = options.multiline ? document.createElement("textarea") : document.createElement("input");
+  control.name = name; control.value = value ?? ""; control.maxLength = options.max || (options.multiline ? 2000 : 320);
+  if (!options.multiline) control.type = options.type || "text";
+  if (options.required) control.required = true;
+  if (options.autocomplete) control.autocomplete = options.autocomplete;
+  label.append(control); return label;
 }
+
+function renderAttendeeDetail(payload, message = "") {
+  const a = payload.attendee; const n = payload.needs; const host = $("attendee-detail"); clear(host);
+  host.append(element("p", "eyebrow", "Restricted attendee record"));
+  const title = element("h2", "", `${text(a.first_name)} ${text(a.last_name)}`); title.id = "attendee-title"; host.append(title);
+  if (message) host.append(element("p", "notice success", message));
+  const grid = element("div", "detail-grid");
+  for (const [label, value] of [["Email", a.email], ["Phone", a.phone], ["Organization", a.company], ["Title", a.job_title], ["Registration", a.registration_status], ["Table", a.event_tables?.table_number]]) { const cell = document.createElement("div"); cell.append(element("span", "record-label", label), element("b", "", text(value))); grid.append(cell); }
+  host.append(grid);
+  const needs = element("section", "detail-section sensitive"); needs.append(element("h3", "", "Meal & access needs"), element("small", "", "Sensitive operational information — visible only after approved-admin server authorization."), element("p", "", n ? `Meal: ${text(n.meal_preference)}\nDietary/allergy: ${n.has_dietary_or_allergy_needs ? text(n.dietary_or_allergy_details) : "None reported"}\nAccessibility: ${n.has_accessibility_needs ? text(n.accessibility_details) : "None reported"}` : "No needs record.")); host.append(needs);
+  const consent = element("section", "detail-section"); consent.append(element("h3", "", "Recorded consent"), element("p", "", payload.consents?.length ? payload.consents.map((c) => `${text(c.scope)} · accepted ${date(c.accepted_at)} · terms ${text(c.terms_version)}`).join("\n") : "No attendee-specific consent record.")); host.append(consent);
+  const edit = element("button", "button dark", "Edit attendee information"); edit.type = "button"; edit.addEventListener("click", () => renderAttendeeEdit(payload)); host.append(edit);
+}
+
+function renderAttendeeEdit(payload) {
+  const a = payload.attendee; const n = payload.needs || {}; const host = $("attendee-detail"); clear(host);
+  host.append(element("p", "eyebrow", "Protected staff edit")); const title = element("h2", "", `Edit ${text(a.first_name)} ${text(a.last_name)}`); title.id = "attendee-title"; host.append(title);
+  host.append(element("p", "fineprint", "Saving updates the authoritative attendee record and writes an audit entry. It does not change payment, consent, registration status, table access, or send an email."));
+  const form = element("form", "attendee-edit");
+  const fields = element("div", "edit-grid");
+  fields.append(
+    formField("First name", "first_name", a.first_name, { required: true, max: 200, autocomplete: "given-name" }),
+    formField("Last name", "last_name", a.last_name, { required: true, max: 200, autocomplete: "family-name" }),
+    formField("Primary email", "email", a.email, { required: true, type: "email", autocomplete: "email" }),
+    formField("Secondary email (optional)", "secondary_email", a.secondary_email, { type: "email" }),
+    formField("Phone (optional)", "phone", a.phone, { type: "tel", max: 100, autocomplete: "tel" }),
+    formField("Job title", "job_title", a.job_title, { required: true, max: 300 }),
+    formField("Company", "company", a.company, { required: true, max: 300 }),
+    formField("Meal preference", "meal_preference", n.meal_preference, { required: true, max: 200 })
+  ); form.append(fields);
+  function needsField(labelText, checkboxName, checked, detailName, detailValue, detailLabel) {
+    const section = element("fieldset", "need-field"); const label = document.createElement("label"); const checkbox = document.createElement("input"); checkbox.type = "checkbox"; checkbox.name = checkboxName; checkbox.checked = Boolean(checked); label.append(checkbox, document.createTextNode(labelText)); const detail = formField(detailLabel, detailName, detailValue, { multiline: true, max: 2000 }); detail.hidden = !checkbox.checked; detail.querySelector("textarea").required = checkbox.checked; checkbox.addEventListener("change", () => { detail.hidden = !checkbox.checked; detail.querySelector("textarea").required = checkbox.checked; if (!checkbox.checked) detail.querySelector("textarea").value = ""; }); section.append(label, detail); return section;
+  }
+  form.append(needsField("Dietary or allergy needs", "has_dietary_or_allergy_needs", n.has_dietary_or_allergy_needs, "dietary_or_allergy_details", n.dietary_or_allergy_details, "Required details"));
+  form.append(needsField("Accessibility needs", "has_accessibility_needs", n.has_accessibility_needs, "accessibility_details", n.accessibility_details, "Required details"));
+  form.append(formField("Internal change note", "change_reason", "", { required: true, max: 500, multiline: true }));
+  const formStatus = element("p", "notice"); formStatus.setAttribute("role", "status"); form.append(formStatus);
+  const actions = element("div", "dialog-actions"); const cancel = element("button", "button outline", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => renderAttendeeDetail(payload)); const save = element("button", "button dark", "Save audited changes"); save.type = "submit"; actions.append(cancel, save); form.append(actions);
+  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; setBusy(save, true); formStatus.textContent = "Saving protected attendee information…"; formStatus.className = "notice"; const data = new FormData(form); const record = Object.fromEntries(data.entries()); record.has_dietary_or_allergy_needs = data.has("has_dietary_or_allergy_needs"); record.has_accessibility_needs = data.has("has_accessibility_needs"); try { const updated = await call({ action: "attendee_update", attendee_id: a.id, record }); renderAttendeeDetail(updated, "Attendee information saved. No email or access link was sent."); if (["attendees", "tables"].includes(activeTab)) loadTab(activeTab, currentPage, lastSearch); } catch (error) { formStatus.textContent = error.message || "The attendee update could not be saved."; formStatus.className = "notice error"; } finally { setBusy(save, false); } });
+  host.append(form);
+}
+
+async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); renderAttendeeDetail(payload); if (!$("attendee-dialog").open) $("attendee-dialog").showModal(); status(""); } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); } }
 
 $("magic-form").addEventListener("submit", sendLink); $("otp-form").addEventListener("submit", verifyCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
 initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));
