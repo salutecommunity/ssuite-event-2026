@@ -16,6 +16,6 @@ window.SSUITE_CONFIG = Object.freeze({
   // Turnstile, trusted-ingress, legal receipt, and operational gates are approved.
   donation: Object.freeze({ enabled: false, turnstileAction: "", receiptPolicyUrl: "" }),
   auction: Object.freeze({ enabled: false, turnstileAction: "" }),
-  // Once final policy pages and exact server-side versions are approved, use:
-  // policy: { termsUrl: "https://…", privacyUrl: "https://…", mediaReleaseUrl: "https://…", termsVersion: "…", privacyVersion: "…", mediaReleaseVersion: "…" },
+  // Once exact server-side versions are approved, use the event-specific pages:
+  // policy: { termsUrl: "https://event.ssuite.org/event-terms.html", privacyUrl: "https://event.ssuite.org/event-privacy.html", mediaReleaseUrl: "https://event.ssuite.org/media-release.html", termsVersion: "approved version", privacyVersion: "approved version", mediaReleaseVersion: "approved version" },
 });

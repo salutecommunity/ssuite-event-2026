@@ -95,13 +95,13 @@
       </div>
       <form class="giving-form" id="donation-form" novalidate>
         <div class="segmented" role="group" aria-label="Donation frequency">
-          <button type="button" class="selected" data-frequency="One-time">One time</button>
-          <button type="button" data-frequency="Monthly">Monthly</button>
+          <button type="button" class="selected" aria-pressed="true" data-frequency="One-time">One time</button>
+          <button type="button" aria-pressed="false" data-frequency="Monthly">Monthly</button>
         </div>
         <fieldset><legend>Choose an amount</legend>
-          <div class="amounts"><button type="button" data-amount="100">$100</button><button type="button" class="selected" data-amount="250">$250</button><button type="button" data-amount="500">$500</button><button type="button" data-amount="1000">$1,000</button></div>
+          <div class="amounts"><button type="button" aria-pressed="false" data-amount="100">$100</button><button type="button" class="selected" aria-pressed="true" data-amount="250">$250</button><button type="button" aria-pressed="false" data-amount="500">$500</button><button type="button" aria-pressed="false" data-amount="1000">$1,000</button></div>
         </fieldset>
-        <label class="custom-amount"><span>$</span><input id="custom-amount" name="amount" inputmode="decimal" autocomplete="off" placeholder="Other amount" aria-label="Other donation amount"></label>
+        <label class="custom-amount"><span>$</span><input id="custom-amount" name="amount" inputmode="decimal" autocomplete="off" maxlength="12" placeholder="Other amount" aria-label="Other donation amount" aria-describedby="custom-amount-help"><small id="custom-amount-help">Enter a whole-dollar or cents amount.</small></label>
         <div class="donation-fields" aria-label="Donor details">
           <label class="field"><span>YOUR NAME</span><input name="donor_name" autocomplete="name" maxlength="200" required></label>
           <label class="field"><span>EMAIL</span><input name="email" type="email" autocomplete="email" maxlength="320" required></label>
@@ -111,8 +111,8 @@
           <label class="field"><span>DEDICATION</span><select name="dedication_type"><option value="in_honor_of">In honor of</option><option value="in_memory_of">In memory of</option></select></label>
           <label class="field"><span>HONOREE NAME</span><input name="honoree_name" maxlength="200"></label>
         </div>
-        <label class="check employer-match"><input id="employer-match" type="checkbox"> <span>I'd like to request employer matching</span></label>
-        <p id="employer-match-note" class="fineprint employer-match-note" hidden>Employer matching is not available until an approved provider is configured. This request cannot be submitted.</p>
+        <label class="check employer-match"><input id="employer-match" type="checkbox" disabled aria-describedby="employer-match-note"> <span>Employer matching <strong>(unavailable)</strong></span></label>
+        <p id="employer-match-note" class="fineprint employer-match-note">Employer matching is unavailable until an approved provider is configured. No matching request can be submitted.</p>
         <div class="gift-summary"><span id="frequency-summary">One-time gift</span><strong id="amount-summary">$250</strong></div>
         <p id="donation-live-status" class="live-status" role="status" aria-live="polite" hidden></p>
         <button class="button button-dark full" type="submit" id="donate-button">Preview giving flow — $250</button>
@@ -152,7 +152,7 @@
 
 <footer>
   <div class="footer-brand"><img src="./assets/salute-wordmark-white-hires.png" alt="SALUTE"><span>NEW YORK CITY</span></div>
-  <div class="footer-links"><a href="#attend">Attend</a><a href="#give">Give</a><a href="#auction">Auction</a><a href="https://ssuite.org/">S.Suite.org ↗</a></div>
+  <div class="footer-links"><a href="#attend">Attend</a><a href="#give">Give</a><a href="#auction">Auction</a><a href="./event-terms.html">Terms</a><a href="./event-privacy.html">Privacy</a><a href="./media-release.html">Media release</a><a href="https://ssuite.org/">S.Suite.org ↗</a></div>
   <p>Prince George Ballroom · New York City</p>
 </footer>
 
@@ -174,7 +174,7 @@
       <div class="table-preview"><div><p class="micro">YOUR PRIVATE TABLE PAGE / PREVIEW</p><strong>10 seats · Sample guest status · Local seating controls</strong></div><button class="text-button" type="button" id="preview-dashboard">Preview dashboard →</button></div>
     </section>
     <section class="legal-consent" aria-label="Registration agreement">
-      <label><input type="checkbox" required><span>I agree to the <a data-policy-link="terms" href="#">Terms &amp; Conditions</a>, <a data-policy-link="privacy" href="#">Privacy Policy</a>, and <a data-policy-link="media" href="#">Media, Photo &amp; Video Release</a> for myself and, where applicable, on behalf of the guests included in this registration.</span></label>
+      <label><input type="checkbox" name="combined_agreement" required><span>I agree to the <a data-policy-link="terms" href="./event-terms.html" target="_blank" rel="noopener noreferrer">Event Terms &amp; Conditions</a>, <a data-policy-link="privacy" href="./event-privacy.html" target="_blank" rel="noopener noreferrer">Event Privacy Notice</a>, and <a data-policy-link="media" href="./media-release.html" target="_blank" rel="noopener noreferrer">Media, Photo &amp; Video Release</a> for myself and, where applicable, on behalf of the guests included in this registration.</span></label>
     </section>
     <div class="total"><span>Total</span><strong id="ticket-total">$350</strong></div>
     <div id="checkout-turnstile" class="turnstile-slot" aria-live="polite"></div>
@@ -271,14 +271,14 @@ document.querySelectorAll('[data-demo-action]').forEach(button=>button.addEventL
 const seatSelects=[...document.querySelectorAll('.seat-select')],roundTableMap=document.querySelector('#round-table-map');
 function renderSeatingMap(){roundTableMap.querySelectorAll('.table-seat').forEach(el=>el.remove());[...document.querySelectorAll('.seat-row')].sort((a,b)=>Number(a.querySelector('.seat-select').value)-Number(b.querySelector('.seat-select').value)).forEach(row=>{const seat=Number(row.querySelector('.seat-select').value),name=row.dataset.guest,marker=document.createElement('div');marker.className=`table-seat${name?'':' open'}`;marker.style.setProperty('--i',seat-1);marker.innerHTML=`<b>SEAT ${String(seat).padStart(2,'0')}</b><strong>${name||'Open'}</strong><small>${name?row.dataset.initials:'Available'}</small>`;roundTableMap.appendChild(marker)})}
 seatSelects.forEach(select=>{select.dataset.previous=select.value;select.addEventListener('change',()=>{const oldSeat=select.dataset.previous,newSeat=select.value,other=seatSelects.find(item=>item!==select&&item.value===newSeat);if(other){other.value=oldSeat;other.dataset.previous=oldSeat}select.dataset.previous=newSeat;renderSeatingMap();notify(`Preview only — sample seat ${newSeat} assigned locally; seating changes are not saved.`)})});renderSeatingMap();
-let amount=250,frequency='One-time';const amountSummary=document.querySelector('#amount-summary'),frequencySummary=document.querySelector('#frequency-summary'),donateButton=document.querySelector('#donate-button');
-function updateGift(){const formatted=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(amount||0);amountSummary.textContent=formatted;frequencySummary.textContent=`${frequency} gift`;donateButton.textContent=`Preview giving flow — ${formatted}`}
-document.querySelectorAll('.segmented button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.segmented button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');frequency=b.dataset.frequency;updateGift()}));
-document.querySelectorAll('.amounts button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.amounts button').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');document.querySelector('#custom-amount').value='';amount=Number(b.dataset.amount);updateGift()}));
-document.querySelector('#custom-amount').addEventListener('input',e=>{document.querySelectorAll('.amounts button').forEach(x=>x.classList.remove('selected'));amount=Math.max(0,Number(e.target.value)||0);updateGift()});
+let amount=250,frequency='One-time';const amountSummary=document.querySelector('#amount-summary'),frequencySummary=document.querySelector('#frequency-summary'),donateButton=document.querySelector('#donate-button'),customAmount=document.querySelector('#custom-amount');
+function updateGift(){const hasCents=/\.\d/.test(customAmount.value.trim()),formatted=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2}).format(Number.isFinite(amount)?amount:0);amountSummary.textContent=formatted;frequencySummary.textContent=`${frequency} gift`;donateButton.textContent=`Preview giving flow — ${formatted}`}
+document.querySelectorAll('.segmented button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.segmented button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});b.classList.add('selected');b.setAttribute('aria-pressed','true');frequency=b.dataset.frequency;updateGift()}));
+document.querySelectorAll('.amounts button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});b.classList.add('selected');b.setAttribute('aria-pressed','true');customAmount.value='';amount=Number(b.dataset.amount);updateGift()}));
+customAmount.addEventListener('input',e=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});const parsed=Number(e.target.value);amount=Number.isFinite(parsed)?Math.max(0,parsed):0;updateGift()});
 document.querySelector('#donation-form').addEventListener('submit',e=>{e.preventDefault();if(window.SSuiteDonation?.enabled()){window.SSuiteDonation.submit(e.currentTarget);return}if(amount<1)return notify('Please choose a gift amount.');notify('Preview only — no donation, payment, or receipt was recorded.')});
 document.querySelector('#dedication-toggle').addEventListener('change',e=>{const details=document.querySelector('#dedication-fields'),honoree=details.querySelector('[name="honoree_name"]');details.hidden=!e.currentTarget.checked;honoree.required=e.currentTarget.checked});
-document.querySelector('#employer-match').addEventListener('change',e=>{document.querySelector('#employer-match-note').hidden=!e.currentTarget.checked});
+// Employer matching is intentionally unavailable until an approved provider exists; the disabled control and persistent note must remain visible.
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>

@@ -46,11 +46,12 @@
     el.dataset.kind = kind;
   }
   function policyLinks() {
-    const p = policy();
-    if (!p) return;
+    // The public agreement always points to the event-specific, same-origin legal pages.
+    // Server configuration still supplies the versions recorded with a live registration.
+    const pages = { terms: "./event-terms.html", privacy: "./event-privacy.html", media: "./media-release.html" };
     document.querySelectorAll("[data-policy-link]").forEach((link) => {
-      const key = link.dataset.policyLink;
-      const value = key === "terms" ? p.termsUrl : key === "privacy" ? p.privacyUrl : p.mediaReleaseUrl;
+      const value = pages[link.dataset.policyLink];
+      if (!value) return;
       link.href = value;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
