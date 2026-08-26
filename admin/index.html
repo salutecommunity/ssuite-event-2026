@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta http-equiv="Referrer-Policy" content="same-origin">
   <title>S.Suite — Private Administration</title>
-  <link rel="stylesheet" href="admin.css?v=20260825-5">
+  <link rel="stylesheet" href="admin.css?v=20260826-1">
 </head>
 <body>
   <a class="skip" href="#workspace">Skip to dashboard</a>
@@ -26,6 +26,15 @@
         <button class="button dark" id="send-link" type="submit">Email my sign-in link</button>
       </form>
       <p class="notice" id="auth-status" role="status" aria-live="polite">Checking private dashboard configuration…</p>
+      <details class="otp-fallback">
+        <summary>Use a one-time email code instead</summary>
+        <form id="otp-form" novalidate>
+          <button class="button outline" id="request-code" type="button">Email me a one-time code</button>
+          <label>Email code<input id="admin-otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required></label>
+          <button class="button outline" id="verify-code" type="submit">Verify email code</button>
+        </form>
+        <p class="fineprint">Request the code from the approved mailbox, then enter it here. The code is used once and is not saved.</p>
+      </details>
       <p class="fineprint">No password is needed. The private sign-in link works once and only for the approved administrator.</p>
     </section>
 
@@ -60,6 +69,6 @@
     <div id="attendee-detail"></div>
   </dialog>
   <script src="admin-config.js"></script>
-  <script type="module" src="admin.js?v=20260825-4"></script>
+  <script type="module" src="admin.js?v=20260826-1"></script>
 </body>
 </html>

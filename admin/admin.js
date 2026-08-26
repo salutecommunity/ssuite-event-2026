@@ -32,10 +32,13 @@ function element(tag, className, value) { const node = document.createElement(ta
 async function initialize() {
   if (!configured()) {
     $("send-link").disabled = true;
+    $("request-code").disabled = true;
+    $("verify-code").disabled = true;
     authStatus("Private sign-in is unavailable until the deployment supplies the public Supabase URL, anon key, and API base URL.", "error");
     return;
   }
-  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: true, storage: window.sessionStorage, autoRefreshToken: true, detectSessionInUrl: true } });
+  // Keep the administrator session in memory only; never write auth material to browser storage.
+  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: true } });
   supabase.auth.onAuthStateChange((_event, nextSession) => { if (nextSession) openDashboard(nextSession); });
   const { data } = await supabase.auth.getSession();
   if (data.session) await openDashboard(data.session);
@@ -87,6 +90,32 @@ async function uploadAttendeePhoto(attendeeId, file) {
 function photoField() {
   const label = document.createElement("label"); label.textContent = "Guest photo (optional · JPG, PNG, or WebP · max 5 MB)";
   const input = document.createElement("input"); input.type = "file"; input.name = "guest_photo"; input.accept = "image/jpeg,image/png,image/webp"; label.append(input); return label;
+}
+
+async function requestCode() {
+  if (!supabase || !configured()) return;
+  const button = $("request-code"); setBusy(button, true); authStatus("Requesting a one-time email code…");
+  try {
+    // Omitting emailRedirectTo requests the numeric OTP rather than a magic link.
+    const { error } = await supabase.auth.signInWithOtp({ email: APPROVED_EMAIL });
+    if (error) throw error;
+    authStatus("If the approved mailbox is available, a one-time code has been sent. It does not grant access until server authorization succeeds.", "success");
+    $("admin-otp").focus();
+  } catch { authStatus("The one-time email code could not be requested. Check deployment configuration and try again.", "error"); }
+  finally { setBusy(button, false); }
+}
+
+async function verifyCode(event) {
+  event.preventDefault(); if (!supabase || !configured()) return;
+  const form = event.currentTarget; if (!form.reportValidity()) return;
+  const button = $("verify-code"); setBusy(button, true); authStatus("Verifying the one-time email code…");
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({ email: APPROVED_EMAIL, token: $("admin-otp").value.trim(), type: "email" });
+    if (error) throw error;
+    if (!data?.session) throw new Error("The one-time code did not create a session.");
+    await openDashboard(data.session);
+  } catch { authStatus("The one-time email code could not be verified. Request a fresh code and try again.", "error"); }
+  finally { setBusy(button, false); }
 }
 
 async function sendLink(event) {
@@ -192,7 +221,26 @@ function renderTables(host, payload) {
     const buyer = table.purchaser;
     const buyerLine = element("p", "buyer-line", buyer ? `Table purchaser: ${text(buyer.purchaser_first_name)} ${text(buyer.purchaser_last_name)} · ${text(buyer.purchaser_email)} · ${money(buyer.total_cents, buyer.currency)} paid ${date(buyer.paid_at)}` : "Table purchaser: No linked purchase — staff-reserved table");
     const leadLine = element("p", "lead-line", `Table lead: ${lead ? `${text(lead.first_name)} ${text(lead.last_name)} · ${text(lead.email)}` : "Not assigned"} · ${accessLabel}`);
-    card.append(buyerLine, leadLine, element("h4", "roster-title", "Guest order · numbered seats 1–10"));
+    card.append(buyerLine, leadLine);
+    if (lead) {
+      const reveal = element("button", "quiet compact", "Show / copy management link"); reveal.type = "button";
+      const linkBox = element("div", "management-link-box"); linkBox.hidden = true;
+      reveal.addEventListener("click", async () => {
+        if (!confirm(`Reveal the private management link for ${text(lead.first_name)} ${text(lead.last_name)}? This grants full control of this table. No email will be sent.`)) return;
+        setBusy(reveal, true);
+        try {
+          const result = await call({ action: "table_management_link_reveal", table_id: table.id });
+          const input = document.createElement("input"); input.type = "text"; input.readOnly = true; input.value = result.table_management_url; input.setAttribute("aria-label", "Private table management link");
+          const copy = element("button", "button dark compact", "Copy link"); copy.type = "button";
+          copy.addEventListener("click", async () => { try { await navigator.clipboard.writeText(input.value); status("Private management link copied. Nothing was emailed.", "success"); } catch { input.focus(); input.select(); status("Select and copy the highlighted private link. Nothing was emailed."); } });
+          linkBox.replaceChildren(element("p", "fineprint", `Private management access for ${text(result.recipient)}. Share only with the named table lead. Nothing was emailed.`), input, copy); linkBox.hidden = false; input.focus(); input.select();
+          status("Private management link revealed and recorded in the audit log. Nothing was emailed.", "success");
+        } catch (error) { status(error.message || "The private management link could not be prepared.", "error"); }
+        finally { setBusy(reveal, false); }
+      });
+      card.append(reveal, linkBox);
+    }
+    card.append(element("h4", "roster-title", "Guest order · numbered seats 1–10"));
 
     const wrap = element("div", "table-wrap roster-wrap"); const roster = document.createElement("table");
     const thead = document.createElement("thead"); const hr = document.createElement("tr");
@@ -213,7 +261,7 @@ function renderTables(host, payload) {
       else { const add = element("button", "quiet compact", "Add attendee"); add.type = "button"; add.disabled = Boolean(seat.locked); add.addEventListener("click", () => attendeeCreateForm(table, seat.seat_number)); const assign = element("button", "quiet compact", "Assign existing guest"); assign.type = "button"; assign.disabled = Boolean(seat.locked); assign.addEventListener("click", () => seatAssignForm(table, seat)); action.append(add, assign); }
       tr.append(action); tbody.append(tr);
     }
-    roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. Secure links and token values are never displayed.")); list.append(card);
+    roster.append(tbody); wrap.append(roster); card.append(wrap, element("p", "fineprint", "Invitation and delivery statuses are read from the private invitation and email ledgers. A management link is displayed only after the sole administrator explicitly reveals it; the raw link is never stored in the dashboard or audit log.")); list.append(card);
   }
   host.append(list); host.append(pagination(payload));
 }
@@ -331,4 +379,14 @@ function renderAttendeeEdit(payload) {
   ); form.append(fields);
   form.append(photoField(), formField("Bio (optional)", "bio", a.bio, { multiline: true, max: 5000 }), formField("Relationship notes (optional)", "relationship_notes", a.relationship_notes, { multiline: true, max: 2000 }));
   attendeeNeedsFields(form, n);
-  form.append(formField("Internal change note", 
+  form.append(formField("Internal change note", "change_reason", "", { required: true, max: 500, multiline: true }));
+  const formStatus = element("p", "notice"); formStatus.setAttribute("role", "status"); form.append(formStatus);
+  const actions = element("div", "dialog-actions"); const cancel = element("button", "button outline", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => renderAttendeeDetail(payload)); const save = element("button", "button dark", "Save audited changes"); save.type = "submit"; actions.append(cancel, save); form.append(actions);
+  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; setBusy(save, true); formStatus.textContent = "Saving protected attendee information…"; formStatus.className = "notice"; const data = new FormData(form); const photo = data.get("guest_photo"); const record = Object.fromEntries(data.entries()); delete record.guest_photo; record.has_dietary_or_allergy_needs = data.has("has_dietary_or_allergy_needs"); record.has_accessibility_needs = data.has("has_accessibility_needs"); try { let updated = await call({ action: "attendee_update", attendee_id: a.id, record }); if (photo instanceof File && photo.size) updated = await uploadAttendeePhoto(a.id, photo); renderAttendeeDetail(updated, "Attendee information saved. No email or access link was sent."); if (["attendees", "tables"].includes(activeTab)) loadTab(activeTab, currentPage, lastSearch); } catch (error) { formStatus.textContent = error.message || "The attendee update could not be saved."; formStatus.className = "notice error"; } finally { setBusy(save, false); } });
+  host.append(form);
+}
+
+async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); renderAttendeeDetail(payload); if (!$("attendee-dialog").open) $("attendee-dialog").showModal(); status(""); } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); } }
+
+$("magic-form").addEventListener("submit", sendLink); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
+initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));
