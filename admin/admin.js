@@ -92,6 +92,26 @@ function photoField() {
   const input = document.createElement("input"); input.type = "file"; input.name = "guest_photo"; input.accept = "image/jpeg,image/png,image/webp"; label.append(input); return label;
 }
 
+// Reports the actual reason a sign-in email failed. Never attribute a runtime
+// failure to deployment configuration unless that is genuinely the cause.
+function signInFailure(error, thing) {
+  const status = Number(error?.status ?? error?.originalError?.status ?? 0);
+  const code = String(error?.code ?? error?.error_code ?? "");
+  const message = String(error?.message ?? "");
+  if (status === 429 || /rate_limit|too_many/i.test(code) || /rate limit|too many/i.test(message)) {
+    const wait = message.match(/after (\d+) seconds?/i);
+    return wait
+      ? `Too many sign-in emails have been requested. Wait ${wait[1]} seconds, then request another ${thing}.`
+      : `Too many sign-in emails have been requested recently. Wait a few minutes, then request another ${thing}.`;
+  }
+  if (/failed to fetch|networkerror|load failed/i.test(message)) {
+    return `The ${thing} could not be requested because the server could not be reached. Check the connection and try again.`;
+  }
+  return message
+    ? `The ${thing} could not be requested: ${message}`
+    : `The ${thing} could not be requested. Try again, and contact S.Suite Admin if it continues.`;
+}
+
 async function requestCode() {
   if (!supabase || !configured()) return;
   const button = $("request-code"); setBusy(button, true); authStatus("Requesting a one-time email code…");
@@ -101,7 +121,7 @@ async function requestCode() {
     if (error) throw error;
     authStatus("If the approved mailbox is available, a one-time code has been sent. It does not grant access until server authorization succeeds.", "success");
     $("admin-otp").focus();
-  } catch { authStatus("The one-time email code could not be requested. Check deployment configuration and try again.", "error"); }
+  } catch (error) { authStatus(signInFailure(error, "one-time email code"), "error"); }
   finally { setBusy(button, false); }
 }
 
@@ -125,7 +145,7 @@ async function sendLink(event) {
     const { error } = await supabase.auth.signInWithOtp({ email: APPROVED_EMAIL, options: { emailRedirectTo: `${location.origin}${location.pathname}` } });
     if (error) throw error;
     authStatus("If the approved mailbox is available, a private sign-in link has been sent. It does not grant access until server authorization succeeds.", "success");
-  } catch { authStatus("The private sign-in link could not be requested. Check deployment configuration and try again.", "error"); }
+  } catch (error) { authStatus(signInFailure(error, "private sign-in link"), "error"); }
   finally { setBusy(button, false); }
 }
 

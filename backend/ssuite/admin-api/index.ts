@@ -278,7 +278,11 @@ async function setAttendeePhoto(body: Json, user: User): Promise<Json> {
   if (objects.error || !objects.data.some((item) => `${folder}/${item.name}` === photoPath)) fail("Uploaded photo was not found", 400);
   const update = await db.from("attendees").update({ staff_photo_path: photoPath }).eq("id", attendeeId).eq("event_id", event);
   if (update.error) fail("The attendee photo could not be saved", 503);
-  await db.from("ssuite_staff_audit_log").insert({ event_id: event, actor_user_id: user.id, action: "attendee_photo_updated", entity_type: "attendee", entity_id: attendeeId, metadata: { private_staff_photo: true } });
+  // The audit action must match the ssuite_ prefix enforced by the staff audit
+  // log CHECK constraint, and a failed audit write must never pass silently:
+  // an unaudited private-photo change is not an acceptable outcome.
+  const audited = await db.from("ssuite_staff_audit_log").insert({ event_id: event, actor_user_id: user.id, action: "ssuite_attendee_photo_updated", entity_type: "attendee", entity_id: attendeeId, metadata: { private_staff_photo: true } });
+  if (audited.error) fail("The attendee photo change could not be audited", 503);
   const oldPath = String(existing.data.staff_photo_path ?? "");
   if (oldPath && oldPath !== photoPath) await db.storage.from("ssuite-attendee-photos").remove([oldPath]);
   return await attendeeDetail({ attendee_id: attendeeId });
