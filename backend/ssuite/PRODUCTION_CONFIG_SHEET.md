@@ -54,34 +54,51 @@ Setting either weakens origin checking or accepts forged bot-protection tokens i
 Cloudflare Turnstile also yields a **site key**, which is public and goes in `config.js`
 (section 6), not here.
 
-## 4. BLOCKED — no value can exist yet (5)
+## 4. ~~BLOCKED~~ RESOLVED 2026-08-26 — all five now have values
 
-| Variable | Why |
+These were blocked only because the relay did not exist. It does now. Exact values,
+including generated keys, are in **`EMAIL_RELAY_RUNBOOK.md` § "Secrets this adds"**, which is
+the single source of truth for them. Substitute the project ref (`iddzcbknnddkonrcwgpt` for
+production, `fxhhwtmanioqtjnppbhm` for staging).
+
+| Variable | Value |
 |---|---|
-| `SSUITE_EMAIL_RELAY_URL` | ~~Blocked~~ **RESOLVED 2026-08-26** — relay built and deployed. See `EMAIL_RELAY_RUNBOOK.md`. |
-| `SSUITE_EMAIL_RELAY_API_KEY` | Defined by the relay once it exists. |
-| `SSUITE_KLAVIYO_SEND_URL` | Depends on the send method the relay uses. |
-| `SSUITE_KLAVIYO_TEMPLATE_ID` | Single-template fallback; superseded by the map below. |
-| `SSUITE_EMAIL_TEMPLATE_IDS_JSON` | Format is known and the nine IDs exist; final key names must match the relay contract. Draft below. |
+| `SSUITE_EMAIL_RELAY_URL` | `https://{project}.supabase.co/functions/v1/ssuite-email-relay/send` |
+| `SSUITE_EMAIL_RELAY_API_KEY` | Generated — see runbook |
+| `SSUITE_KLAVIYO_SEND_URL` | `https://{project}.supabase.co/functions/v1/ssuite-email-relay/legacy-invitation` |
+| `SSUITE_KLAVIYO_TEMPLATE_ID` | `S.Suite Table Invitation` |
+| `SSUITE_EMAIL_TEMPLATE_IDS_JSON` | The nine-entry map below |
 
-Draft template map (validated against `templateMap()` — keys must match `^[a-z0-9_-]{3,120}$`):
+### Correction — the map holds metric names, not template IDs
+
+An earlier draft of this sheet listed Klaviyo **template IDs** (`RXG4VE`, `WuE9QE`, …) as the
+values. That was wrong and would have failed at send time for all nine messages.
+
+The dispatcher passes each value through to the relay as `template_id`, and the relay triggers
+it as a **Klaviyo metric name**. The flow bound to that metric selects the template. The nine
+templates are still used exactly as built; the flow, not this map, chooses them.
 
 ```json
 {
-  "ssuite_paid_order_confirmation": "RXG4VE",
-  "ssuite_table_lead_access": "WuE9QE",
-  "ssuite_table_invitation": "WZ2VXn",
-  "ssuite_guest_registration_confirmation": "W678a4",
-  "ssuite_incomplete_table_reminder": "XQvZw2",
-  "ssuite_event_logistics": "XiHth9",
-  "ssuite_auction_submission_acknowledgment": "UYv3xM",
-  "ssuite_donation_receipt": "WjKDaM",
-  "ssuite_post_event_thanks": "YvU4i5"
+  "ssuite_paid_order_confirmation": "S.Suite Paid Order Confirmation",
+  "ssuite_table_lead_access": "S.Suite Table Lead Access",
+  "ssuite_table_invitation": "S.Suite Table Invitation",
+  "ssuite_guest_registration_confirmation": "S.Suite Guest Registration Confirmation",
+  "ssuite_incomplete_table_reminder": "S.Suite Incomplete Table Reminder",
+  "ssuite_event_logistics": "S.Suite Event Logistics",
+  "ssuite_auction_submission_acknowledgment": "S.Suite Auction Submission Acknowledgment",
+  "ssuite_donation_receipt": "S.Suite Donation Receipt",
+  "ssuite_post_event_thanks": "S.Suite Post Event Thanks"
 }
 ```
 
-`templateMap()` imposes **no required key set** — earlier concern about a mandatory
-`wallet-pass-update` key was incorrect. Wallet passes are out of scope and need no entry.
+`SSUITE_KLAVIYO_ALLOWED_METRICS_JSON` is those same nine names as a JSON array. The relay
+refuses any metric outside the list with `400 Unknown message type`, so a leaked relay key
+cannot fire arbitrary metrics into the Klaviyo account.
+
+`templateMap()` imposes **no required key set** — an earlier concern about a mandatory
+`wallet-pass-update` key was incorrect. Wallet passes are out of scope and need no entry; the
+wallet-pass template has been quarantined as untruthful.
 
 ## 5. The missing component: the email relay — BUILT 2026-08-26
 
@@ -164,6 +181,30 @@ still requires `SSuite.sales_status = 'open'`.
 | `https://iddzcbknnddkonrcwgpt.supabase.co/functions/v1/donation-stripe-webhook` | the same five, plus `invoice.paid`, `customer.subscription.deleted` |
 
 Must be created in **live** mode. Signing secrets feed section 3.
+
+### These must be created by Neha — the connected Stripe key cannot do it
+
+Attempted 2026-08-26 and refused at the key level, for both read and write:
+
+```
+stripe_api_read  GetWebhookEndpoints  → "Your API key does not have the required
+                                         permissions for 'GetWebhookEndpoints'."
+stripe_api_write PostWebhookEndpoints → "Your API key does not have the required
+                                         permissions for 'PostWebhookEndpoints'."
+```
+
+The connected key has no webhook-endpoint scope, so the endpoints can neither be listed
+nor created from here. Two ways forward, Neha's choice:
+
+- **Create both endpoints in the Stripe dashboard** (Developers → Webhooks → Add endpoint),
+  selecting the events above, and paste the two signing secrets into section 3. Roughly
+  five minutes.
+- **Grant the connected key webhook-endpoint permissions**, after which this can be done
+  here and verified automatically.
+
+Either way the signing secrets are required before any payment can be honoured: without
+them the webhook rejects Stripe's calls, and a buyer would be charged with no registration
+created. This is a hard gate, not a nicety.
 
 ## 8. Open decision
 
