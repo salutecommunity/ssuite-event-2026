@@ -3,12 +3,15 @@
   const cfg = window.SSUITE_CONFIG || {};
   const $ = (id) => document.getElementById(id);
   const email = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+  const tableNameLimit = 200;
+  const invalidTableNameCharacters = /[\u0000-\u001f\u007f]/;
   const token = new URLSearchParams(location.hash.slice(1)).get("token") || "";
   // Fragments never leave the browser in an HTTP request, but remove them at
   // once so users cannot accidentally copy, bookmark, or report the token.
   history.replaceState(null, "", `${location.pathname}${location.search}`);
   let tableToken = /^[0-9a-f]{64}$/i.test(token) ? token.toLowerCase() : "";
   let table = null;
+  let editingTableName = false;
 
   function base() {
     try { const u = new URL(String(cfg.apiBase || "")); return cfg.mode === "live" && u.protocol === "https:" ? u.origin : ""; } catch { return ""; }
@@ -26,7 +29,9 @@
   function activeSeat(n) { return (table?.invitations || []).some((i) => Number(i.seat_number) === Number(n) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); }
   function render() {
     $("portal").hidden = false;
-    $("table-name").textContent = table.table_name || `Table ${table.table_number || ""}`;
+    const currentTableName = typeof table.table_name === "string" ? table.table_name.trim() : "";
+    $("table-name").textContent = currentTableName || `Table ${table.table_number || ""}`;
+    if (!editingTableName) $("table-name-input").value = currentTableName;
     const meta = $("table-meta"); meta.replaceChildren(cell("Table", String(table.table_number || "—")), cell("Seats", String((table.seats || []).length)), cell("Lead", "Secure access"));
     const grid = $("seats"); grid.replaceChildren();
     for (const seat of [...(table.seats || [])].sort((a, b) => a.seat_number - b.seat_number)) {
@@ -43,6 +48,39 @@
     const select = $("invite-form").elements.seat_number; select.replaceChildren();
     for (const seat of openSeats()) { const option = document.createElement("option"); option.value = String(seat.seat_number); option.textContent = `Seat ${String(seat.seat_number).padStart(2, "0")}`; select.append(option); }
     const form = $("invite-form"); form.hidden = openSeats().length === 0;
+  }
+  function setNameEditor(open) {
+    editingTableName = open;
+    $("table-name-form").hidden = !open;
+    $("edit-table-name").hidden = open;
+    if (open) {
+      const input = $("table-name-input");
+      input.value = typeof table?.table_name === "string" ? table.table_name.trim() : "";
+      requestAnimationFrame(() => { input.focus(); input.select(); });
+    }
+  }
+  async function renameTable(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const name = form.elements.table_name.value.trim();
+    if (!name || name.length > tableNameLimit || invalidTableNameCharacters.test(name)) {
+      return status("Enter a table name of 1–200 characters without control characters.", "error");
+    }
+    const button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    try {
+      status("Saving table name…");
+      const result = await call({ action: "rename_table", table_name: name });
+      if (!result || typeof result.table_name !== "string") throw new Error("The table name response was invalid.");
+      table = { ...table, table_name: result.table_name };
+      setNameEditor(false);
+      render();
+      status("Table name updated.", "success");
+    } catch {
+      status("The table name could not be updated. Your current name is unchanged.", "error");
+    } finally {
+      button.disabled = false;
+    }
   }
   async function load(message = "Refreshing secure table data…") {
     status(message); const result = await call({ action: "get" }); table = result.table; if (!table || typeof table !== "object") throw new Error("Table data was unavailable."); render(); status("");
@@ -61,6 +99,9 @@
     try { await call({ action: "revoke_access" }); tableToken = ""; $("portal").hidden = true; status("This access link was revoked.", "success"); } catch { status("The access link could not be revoked.", "error"); }
   }
   $("refresh").addEventListener("click", () => load().catch(() => status("Unable to refresh this private table.", "error")));
+  $("edit-table-name").addEventListener("click", () => setNameEditor(true));
+  $("cancel-table-name").addEventListener("click", () => setNameEditor(false));
+  $("table-name-form").addEventListener("submit", renameTable);
   $("invite-form").addEventListener("submit", invite); $("revoke-access").addEventListener("click", revoke);
   if (!tableToken) status("This private table link is missing or invalid. Request a new link from the table lead process.", "error");
   else if (!base()) status("The table portal is not configured for live access.", "error");
