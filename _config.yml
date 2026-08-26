@@ -1,0 +1,8 @@
+# GitHub Pages build configuration for event.ssuite.org.
+# Server-side sources are kept under version control but must never be
+# published as downloadable files on the public site.
+exclude:
+  - backend
+  - apps
+  - README.md
+  - config.isolated-staging.example.js

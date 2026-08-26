@@ -32,10 +32,13 @@ function element(tag, className, value) { const node = document.createElement(ta
 async function initialize() {
   if (!configured()) {
     $("send-link").disabled = true;
+    $("request-code").disabled = true;
+    $("verify-code").disabled = true;
     authStatus("Private sign-in is unavailable until the deployment supplies the public Supabase URL, anon key, and API base URL.", "error");
     return;
   }
-  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: true, storage: window.sessionStorage, autoRefreshToken: true, detectSessionInUrl: true } });
+  // Keep the administrator session in memory only; never write auth material to browser storage.
+  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: true } });
   supabase.auth.onAuthStateChange((_event, nextSession) => { if (nextSession) openDashboard(nextSession); });
   const { data } = await supabase.auth.getSession();
   if (data.session) await openDashboard(data.session);
@@ -87,6 +90,32 @@ async function uploadAttendeePhoto(attendeeId, file) {
 function photoField() {
   const label = document.createElement("label"); label.textContent = "Guest photo (optional · JPG, PNG, or WebP · max 5 MB)";
   const input = document.createElement("input"); input.type = "file"; input.name = "guest_photo"; input.accept = "image/jpeg,image/png,image/webp"; label.append(input); return label;
+}
+
+async function requestCode() {
+  if (!supabase || !configured()) return;
+  const button = $("request-code"); setBusy(button, true); authStatus("Requesting a one-time email code…");
+  try {
+    // Omitting emailRedirectTo requests the numeric OTP rather than a magic link.
+    const { error } = await supabase.auth.signInWithOtp({ email: APPROVED_EMAIL });
+    if (error) throw error;
+    authStatus("If the approved mailbox is available, a one-time code has been sent. It does not grant access until server authorization succeeds.", "success");
+    $("admin-otp").focus();
+  } catch { authStatus("The one-time email code could not be requested. Check deployment configuration and try again.", "error"); }
+  finally { setBusy(button, false); }
+}
+
+async function verifyCode(event) {
+  event.preventDefault(); if (!supabase || !configured()) return;
+  const form = event.currentTarget; if (!form.reportValidity()) return;
+  const button = $("verify-code"); setBusy(button, true); authStatus("Verifying the one-time email code…");
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({ email: APPROVED_EMAIL, token: $("admin-otp").value.trim(), type: "email" });
+    if (error) throw error;
+    if (!data?.session) throw new Error("The one-time code did not create a session.");
+    await openDashboard(data.session);
+  } catch { authStatus("The one-time email code could not be verified. Request a fresh code and try again.", "error"); }
+  finally { setBusy(button, false); }
 }
 
 async function sendLink(event) {
@@ -359,5 +388,5 @@ function renderAttendeeEdit(payload) {
 
 async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); renderAttendeeDetail(payload); if (!$("attendee-dialog").open) $("attendee-dialog").showModal(); status(""); } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); } }
 
-$("magic-form").addEventListener("submit", sendLink); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
+$("magic-form").addEventListener("submit", sendLink); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
 initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));
