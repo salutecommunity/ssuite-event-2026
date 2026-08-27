@@ -1,16 +1,19 @@
-/* Read-only registration receipt.
+/* Registration details: payment record, registration record, and self-service corrections.
  *
  * Accepts either the private receipt token from the confirmation email (#token=)
  * or the Stripe Checkout session the buyer was returned with (?session_id=).
  * The credential is stripped from the address bar immediately and is never stored.
- * This page states only what the server reports from the authoritative order record;
- * it never asserts a payment, registration, or delivery on its own. */
+ *
+ * This page states only what the server reports from the authoritative records, and it
+ * only reports a change as saved after the event system confirms the write and the
+ * details are re-read from the server. */
 (() => {
   "use strict";
   const cfg = window.SSUITE_CONFIG || {};
   const byId = (id) => document.getElementById(id);
   const tokenPattern = /^[0-9a-f]{64}$/;
   const sessionPattern = /^cs_(live|test)_[A-Za-z0-9]{8,320}$/;
+  let latest = null;
 
   function apiBase() {
     const value = (typeof cfg.apiBase === "string" ? cfg.apiBase : "").trim().replace(/\/$/, "");
@@ -26,6 +29,14 @@
     const el = byId("status");
     if (!el) return;
     el.hidden = false;
+    el.textContent = message;
+    el.className = `notice${kind ? ` ${kind}` : ""}`;
+  }
+
+  function setFormStatus(message, kind = "") {
+    const el = byId("form-status");
+    if (!el) return;
+    el.hidden = !message;
     el.textContent = message;
     el.className = `notice${kind ? ` ${kind}` : ""}`;
   }
@@ -72,6 +83,42 @@
     }).filter(Boolean).join(", ");
   }
 
+  function renderRegistration(data) {
+    const block = byId("registration-block");
+    const rows = byId("registration-rows");
+    const note = byId("registration-note");
+    const actions = byId("registration-actions");
+    const registration = data && typeof data.registration === "object" ? data.registration : null;
+    if (!registration) { block.hidden = true; return; }
+
+    const name = [registration.first_name, registration.last_name]
+      .filter((part) => typeof part === "string" && part.trim()).join(" ").trim();
+    rows.replaceChildren();
+    row(rows, "Name", name);
+    row(rows, "Email", registration.email || "");
+    row(rows, "Secondary email", registration.secondary_email || "");
+    row(rows, "Phone", registration.phone || "");
+    row(rows, "Job title", registration.job_title || "");
+    row(rows, "Company", registration.company || "");
+    row(rows, "Meal preference", registration.meal_preference || "");
+    row(rows, "Allergies / dietary needs",
+      registration.has_dietary_or_allergy_needs ? (registration.dietary_or_allergy_details || "Noted") : "None noted");
+    row(rows, "Accessibility needs",
+      registration.has_accessibility_needs ? (registration.accessibility_details || "Noted") : "None noted");
+    row(rows, "How you heard about us", data.how_heard || "");
+    if (typeof data.seats_total === "number" && data.seats_total > 1) {
+      row(rows, "Seats on this order", String(data.seats_total));
+    }
+
+    const seated = typeof data.seats_total === "number" && data.seats_total > 1;
+    note.textContent = seated
+      ? "These are your own details. The other seats on this order are managed from the private table link sent to the table lead."
+      : "";
+    note.hidden = !seated;
+    actions.hidden = data.editable !== true;
+    block.hidden = false;
+  }
+
   function render(data) {
     const heading = byId("receipt-heading");
     const eyebrow = byId("receipt-eyebrow");
@@ -93,6 +140,7 @@
       return true;
     }
 
+    latest = data;
     const name = typeof data.first_name === "string" && data.first_name.trim() ? data.first_name.trim() : "";
     rows.replaceChildren();
     row(rows, "Order reference", data.reference || "");
@@ -100,13 +148,14 @@
     row(rows, state === "refunded" ? "Amount charged" : "Amount paid", money(data.total_cents, data.currency));
     row(rows, "Paid on", data.paid_on || "");
     if (state === "refunded") row(rows, "Refunded on", data.refunded_on || "");
-    row(rows, "Registered to", data.purchaser_name || "");
     row(rows, "Confirmation sent to", data.email_masked || "");
+
+    renderRegistration(data);
 
     if (state === "refunded") {
       eyebrow.textContent = "Refunded order";
       heading.textContent = "This order has been refunded.";
-      lede.textContent = "This receipt is kept for your records. The registration attached to this order is no longer active.";
+      lede.textContent = "This record is kept for your reference. The registration attached to this order is no longer active.";
       setStatus("This order was refunded. No admission is held against it.", "error");
       next.textContent = "If you believe this refund was made in error, please write to ssuite@salute.community.";
       panel.hidden = false;
@@ -115,10 +164,10 @@
 
     eyebrow.textContent = "Payment confirmed";
     heading.textContent = name ? `Thank you, ${name}. You're registered.` : "Thank you. You're registered.";
-    lede.textContent = "Your payment was received and your registration for the S.Suite Honors Ceremony is confirmed. Please keep this receipt for your records.";
+    lede.textContent = "Your payment was received and your registration for the S.Suite Honors Ceremony is confirmed. Please check the details below and keep this page for your records.";
     setStatus("Payment verified and registration confirmed.", "success");
     next.textContent = data.email_masked
-      ? `A confirmation email has been queued to ${data.email_masked}. Event details and arrival information will follow closer to the date.`
+      ? `A confirmation email has been sent to ${data.email_masked}. Event details and arrival information will follow closer to the date.`
       : "Event details and arrival information will follow closer to the date.";
     panel.hidden = false;
     return true;
@@ -126,7 +175,7 @@
 
   async function lookup(attempt) {
     const base = apiBase();
-    if (!base) { setStatus("This receipt page is not configured. Please write to ssuite@salute.community.", "error"); return; }
+    if (!base) { setStatus("This page is not configured. Please write to ssuite@salute.community.", "error"); return; }
     try {
       const response = await fetch(`${base}/functions/v1/checkout-status`, {
         method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
@@ -134,7 +183,7 @@
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok || !payload) {
-        setStatus("We could not load this receipt right now. Please try again shortly, or write to ssuite@salute.community.", "error");
+        setStatus("We could not load these details right now. Please try again shortly, or write to ssuite@salute.community.", "error");
         return;
       }
       const settled = render(payload);
@@ -147,9 +196,102 @@
     }
   }
 
+  function toggleConditional(form) {
+    const dietary = form.elements.has_dietary_or_allergy_needs;
+    const accessibility = form.elements.has_accessibility_needs;
+    byId("dietary-field").hidden = !dietary.checked;
+    byId("accessibility-field").hidden = !accessibility.checked;
+    form.elements.dietary_or_allergy_details.required = dietary.checked;
+    form.elements.accessibility_details.required = accessibility.checked;
+  }
+
+  function fillForm(form, registration, howHeard) {
+    const set = (field, value) => { if (form.elements[field]) form.elements[field].value = value || ""; };
+    set("first_name", registration.first_name);
+    set("last_name", registration.last_name);
+    set("job_title", registration.job_title);
+    set("company", registration.company);
+    set("secondary_email", registration.secondary_email);
+    set("phone", registration.phone);
+    set("meal_preference", registration.meal_preference);
+    set("how_heard", howHeard);
+    form.elements.has_dietary_or_allergy_needs.checked = registration.has_dietary_or_allergy_needs === true;
+    set("dietary_or_allergy_details", registration.dietary_or_allergy_details);
+    form.elements.has_accessibility_needs.checked = registration.has_accessibility_needs === true;
+    set("accessibility_details", registration.accessibility_details);
+    toggleConditional(form);
+  }
+
+  function showForm(open) {
+    byId("registration-form").hidden = !open;
+    byId("registration-actions").hidden = open || !(latest && latest.editable === true);
+    byId("registration-rows").hidden = open;
+    byId("registration-note").hidden = open || !byId("registration-note").textContent;
+    if (!open) setFormStatus("");
+  }
+
+  async function save(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    if (!latest || !latest.registration || !latest.registration.attendee_id) return;
+    const base = apiBase();
+    if (!base) { setFormStatus("This page is not configured. Please write to ssuite@salute.community.", "error"); return; }
+
+    const value = (field) => String(form.elements[field] ? form.elements[field].value : "").trim();
+    const buttons = form.querySelectorAll("button");
+    buttons.forEach((button) => { button.disabled = true; });
+    setFormStatus("Saving your changes…");
+    try {
+      const response = await fetch(`${base}/functions/v1/registration-update`, {
+        method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...credential,
+          attendee_id: latest.registration.attendee_id,
+          registration: {
+            first_name: value("first_name"), last_name: value("last_name"),
+            job_title: value("job_title"), company: value("company"),
+            secondary_email: value("secondary_email"), phone: value("phone"),
+            meal_preference: value("meal_preference"), how_heard: value("how_heard"),
+            has_dietary_or_allergy_needs: form.elements.has_dietary_or_allergy_needs.checked,
+            dietary_or_allergy_details: value("dietary_or_allergy_details"),
+            has_accessibility_needs: form.elements.has_accessibility_needs.checked,
+            accessibility_details: value("accessibility_details"),
+          },
+        }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || !payload || payload.saved !== true) {
+        setFormStatus(payload && typeof payload.error === "string" ? payload.error : "We could not save those changes. Please try again.", "error");
+        return;
+      }
+      // Re-read from the server so the page shows the stored record, not the typed one.
+      await lookup(0);
+      showForm(false);
+      setStatus("Your registration details have been updated.", "success");
+    } catch {
+      setFormStatus("We could not reach the event system. Please check your connection and try again.", "error");
+    } finally {
+      buttons.forEach((button) => { button.disabled = false; });
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     const print = byId("print-receipt");
     if (print) print.addEventListener("click", () => window.print());
+    const form = byId("registration-form");
+    form.addEventListener("submit", save);
+    form.elements.has_dietary_or_allergy_needs.addEventListener("change", () => toggleConditional(form));
+    form.elements.has_accessibility_needs.addEventListener("change", () => toggleConditional(form));
+    byId("edit-registration").addEventListener("click", () => {
+      if (!latest || !latest.registration) return;
+      fillForm(form, latest.registration, latest.how_heard);
+      showForm(true);
+      form.elements.first_name.focus();
+    });
+    byId("cancel-registration").addEventListener("click", () => showForm(false));
+
     if (!credential) {
       byId("receipt-heading").textContent = "This page needs your private link.";
       setStatus("Open this page using the private link in your confirmation email. If you no longer have it, write to ssuite@salute.community and we will resend it.", "error");
