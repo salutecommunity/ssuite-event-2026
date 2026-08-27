@@ -229,9 +229,19 @@
     applyLiveLabels();
     createMemberFields();
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
-    const result = new URLSearchParams(location.search).get("checkout");
+    const params = new URLSearchParams(location.search);
+    const result = params.get("checkout");
     if (result === "cancel") setStatus("Checkout was cancelled. No payment was completed.", "error");
-    if (result === "success") setStatus("Checkout returned successfully. Your registration is confirmed only after Stripe and the event system finish processing.", "working");
+    if (result === "success") {
+      // Hand the buyer to the receipt page, which reports only what the
+      // authoritative order record proves. Never confirm anything here.
+      const session = text(params.get("session_id"));
+      if (/^cs_(live|test)_[A-Za-z0-9]{8,320}$/.test(session)) {
+        location.replace(`./registration.html?session_id=${encodeURIComponent(session)}`);
+        return;
+      }
+      setStatus("Checkout returned, but this browser did not carry the reference needed to display your receipt. Your confirmation email is the authoritative record. Write to ssuite@salute.community if it does not arrive.", "working");
+    }
   }
   window.SSuiteLive = { checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
