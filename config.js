@@ -7,8 +7,13 @@
  * Supabase keys, Stripe keys, Turnstile secrets, management tokens, or
  * invitation tokens in this file.
  *
- * Give (donation) and Auction intake remain disabled until their independent
- * receipt, refund-reconciliation, and intake-safeguard gates are approved.
+ * Auction intake is OPEN: item submissions persist to the private S.Suite
+ * database. Bidding is not open and no lots are published.
+ *
+ * Give (donation) remains disabled. Opening it additionally requires the
+ * receiving nonprofit's legal_entity_name and legal_entity_address in
+ * ssuite_donation_configuration, without which finalize_ssuite_donation
+ * issues receipt_status='unavailable' and a donor receives no receipt.
  */
 window.SSUITE_CONFIG = Object.freeze({
   mode: "live",
@@ -24,5 +29,5 @@ window.SSUITE_CONFIG = Object.freeze({
     mediaReleaseVersion: "ssuite-media-release-2026-08-25"
   }),
   donation: Object.freeze({ enabled: false, turnstileAction: "", receiptPolicyUrl: "" }), // SSUITE_DONATION_TURNSTILE_ACTION
-  auction: Object.freeze({ enabled: false, turnstileAction: "" }) // SSUITE_AUCTION_TURNSTILE_ACTION
+  auction: Object.freeze({ enabled: true, turnstileAction: "auction-submission" }) // must match SSUITE_AUCTION_TURNSTILE_ACTION exactly
 });
