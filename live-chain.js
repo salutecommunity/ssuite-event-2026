@@ -186,8 +186,37 @@
     if (label) label.textContent = readiness.ok ? "Secure checkout available after details" : "Preview only — checkout is not configured";
     if (readiness.ok) ensureTurnstile().catch((error) => setStatus(error.message, "error"));
   }
+  function applyLiveLabels() {
+    // Preview wording ships as the safe default in the HTML. Only replace it once
+    // this deployment is genuinely wired for live payment, so the page never
+    // promises a real charge it cannot make, or a preview it will not honour.
+    if (!liveReadiness().ok) return;
+    const note = byId("attend-sales-note");
+    if (note) note.textContent = "Early-bird pricing is available through September 30, 2026, 11:59 p.m. Eastern. Registration is completed through secure checkout.";
+    const submit = byId("checkout-submit");
+    if (submit) submit.textContent = "Continue to secure checkout";
+    const fineprint = byId("checkout-fineprint");
+    if (fineprint) fineprint.textContent = "You will be taken to Stripe to complete payment securely. Your registration is confirmed only after your payment is verified.";
+    const intro = byId("drawer-intro");
+    if (intro) intro.textContent = "Enter each attendee's details. You will then be taken to Stripe to pay securely; your registration is created once your payment is verified.";
+    const tableEyebrow = byId("table-head-eyebrow");
+    if (tableEyebrow) tableEyebrow.textContent = "TABLE MANAGEMENT";
+    const tableTitle = byId("table-head-title");
+    if (tableTitle) tableTitle.textContent = "Set up your table.";
+    const tableNote = byId("table-head-note");
+    if (tableNote) tableNote.textContent = "After your payment is verified, you will receive a private link to manage your table, name it, add guests, and send seat registration links.";
+    const tablePageEyebrow = byId("table-page-eyebrow");
+    if (tablePageEyebrow) tablePageEyebrow.textContent = "YOUR PRIVATE TABLE PAGE";
+    const tablePageNote = byId("table-page-note");
+    if (tablePageNote) tablePageNote.textContent = "10 seats · Guest status · Seating controls";
+    // The local sample dashboard is a design preview only; it must not be offered
+    // alongside a real purchase that issues a genuine private table page.
+    const previewDashboard = byId("preview-dashboard");
+    if (previewDashboard) previewDashboard.hidden = true;
+  }
   function init() {
     policyLinks();
+    applyLiveLabels();
     createMemberFields();
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
     const result = new URLSearchParams(location.search).get("checkout");

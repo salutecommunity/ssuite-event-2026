@@ -46,27 +46,26 @@
       <header class="section-heading">
         <p class="eyebrow">ATTEND</p>
         <h2>Choose how you’ll join us.</h2>
-        <p>Ticket sales are not open yet. Pricing is shown for advance planning; registration and checkout will become available here when sales open.</p>
+        <p id="attend-sales-note">Ticket sales are not open yet. Pricing is shown for advance planning; registration and checkout will become available here when sales open.</p>
       </header>
       <div class="ticket-grid">
         <article class="ticket-card">
           <div><p class="micro">EARLY BIRD / INDIVIDUAL</p><h3>SALUTE Member Ticket</h3><div class="price-row"><p class="price">$275</p><p class="original-price"><span class="sr-only">Original price </span>$350</p></div><p class="price-note">Early-bird price</p></div>
           <p>For current SALUTE members. We’ll verify membership with the email used at checkout.</p>
-          <button class="button button-outline" type="button" disabled aria-disabled="true">Sales opening soon</button>
+          <button class="button button-outline choose" type="button" data-ticket-code="salute_member" data-ticket="SALUTE Member Ticket" data-price="275" disabled aria-disabled="true">Sales opening soon</button>
         </article>
         <article class="ticket-card featured">
           <div class="flag">INDIVIDUAL</div>
           <div><p class="micro">EARLY BIRD / GENERAL ADMISSION</p><h3>Community Ticket</h3><div class="price-row"><p class="price">$350</p><p class="original-price"><span class="sr-only">Original price </span>$400</p></div><p class="price-note">Early-bird price</p></div>
           <p>One reserved seat, event communications, and access to the full evening.</p>
-          <button class="button button-dark" type="button" disabled aria-disabled="true">Sales opening soon</button>
+          <button class="button button-dark choose" type="button" data-ticket-code="community" data-ticket="Community Ticket" data-price="350" disabled aria-disabled="true">Sales opening soon</button>
         </article>
         <article class="ticket-card table-card">
           <div><p class="micro">EARLY BIRD / HOST THE TABLE</p><h3>Table for ten</h3><div class="price-row"><p class="price">$5,000</p><p class="original-price"><span class="sr-only">Original price </span>$7,500</p></div><p class="price-note">Early-bird price</p></div>
           <p>Ten seats plus a private link to invite guests, collect details, and manage your table.</p>
-          <button class="button button-light" type="button" disabled aria-disabled="true">Sales opening soon</button>
+          <button class="button button-light choose" type="button" data-ticket-code="full_table" data-ticket="Table for ten" data-price="5000" disabled aria-disabled="true">Sales opening soon</button>
         </article>
       </div>
-      <div class="trust-row" aria-label="Ticket-sales status"><span>Ticket sales are currently closed</span><span>No payment can be made yet</span><span>Sales will open here</span></div>
     </section>
 
     <section class="editorial-band">
@@ -160,19 +159,19 @@
 <div class="drawer-backdrop" hidden></div>
 <aside class="checkout-drawer" aria-hidden="true" aria-labelledby="checkout-title">
   <button class="close" aria-label="Close registration">×</button>
-  <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p>Complete attendee details to preview the registration flow. Live Stripe checkout is disabled, and no registration or payment is saved.</p></div>
+  <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p id="drawer-intro">Complete attendee details to preview the registration flow. Live Stripe checkout is disabled, and no registration or payment is saved.</p></div>
   <form id="registration-form">
     <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">QUANTITY<select id="ticket-quantity" aria-label="Ticket quantity"><option>1</option><option>2</option><option>3</option><option>4</option></select></label></div>
     <div id="guest-fields"></div>
     <section class="table-options" hidden>
-      <div class="form-section-head"><p class="micro">TABLE MANAGEMENT / PREVIEW</p><h3>Preview your table setup.</h3><p>In production, paid table leads would receive secure dashboard access. This preview does not create access, invite guests, or save a table.</p></div>
+      <div class="form-section-head"><p class="micro" id="table-head-eyebrow">TABLE MANAGEMENT / PREVIEW</p><h3 id="table-head-title">Preview your table setup.</h3><p id="table-head-note">In production, paid table leads would receive secure dashboard access. This preview does not create access, invite guests, or save a table.</p></div>
       <div class="management-choices">
         <label><input type="radio" name="table-method" value="manual" checked><span><b>Add guests myself</b><small>Enter and update guest details from your table dashboard.</small></span></label>
         <label><input type="radio" name="table-method" value="invite"><span><b>Send registration links</b><small>Guests complete their own details and join your table automatically.</small></span></label>
         <label><input type="radio" name="table-method" value="both"><span><b>Use both</b><small>Manually add some guests and invite the rest.</small></span></label>
       </div>
       <label class="field full-field"><span>TABLE NAME <i>OPTIONAL</i></span><input name="table-name" placeholder="e.g. The Singh Table"></label>
-      <div class="table-preview"><div><p class="micro">YOUR PRIVATE TABLE PAGE / PREVIEW</p><strong>10 seats · Sample guest status · Local seating controls</strong></div><button class="text-button" type="button" id="preview-dashboard">Preview dashboard →</button></div>
+      <div class="table-preview"><div><p class="micro" id="table-page-eyebrow">YOUR PRIVATE TABLE PAGE / PREVIEW</p><strong id="table-page-note">10 seats · Sample guest status · Local seating controls</strong></div><button class="text-button" type="button" id="preview-dashboard">Preview dashboard →</button></div>
     </section>
     <section class="legal-consent" aria-label="Registration agreement">
       <label><input type="checkbox" name="combined_agreement" required><span>I agree to the <a data-policy-link="terms" href="./event-terms.html" target="_blank" rel="noopener noreferrer">Event Terms &amp; Conditions</a>, <a data-policy-link="privacy" href="./event-privacy.html" target="_blank" rel="noopener noreferrer">Event Privacy Notice</a>, and <a data-policy-link="media" href="./media-release.html" target="_blank" rel="noopener noreferrer">Media, Photo &amp; Video Release</a> for myself and, where applicable, on behalf of the guests included in this registration.</span></label>
@@ -180,9 +179,8 @@
     <div class="total"><span>Total</span><strong id="ticket-total">$350</strong></div>
     <div id="checkout-turnstile" class="turnstile-slot" aria-live="polite"></div>
     <p id="live-checkout-status" class="live-status" role="status" aria-live="polite" hidden></p>
-    <button class="button button-dark full" type="submit">Preview checkout (no charge)</button>
-    <button class="test-fill" type="button" id="fill-test-details">Fill with test details</button>
-    <p class="fineprint">Preview only — this simulated payment makes no charge and does not create a registration.</p>
+    <button class="button button-dark full" type="submit" id="checkout-submit">Preview checkout (no charge)</button>
+    <p class="fineprint" id="checkout-fineprint">Preview only — this simulated payment makes no charge and does not create a registration.</p>
   </form>
   <section class="checkout-step" id="checkout-step" hidden>
     <button class="step-back" type="button" id="back-to-registration">← Back to guest details</button>
@@ -248,7 +246,6 @@ document.querySelectorAll('.legal-consent a').forEach(a=>a.addEventListener('cli
 const registrationForm=document.querySelector('#registration-form'),checkoutStep=document.querySelector('#checkout-step'),confirmationStep=document.querySelector('#confirmation-step'),dashboard=document.querySelector('#table-dashboard');
 function showDrawerStep(step){registrationForm.hidden=step!=='registration';checkoutStep.hidden=step!=='checkout';confirmationStep.hidden=step!=='confirmation';drawer.scrollTop=0}
 registrationForm.addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.reportValidity())return;if(window.SSuiteLive?.checkoutEnabled()){window.SSuiteLive.submitCheckout(e.currentTarget);return}document.querySelector('#review-ticket').textContent=document.querySelector('#ticket-name').textContent;document.querySelector('#review-count').textContent=isTable?'Full table · 10 seats':`${qty.value} ${Number(qty.value)===1?'attendee':'attendees'}`;document.querySelector('#review-total').textContent=document.querySelector('#ticket-total').textContent;showDrawerStep('checkout')});
-document.querySelector('#fill-test-details').addEventListener('click',()=>{registrationForm.querySelectorAll('input[required]').forEach(input=>{if(input.type==='checkbox')input.checked=true;else if(input.type==='email')input.value='test@example.com';else input.value=input.name?.includes('last')?'Guest':input.name?.includes('company')?'S.Suite Community':input.name?.includes('title')?'Director':'Test'});registrationForm.querySelectorAll('select[required]').forEach(select=>select.selectedIndex=1);notify('Test details added — you can continue.')});
 document.querySelector('#back-to-registration').addEventListener('click',()=>showDrawerStep('registration'));
 document.querySelector('#complete-test-payment').addEventListener('click',()=>{document.querySelector('#confirmation-copy').textContent=isTable?'Preview complete — no charge, registration, receipt, email, or table-management access was created.':'Preview complete — no charge, registration, receipt, or email was created.';document.querySelector('#open-dashboard-after-payment').hidden=!isTable;showDrawerStep('confirmation')});
 document.querySelector('#finish-preview').addEventListener('click',()=>{closeDrawer();showDrawerStep('registration')});
