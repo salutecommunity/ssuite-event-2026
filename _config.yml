@@ -6,3 +6,4 @@ exclude:
   - apps
   - README.md
   - config.isolated-staging.example.js
+  - staging.html
