@@ -8,7 +8,7 @@
   <title>S.Suite — Attend</title>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./donation-auction.css">
-  <script src="./config.js?v=20260827f"></script>
+  <script src="./config.js?v=20260827g"></script>
 </head>
 <body>
 <a class="skip" href="#content">Skip to content</a>
@@ -100,7 +100,7 @@
         <fieldset><legend>Choose an amount</legend>
           <div class="amounts"><button type="button" aria-pressed="false" data-amount="100">$100</button><button type="button" class="selected" aria-pressed="true" data-amount="250">$250</button><button type="button" aria-pressed="false" data-amount="500">$500</button><button type="button" aria-pressed="false" data-amount="1000">$1,000</button></div>
         </fieldset>
-        <label class="custom-amount"><span>$</span><input id="custom-amount" name="amount" inputmode="decimal" autocomplete="off" maxlength="12" placeholder="Other amount" aria-label="Other donation amount" aria-describedby="custom-amount-help"><small id="custom-amount-help">Enter a whole-dollar or cents amount.</small></label>
+        <label class="custom-amount"><span>$</span><input id="custom-amount" name="amount" inputmode="decimal" autocomplete="off" maxlength="12" placeholder="Other amount" aria-label="Other donation amount" aria-describedby="custom-amount-help"><small id="custom-amount-help">Enter a whole-dollar or cents amount. Minimum $5.</small></label>
         <div class="donation-fields" aria-label="Donor details">
           <label class="field"><span>YOUR NAME</span><input name="donor_name" autocomplete="name" maxlength="200" required></label>
           <label class="field"><span>EMAIL</span><input name="email" type="email" autocomplete="email" maxlength="320" required></label>
@@ -279,6 +279,6 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260827f"></script>
-<script src="./donation-auction-live.js?v=20260827f"></script>
+<script src="./live-chain.js?v=20260827g"></script>
+<script src="./donation-auction-live.js?v=20260827g"></script>
 </body></html>
