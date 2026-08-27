@@ -213,6 +213,16 @@
     // alongside a real purchase that issues a genuine private table page.
     const previewDashboard = byId("preview-dashboard");
     if (previewDashboard) previewDashboard.hidden = true;
+    // Purchase controls ship disabled and labelled "Sales opening soon" so the
+    // page is never able to start a checkout it cannot complete. They are only
+    // enabled once this deployment is genuinely wired for live payment.
+    document.querySelectorAll(".choose").forEach((button) => {
+      const label = text(button.dataset.liveLabel);
+      if (!label) return;
+      button.disabled = false;
+      button.removeAttribute("aria-disabled");
+      button.textContent = label;
+    });
   }
   function init() {
     policyLinks();
