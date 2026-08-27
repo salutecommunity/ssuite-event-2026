@@ -41,10 +41,14 @@
   function post(name, key, body) { return fetch(`${apiBase()}/functions/v1/${name}`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json", "Idempotency-Key": key }, body: JSON.stringify(body) }); }
 
   const donationConfig = () => cfg.donation && typeof cfg.donation === "object" ? cfg.donation : {};
+  function configuredTurnstileAction(flow) {
+    const action = text(flow?.turnstileAction);
+    return /^[A-Za-z0-9_-]{1,32}$/.test(action) ? action : "";
+  }
   function donationReadiness() {
     const d = donationConfig();
     if (cfg.mode !== "live" || d.enabled !== true) return { ok: false, reason: "This site is in preview mode. No donation will be submitted or charged." };
-    if (!apiBase() || !text(cfg.turnstileSiteKey) || !safeHttps(d.receiptPolicyUrl)) return { ok: false, reason: "Donation checkout is not fully configured." };
+    if (!apiBase() || !text(cfg.turnstileSiteKey) || !configuredTurnstileAction(d) || !safeHttps(d.receiptPolicyUrl)) return { ok: false, reason: "Donation checkout is not fully configured." };
     return { ok: true, reason: "" };
   }
   function donationAmount() { const custom = text(byId("custom-amount")?.value); if (custom) return custom; const selected = document.querySelector(".amounts button.selected"); return text(selected?.dataset.amount); }
@@ -56,7 +60,7 @@
     const submit = byId("donate-button");
     try {
       submit.disabled = true; status("donation-live-status", "Preparing secure donation checkout…", "working");
-      const turnstileToken = await token("donation-turnstile", donationConfig().turnstileAction);
+      const turnstileToken = await token("donation-turnstile", configuredTurnstileAction(donationConfig()));
       const response = await post("donation-create-checkout", idempotencyKey(), { donor_name: donorName, email: address, amount, frequency: document.querySelector(".segmented button.selected")?.dataset.frequency === "Monthly" ? "recurring_monthly" : "one_time", turnstile_token: turnstileToken });
       const payload = await response.json().catch(() => ({})); if (!response.ok || typeof payload.checkout_url !== "string") throw new Error(text(payload.error) || "Donation checkout could not be started.");
       const destination = new URL(payload.checkout_url); if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout returned an unsafe redirect and was stopped.");
@@ -66,8 +70,9 @@
 
   const auctionConfig = () => cfg.auction && typeof cfg.auction === "object" ? cfg.auction : {};
   function auctionReadiness() {
-    if (cfg.mode !== "live" || auctionConfig().enabled !== true) return { ok: false, reason: "This site is in preview mode. No auction item will be submitted." };
-    if (!apiBase() || !text(cfg.turnstileSiteKey)) return { ok: false, reason: "Auction intake is not fully configured." };
+    const a = auctionConfig();
+    if (cfg.mode !== "live" || a.enabled !== true) return { ok: false, reason: "This site is in preview mode. No auction item will be submitted." };
+    if (!apiBase() || !text(cfg.turnstileSiteKey) || !configuredTurnstileAction(a)) return { ok: false, reason: "Auction intake is not fully configured." };
     return { ok: true, reason: "" };
   }
   async function submitAuction(form) {
@@ -78,7 +83,7 @@
     const submit = byId("auction-submit-button");
     try {
       submit.disabled = true; status("auction-live-status", "Submitting for committee review…", "working");
-      const turnstileToken = await token("auction-turnstile", auctionConfig().turnstileAction);
+      const turnstileToken = await token("auction-turnstile", configuredTurnstileAction(auctionConfig()));
       const response = await post("auction-submission", idempotencyKey(), { name: read("name"), email: read("email").toLowerCase(), job_title: read("job_title"), company: read("company"), item: read("item"), estimated_value: amountValue, website: read("website"), turnstile_token: turnstileToken });
       if (!response.ok) throw new Error("Unable to accept submission. Please try again later.");
       const payload = await response.json().catch(() => ({})); if (payload.accepted !== true) throw new Error("Unable to accept submission. Please try again later.");
@@ -87,8 +92,27 @@
   }
   function init() {
     const donation = donationReadiness(), auction = auctionReadiness();
-    if (donation.ok) { const button = byId("donate-button"), note = byId("donation-preview-note"), receiptPolicy = byId("donation-receipt-policy"); if (button) button.textContent = "Continue to secure donation checkout"; if (note) note.textContent = "You will be redirected to Stripe. A receipt is issued only after verified payment and configured receipt review."; if (receiptPolicy) { const link = receiptPolicy.querySelector("a"); if (link) link.href = safeHttps(donationConfig().receiptPolicyUrl); receiptPolicy.hidden = false; } const slot = document.createElement("div"); slot.id = "donation-turnstile"; slot.className = "turnstile-slot"; byId("donation-live-status")?.before(slot); }
+    if (donation.ok) { const button = byId("donate-button"), note = byId("donation-preview-note"), receiptPolicy = byId("donation-receipt-policy"); if (button) { button.textContent = "Continue to secure donation checkout"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "You will be redirected to Stripe. A receipt is issued only after verified payment and configured receipt review."; if (receiptPolicy) { const link = receiptPolicy.querySelector("a"); if (link) link.href = safeHttps(donationConfig().receiptPolicyUrl); receiptPolicy.hidden = false; } const slot = document.createElement("div"); slot.id = "donation-turnstile"; slot.className = "turnstile-slot"; byId("donation-live-status")?.before(slot); }
     if (auction.ok) { const button = byId("auction-submit-button"), note = byId("auction-preview-note"); if (button) button.textContent = "Submit for committee review"; if (note) note.textContent = "Your item will be considered by the auction committee; submission does not promise acceptance, valuation, publication, or tax treatment."; }
+    // A live public page must not carry controls that cannot perform their stated
+    // action. Where giving or auction intake is not open, close the control
+    // honestly instead of offering a simulated run-through.
+    if (!donation.ok) {
+      const button = byId("donate-button");
+      if (button) { button.textContent = "Giving opens soon"; button.disabled = true; button.setAttribute("aria-disabled", "true"); }
+      const note = byId("donation-preview-note");
+      if (note) note.textContent = "Online giving is not open yet. No donation can be submitted, charged, or receipted here.";
+      const form = byId("donation-form");
+      if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = true; });
+    }
+    if (!auction.ok) {
+      const button = byId("auction-submit-button");
+      if (button) { button.textContent = "Submissions open soon"; button.disabled = true; button.setAttribute("aria-disabled", "true"); }
+      const note = byId("auction-preview-note");
+      if (note) note.textContent = "Auction item submissions are not open yet. Nothing entered here is saved or sent.";
+      const form = byId("auction-submission-form");
+      if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = true; });
+    }
   }
   window.SSuiteDonation = { enabled: () => donationReadiness().ok, submit: submitDonation };
   window.SSuiteAuction = { enabled: () => auctionReadiness().ok, submit: submitAuction };
