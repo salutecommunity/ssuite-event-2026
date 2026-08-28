@@ -25,7 +25,10 @@
   function agreement() { const p = policy(), slot = $("policy-agreement"); if (!p) return false; const label = document.createElement("label"), check = document.createElement("input"), span = document.createElement("span"); const documents = [["Event Terms & Conditions", "./event-terms.html"], ["Event Privacy Notice", "./event-privacy.html"], ["Media, Photo & Video Release", "./media-release.html"]]; label.className = "check"; check.type = "checkbox"; check.name = "combined_agreement"; check.required = true; span.append("I agree to the "); for (const [name, href] of documents) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = name; span.append(a, document.createTextNode(name === "Media, Photo & Video Release" ? "." : ", ")); } label.append(check, span); slot.replaceChildren(label); return true; }
 
   function loadTurnstile() { if (window.turnstile && typeof window.turnstile.render === "function") return Promise.resolve(window.turnstile); if (loading) return loading; if (window.turnstile && typeof window.turnstile.render !== "function") { try { delete window.turnstile; } catch { window.turnstile = undefined; } } loading = new Promise((resolve, reject) => { const s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true; s.defer = true; s.onload = () => window.turnstile && typeof window.turnstile.render === "function" ? resolve(window.turnstile) : reject(new Error("Anti-bot control did not load")); s.onerror = () => reject(new Error("Anti-bot control could not load")); document.head.append(s); }); return loading; }
-  async function turnstileToken() { const api = await loadTurnstile(); if (widget === null) { const action = turnstileAction(); if (!action) throw new Error("Guest registration is not configured for live use."); const options = { sitekey: String(cfg.turnstileSiteKey || ""), action, "error-callback": () => status("The anti-bot check failed. Please retry.", "error"), "expired-callback": () => status("The anti-bot check expired. Please retry.", "error") }; widget = api.render($("turnstile-widget"), options); } const result = api.getResponse(widget); if (!result) throw new Error("Please complete the anti-bot check."); return result; }
+  /* Rendered as soon as the form opens rather than on first submit, so the guest is never
+     told to complete a check that is not on screen yet. */
+  async function renderTurnstile() { const api = await loadTurnstile(); if (widget === null) { const action = turnstileAction(); if (!action) throw new Error("Guest registration is not configured for live use."); const options = { sitekey: String(cfg.turnstileSiteKey || ""), action, "error-callback": () => status("The anti-bot check failed. Please retry.", "error"), "expired-callback": () => status("The anti-bot check expired. Please retry.", "error") }; widget = api.render($("turnstile-widget"), options); } return api; }
+  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("Please wait a moment for the anti-bot check to finish, then try again."); return result; }
 
   async function api(payload) {
     const response = await fetch(`${base()}/functions/v1/guest-registration`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invitation_token: invitationToken, ...payload }) });
@@ -83,6 +86,7 @@
       note.hidden = false;
     }
     $("registration").hidden = false;
+    renderTurnstile().catch(() => { /* surfaced on submit */ });
     status("Nothing has been submitted yet. Your details are saved only when you confirm your seat.");
   }
 
