@@ -64,7 +64,7 @@
     section.id = "member-verification";
     section.className = "member-verification";
     section.hidden = true;
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>Use the active member email if it differs from the purchaser email. If it cannot be matched, you may request review by attesting below.</p><label class="field"><span>MEMBERSHIP EMAIL <i>OPTIONAL</i></span><input id="membership-email" type="email" autocomplete="email" maxlength="320"></label><label class="condition-check"><input id="member-attestation" type="checkbox"><span>I confirm that I am a current SALUTE member and understand this ticket may require review.</span></label>`;
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. We check your purchaser email against our membership records. If your membership is under a different email, add it here.</p><label class="field"><span>MEMBERSHIP EMAIL <i>OPTIONAL</i></span><input id="membership-email" type="email" autocomplete="email" maxlength="320" placeholder="If different from your purchaser email"></label><label class="condition-check"><input id="member-attestation" type="checkbox" required><span>I confirm I am a current or former SALUTE member.</span></label><p class="member-note">Memberships we can’t match automatically are confirmed by our team before the event.</p>`;
     selection.insertAdjacentElement("afterend", section);
   }
   function updateMemberFields(code) {
@@ -149,6 +149,7 @@
     if (!code || !howHeard) throw new Error("Complete the registration details before checkout.");
     const membership = value(form, "membership-email").toLowerCase();
     if (membership && !emailPattern.test(membership)) throw new Error("Enter a valid membership email address.");
+    if (code === "salute_member" && !byId("member-attestation")?.checked) throw new Error("Confirm your SALUTE membership to use the member rate.");
     return {
       ticket_type_code: code, order_type: table ? "table" : "ticket", quantity: table || member ? 1 : count,
       guest_quantity: guestSeats,
