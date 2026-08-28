@@ -27,6 +27,27 @@
   function cell(label, value) { const el = document.createElement("div"), a = document.createElement("span"), b = document.createElement("strong"); a.textContent = label; b.textContent = value; el.append(a, b); return el; }
   function openSeats() { return (table?.seats || []).filter((seat) => !seat.locked && !seat.attendee_id && !activeSeat(seat.seat_number)); }
   function activeSeat(n) { return (table?.invitations || []).some((i) => Number(i.seat_number) === Number(n) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); }
+  // The server is the authority on both deadlines; these only decide what the
+  // page offers, so a closed window never shows a control that would be refused.
+  function windowOf(key) { const w = table && table[key]; return w && typeof w === "object" ? w : null; }
+  function changesOpen() { const w = windowOf("details_window"); return !w || w.open !== false; }
+  function changesCutoff() { const w = windowOf("details_window"); return w && typeof w.cutoff_display === "string" ? w.cutoff_display : ""; }
+  function guestCutoff() { const w = windowOf("guest_details_window"); return w && typeof w.cutoff_display === "string" ? w.cutoff_display : ""; }
+  function renderChangeWindow() {
+    const node = $("changes-window"), mine = changesCutoff(), theirs = guestCutoff();
+    const parts = [];
+    if (changesOpen()) {
+      if (mine) parts.push(`You can invite guests and rename this table until ${mine}.`);
+      if (theirs) parts.push(`Your guests can change their own details until ${theirs}.`);
+      if (mine) parts.push("After that, email ssuite@salute.community and the S.Suite team can still make changes.");
+    } else {
+      parts.push(mine ? `Table changes closed on ${mine}.` : "Table changes are closed.");
+      parts.push("You can still resend an invitation to a guest. For any other change, email ssuite@salute.community and the S.Suite team can help.");
+    }
+    node.textContent = parts.join(" ");
+    node.className = changesOpen() ? "notice" : "notice error";
+    node.hidden = parts.length === 0;
+  }
   function render() {
     $("portal").hidden = false;
     const currentTableName = typeof table.table_name === "string" ? table.table_name.trim() : "";
@@ -47,12 +68,16 @@
     }
     const select = $("invite-form").elements.seat_number; select.replaceChildren();
     for (const seat of openSeats()) { const option = document.createElement("option"); option.value = String(seat.seat_number); option.textContent = `Seat ${String(seat.seat_number).padStart(2, "0")}`; select.append(option); }
-    const form = $("invite-form"); form.hidden = openSeats().length === 0;
+    const form = $("invite-form"); form.hidden = openSeats().length === 0 || !changesOpen();
+    if (!changesOpen() && editingTableName) setNameEditor(false);
+    $("edit-table-name").hidden = editingTableName || !changesOpen();
+    renderChangeWindow();
   }
-  function setNameEditor(open) {
+  function setNameEditor(requested) {
+    const open = requested && changesOpen();
     editingTableName = open;
     $("table-name-form").hidden = !open;
-    $("edit-table-name").hidden = open;
+    $("edit-table-name").hidden = open || !changesOpen();
     if (open) {
       const input = $("table-name-input");
       input.value = typeof table?.table_name === "string" ? table.table_name.trim() : "";
@@ -63,6 +88,7 @@
     event.preventDefault();
     const form = event.currentTarget;
     const name = form.elements.table_name.value.trim();
+    if (!changesOpen()) { setNameEditor(false); render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community for a late change.` : "Table changes are closed.", "error"); }
     if (!name || name.length > tableNameLimit || invalidTableNameCharacters.test(name)) {
       return status("Enter a table name of 1–200 characters without control characters.", "error");
     }
@@ -87,6 +113,7 @@
   }
   async function invite(event) {
     event.preventDefault(); const form = event.currentTarget; const recipient = form.elements.recipient_email.value.trim().toLowerCase(), seat = Number(form.elements.seat_number.value), note = form.elements.personal_note.value.trim();
+    if (!changesOpen()) { render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
     if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return status("Enter a valid email, open seat, and optional note.", "error");
     const button = form.querySelector("button[type=submit]"); button.disabled = true;
     try { status("Queueing the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation queued. It has not been represented as sent; the server delivery worker must accept it.", "success"); } catch { status("Unable to queue this invitation. Confirm that this secure link remains active and try again.", "error"); } finally { button.disabled = false; }
