@@ -64,7 +64,7 @@
     section.id = "member-verification";
     section.className = "member-verification";
     section.hidden = true;
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. We check your purchaser email against our membership records. If your membership is under a different email, add it here.</p><label class="field"><span>MEMBERSHIP EMAIL <i>OPTIONAL</i></span><input id="membership-email" type="email" autocomplete="email" maxlength="320" placeholder="If different from your purchaser email"></label><label class="condition-check"><input id="member-attestation" type="checkbox" required><span>I confirm I am a current or former SALUTE member.</span></label><p class="member-note">Memberships we can’t match automatically are confirmed by our team before the event.</p>`;
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. Enter the access code from your SALUTE email to unlock it.</p><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" required maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from your SALUTE email"></label><p class="member-note">Don’t have your code? Email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we’ll send it to you.</p>`;
     selection.insertAdjacentElement("afterend", section);
   }
   function updateMemberFields(code) {
@@ -147,15 +147,14 @@
     const purchaser = attendees[0];
     const howHeard = value(form, "referral-source");
     if (!code || !howHeard) throw new Error("Complete the registration details before checkout.");
-    const membership = value(form, "membership-email").toLowerCase();
-    if (membership && !emailPattern.test(membership)) throw new Error("Enter a valid membership email address.");
-    if (code === "salute_member" && !byId("member-attestation")?.checked) throw new Error("Confirm your SALUTE membership to use the member rate.");
+    const memberCode = String(byId("member-code")?.value || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    if (code === "salute_member" && !memberCode) throw new Error("Enter your member access code to use the member rate. It is in your SALUTE email — or write to ssuite@salute.community and we will send it.");
     return {
       ticket_type_code: code, order_type: table ? "table" : "ticket", quantity: table || member ? 1 : count,
       guest_quantity: guestSeats,
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
-      membership_email: code === "salute_member" && membership ? membership : undefined,
-      member_attestation: code === "salute_member" && Boolean(byId("member-attestation")?.checked),
+      member_code: code === "salute_member" ? memberCode : undefined,
+      member_attestation: false,
       how_heard: howHeard, attendees, combined_agreement: true,
       terms_version: p.termsVersion, privacy_version: p.privacyVersion, media_release_version: p.mediaReleaseVersion,
       success_url: `${location.origin}/registration.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,

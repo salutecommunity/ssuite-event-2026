@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#f4efe8">
   <meta name="referrer" content="no-referrer">
   <title>S.Suite — Attend</title>
-  <link rel="stylesheet" href="./styles.css?v=20260828d">
-  <link rel="stylesheet" href="./donation-auction.css?v=20260828d">
-  <script src="./config.js?v=20260828d"></script>
+  <link rel="stylesheet" href="./styles.css?v=20260828e">
+  <link rel="stylesheet" href="./donation-auction.css?v=20260828e">
+  <script src="./config.js?v=20260828e"></script>
 </head>
 <body>
 <a class="skip" href="#content">Skip to content</a>
@@ -51,7 +51,7 @@
       <div class="ticket-grid">
         <article class="ticket-card">
           <div><p class="micro">EARLY BIRD / INDIVIDUAL</p><h3>SALUTE Member Ticket</h3><div class="price-row"><p class="price">$275</p><p class="original-price"><span class="sr-only">Original price </span>$350</p></div><p class="price-note">Early-bird price</p></div>
-          <p>For current and former SALUTE members. One seat per member — guests are welcome at the Community rate.</p>
+          <p>For current and former SALUTE members. One seat per member — guests are welcome at the Community rate. Requires the member access code from your SALUTE email.</p>
           <button class="button button-outline choose" type="button" data-ticket-code="salute_member" data-live-label="Choose this ticket" data-ticket="SALUTE Member Ticket" data-price="275" disabled aria-disabled="true">Sales opening soon</button>
         </article>
         <article class="ticket-card featured">
@@ -216,6 +216,6 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260828d"></script>
-<script src="./donation-auction-live.js?v=20260828d"></script>
+<script src="./live-chain.js?v=20260828e"></script>
+<script src="./donation-auction-live.js?v=20260828e"></script>
 </body></html>
