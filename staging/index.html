@@ -7,9 +7,9 @@
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>STAGING — S.Suite — Attend</title>
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./donation-auction.css">
-  <script src="./config.js"></script>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../donation-auction.css">
+  <script src="../config.js"></script>
 
   <style>
     .staging-badge{position:fixed;right:18px;bottom:18px;z-index:500;background:#000;color:#fff;border:1px solid #fff;padding:10px 13px;font:600 10px/1 NeueSwiss,Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;box-shadow:0 4px 18px rgba(0,0,0,.2)}
@@ -24,7 +24,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site-header">
   <a class="brand" href="#attend" aria-label="S.Suite home">
-    <img src="./assets/ssuite-logo-header.png" alt="S.Suite">
+    <img src="../assets/ssuite-logo-header.png" alt="S.Suite">
   </a>
   <nav class="event-nav" aria-label="Event navigation">
     <a href="#attend" data-route="attend">Attend</a>
@@ -43,7 +43,7 @@
         <p class="hero-lede">An evening honoring South Asian women leaders and allies across business, capital, and culture.</p>
         <a class="text-link" href="#tickets">Choose your ticket ↓</a>
       </div>
-      <div class="hero-mark" aria-hidden="true"><img src="./assets/ssuite-mark.png" alt=""></div>
+      <div class="hero-mark" aria-hidden="true"><img src="../assets/ssuite-mark.png" alt=""></div>
     </section>
 
     <section class="facts" aria-label="Event details">
@@ -61,7 +61,7 @@
       <div class="ticket-grid">
         <article class="ticket-card">
           <div><p class="micro">EARLY BIRD / INDIVIDUAL</p><h3>SALUTE Member Ticket</h3><div class="price-row"><p class="price">$275</p><p class="original-price"><span class="sr-only">Original price </span>$350</p></div><p class="price-note">Early-bird price</p></div>
-          <p>For current and former SALUTE members.</p>
+          <p>For current SALUTE members. We’ll verify membership with the email used at checkout.</p>
           <button class="button button-outline choose" data-ticket="SALUTE Member Ticket" data-ticket-code="salute_member" data-price="275">Preview ticket flow</button>
         </article>
         <article class="ticket-card featured">
@@ -76,6 +76,7 @@
           <button class="button button-light choose" data-ticket="Table for ten" data-ticket-code="full_table" data-price="5000">Preview table flow</button>
         </article>
       </div>
+      <div class="trust-row" aria-label="Features planned for live sales"><span>Planned: promotion codes</span><span>Planned: live availability</span><span>Planned: email receipt</span></div>
     </section>
 
     <section class="editorial-band">
@@ -161,8 +162,8 @@
 </main>
 
 <footer>
-  <div class="footer-brand"><img src="./assets/salute-wordmark-white-hires.png" alt="SALUTE"><span>NEW YORK CITY</span></div>
-  <div class="footer-links"><a href="#attend">Attend</a><a href="#give">Give</a><a href="#auction">Auction</a><a href="./event-terms.html">Terms</a><a href="./event-privacy.html">Privacy</a><a href="./media-release.html">Media release</a><a href="https://ssuite.org/">S.Suite.org ↗</a></div>
+  <div class="footer-brand"><img src="../assets/salute-wordmark-white-hires.png" alt="SALUTE"><span>NEW YORK CITY</span></div>
+  <div class="footer-links"><a href="#attend">Attend</a><a href="#give">Give</a><a href="#auction">Auction</a><a href="../event-terms.html">Terms</a><a href="../event-privacy.html">Privacy</a><a href="../media-release.html">Media release</a><a href="https://ssuite.org/">S.Suite.org ↗</a></div>
   <p>Prince George Ballroom · New York City</p>
 </footer>
 
@@ -184,7 +185,7 @@
       <div class="table-preview"><div><p class="micro">YOUR PRIVATE TABLE PAGE / PREVIEW</p><strong>10 seats · Sample guest status · Local seating controls</strong></div><button class="text-button" type="button" id="preview-dashboard">Preview dashboard →</button></div>
     </section>
     <section class="legal-consent" aria-label="Registration agreement">
-      <label><input type="checkbox" name="combined_agreement" required><span>I agree to the <a data-policy-link="terms" href="./event-terms.html" target="_blank" rel="noopener noreferrer">Event Terms &amp; Conditions</a>, <a data-policy-link="privacy" href="./event-privacy.html" target="_blank" rel="noopener noreferrer">Event Privacy Notice</a>, and <a data-policy-link="media" href="./media-release.html" target="_blank" rel="noopener noreferrer">Media, Photo &amp; Video Release</a> for myself and, where applicable, on behalf of the guests included in this registration.</span></label>
+      <label><input type="checkbox" name="combined_agreement" required><span>I agree to the <a data-policy-link="terms" href="../event-terms.html" target="_blank" rel="noopener noreferrer">Event Terms &amp; Conditions</a>, <a data-policy-link="privacy" href="../event-privacy.html" target="_blank" rel="noopener noreferrer">Event Privacy Notice</a>, and <a data-policy-link="media" href="../media-release.html" target="_blank" rel="noopener noreferrer">Media, Photo &amp; Video Release</a> for myself and, where applicable, on behalf of the guests included in this registration.</span></label>
     </section>
     <div class="total"><span>Total</span><strong id="ticket-total">$350</strong></div>
     <div id="checkout-turnstile" class="turnstile-slot" aria-live="polite"></div>
@@ -291,6 +292,6 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js"></script>
-<script src="./donation-auction-live.js"></script>
+<script src="../live-chain.js"></script>
+<script src="../donation-auction-live.js"></script>
 </body></html>

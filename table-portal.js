@@ -30,7 +30,7 @@
   function render() {
     $("portal").hidden = false;
     const currentTableName = typeof table.table_name === "string" ? table.table_name.trim() : "";
-    $("table-name").textContent = currentTableName || `Table ${table.table_number || ""}`;
+    $("table-name").textContent = currentTableName || (table.table_number ? `Table ${table.table_number}` : "Your table");
     if (!editingTableName) $("table-name-input").value = currentTableName;
     const meta = $("table-meta"); meta.replaceChildren(cell("Table", String(table.table_number || "—")), cell("Seats", String((table.seats || []).length)), cell("Lead", "Secure access"));
     const grid = $("seats"); grid.replaceChildren();

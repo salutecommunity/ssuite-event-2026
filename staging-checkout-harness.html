@@ -1,0 +1,35 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
+<title>S.Suite isolated staging checkout harness</title>
+<h1>S.Suite isolated staging checkout harness</h1>
+<p>This local-only page creates one Stripe sandbox Checkout Session for release-gate verification. No live transaction is possible.</p>
+<div class="cf-turnstile" data-sitekey="1x00000000000000000000AA" data-callback="tokenReady"></div>
+<button id="create" type="button" disabled>Create sandbox checkout</button>
+<pre id="status">Waiting for test verification…</pre>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+let turnstileToken = "";
+window.tokenReady = token => { turnstileToken = token; document.querySelector('#create').disabled = false; document.querySelector('#status').textContent = 'Test verification ready.'; };
+document.querySelector('#create').addEventListener('click', async () => {
+  const id = Date.now();
+  const body = {
+    ticket_type_code: 'community', order_type: 'ticket', quantity: 1,
+    purchaser: { first_name: 'Automatic', last_name: 'Refund Gate', email: `refund-gate-${id}@example.com` },
+    member_attestation: false, how_heard: 'Other',
+    attendees: [{ first_name: 'Automatic', last_name: 'Refund Gate', email: `refund-gate-${id}@example.com`, job_title: 'Release Tester', company: 'S.Suite isolated staging', meal_preference: 'Vegetarian', has_dietary_or_allergy_needs: false, dietary_or_allergy_details: null, has_accessibility_needs: false, accessibility_details: null }],
+    combined_agreement: true, turnstile_token: turnstileToken,
+    terms_version: 'ssuite-event-terms-2026-08-25', privacy_version: 'ssuite-event-privacy-2026-08-25', media_release_version: 'ssuite-media-release-2026-08-25',
+    success_url: `${location.origin}/staging-checkout-harness.html?checkout=success`, cancel_url: `${location.origin}/staging-checkout-harness.html?checkout=cancel`
+  };
+  document.querySelector('#create').disabled = true;
+  document.querySelector('#status').textContent = 'Creating sandbox checkout…';
+  try {
+    const response = await fetch('https://fxhhwtmanioqtjnppbhm.supabase.co/functions/v1/create-checkout', { method: 'POST', headers: {'content-type':'application/json'}, body: JSON.stringify(body) });
+    const result = await response.json();
+    sessionStorage.setItem('ssuite-refund-gate-order', JSON.stringify(result));
+    document.querySelector('#status').textContent = JSON.stringify({status: response.status, ...result}, null, 2);
+    if (response.ok && result.checkout_url) location.assign(result.checkout_url);
+  } catch (error) { document.querySelector('#status').textContent = String(error); }
+});
+</script>
