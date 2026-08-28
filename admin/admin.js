@@ -172,8 +172,9 @@ function render(tab, payload) {
   if (tab === "attendees") host.append(adminAttendeeButton());
   const searchable = ["orders", "attendees", "email", "auction", "donations"].includes(tab);
   if (searchable) host.append(searchToolbar(tab));
+  const memberStatus = (v) => ({ matched: "Verified", alternate_email_matched: "Verified · alt email", attested_review: "Needs review" })[v] || (v ? String(v) : "—");
   const configByTab = {
-    orders: [["Purchaser", (r) => `${text(r.purchaser_first_name)} ${text(r.purchaser_last_name)}`], ["Email", "purchaser_email"], ["Type", "order_type"], ["Total", (r) => money(r.total_cents, r.currency)], ["Status", "status"], ["Paid", (r) => date(r.paid_at)]],
+    orders: [["Purchaser", (r) => `${text(r.purchaser_first_name)} ${text(r.purchaser_last_name)}`], ["Email", "purchaser_email"], ["Type", "order_type"], ["Membership", (r) => memberStatus(r.member_verification_status)], ["Total", (r) => money(r.total_cents, r.currency)], ["Status", "status"], ["Paid", (r) => date(r.paid_at)]],
     attendees: [["Name", (r) => `${text(r.first_name)} ${text(r.last_name)}`], ["Email", "email"], ["Organization", "company"], ["Registration", "registration_status"], ["Source", "source"], ["Completed", (r) => date(r.completed_at)]],
     email: [["Recipient", "recipient"], ["Message", "message_type"], ["Status", "status"], ["Attempts", "attempt_count"], ["Accepted", (r) => date(r.accepted_at)], ["Delivered", (r) => date(r.delivered_at)]],
     auction: [["Donor", "name"], ["Email", "normalized_email"], ["Company", "company"], ["Estimated value", (r) => money(r.estimated_value_cents)], ["Review", "review_status"], ["Received", (r) => date(r.created_at)]],
