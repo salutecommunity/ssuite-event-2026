@@ -10,7 +10,13 @@
 <main class="shell">
   <section class="card"><p class="eyebrow">Private table access</p><h1>Manage your table.</h1><p class="lede">This page uses a private access link. The access token is removed from the browser address immediately and is never stored by this page.</p><p id="status" class="notice" role="status" aria-live="polite">Checking secure access…</p></section>
   <section id="portal" class="card" hidden>
-    <p class="eyebrow">Table overview</p><h2 id="table-name"></h2><div id="table-meta" class="table-meta"></div>
+    <div class="table-heading"><div><p class="eyebrow">Table overview</p><h2 id="table-name"></h2></div><button id="edit-table-name" type="button" class="secondary">Rename table</button></div>
+    <form id="table-name-form" class="table-name-form" hidden novalidate>
+      <label class="field"><span>TABLE NAME</span><input id="table-name-input" name="table_name" type="text" required maxlength="200" autocomplete="off" aria-describedby="table-name-help"></label>
+      <p id="table-name-help" class="field-help">Use a name your guests will recognize. Up to 200 characters.</p>
+      <div class="actions"><button type="submit">Save name</button><button id="cancel-table-name" type="button" class="secondary">Cancel</button></div>
+    </form>
+    <div id="table-meta" class="table-meta"></div>
     <div class="actions"><button id="refresh" type="button" class="secondary">Refresh table</button><button id="revoke-access" type="button" class="danger">Revoke this access link</button></div>
     <div id="seats" class="seat-grid" aria-live="polite"></div>
     <form id="invite-form" class="invite-form" novalidate>

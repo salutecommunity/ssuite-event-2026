@@ -82,7 +82,7 @@
   async function submitAuction(form) {
     const ready = auctionReadiness(); if (!ready.ok) { status("auction-live-status", ready.reason, "error"); return; }
     if (!form.reportValidity()) return;
-    const read = (name) => text(form.elements[name]?.value), amountValue = normalizeMoney(read("estimated_value"));
+    const read = (name) => text(form.elements.namedItem(name)?.value), amountValue = normalizeMoney(read("estimated_value"));
     if (!money.test(amountValue)) { status("auction-live-status", "Enter the estimated value in dollars, for example 1500 or 1500.00.", "error"); return; }
     if (!email.test(read("email").toLowerCase())) { status("auction-live-status", "Please enter a valid email address.", "error"); return; }
     const submit = byId("auction-submit-button");

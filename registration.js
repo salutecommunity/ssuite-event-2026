@@ -308,7 +308,7 @@
     const base = apiBase();
     if (!base) { setFormStatus("This page is not configured. Please write to ssuite@salute.community.", "error"); return; }
 
-    const read = (field) => String(form.elements[field] ? form.elements[field].value : "").trim();
+    const read = (field) => String(form.elements.namedItem(field)?.value ?? "").trim();
     const dietary = read("dietary_or_allergy_details");
     const accessibility = read("accessibility_details");
     const buttons = form.querySelectorAll("button");
