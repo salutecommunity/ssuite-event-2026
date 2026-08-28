@@ -7,6 +7,9 @@
   const byId = (id) => document.getElementById(id);
   const email = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   const money = /^(?:0|[1-9][0-9]*)(?:\.[0-9]{1,2})?$/;
+  // People type money the way they say it: "$1,500", "1 500", "$100.". Accept that
+  // and normalise to the plain amount the API expects, rather than rejecting them.
+  const normalizeMoney = (raw) => text(raw).replace(/[$,\s]/g, "").replace(/\.$/, "").replace(/^\./, "0.");
   function apiBase() {
     const raw = text(cfg.apiBase).replace(/\/$/, "");
     try {
@@ -51,12 +54,13 @@
     if (!apiBase() || !text(cfg.turnstileSiteKey) || !configuredTurnstileAction(d) || !safeHttps(d.receiptPolicyUrl)) return { ok: false, reason: "Donation checkout is not fully configured." };
     return { ok: true, reason: "" };
   }
-  function donationAmount() { const custom = text(byId("custom-amount")?.value); if (custom) return custom; const selected = document.querySelector(".amounts button.selected"); return text(selected?.dataset.amount); }
+  function donationAmount() { const custom = normalizeMoney(byId("custom-amount")?.value); if (custom) return custom; const selected = document.querySelector(".amounts button.selected"); return text(selected?.dataset.amount); }
   async function submitDonation(form) {
     const ready = donationReadiness(); if (!ready.ok) { status("donation-live-status", ready.reason, "error"); return; }
     if (!form.reportValidity()) return;
     const amount = donationAmount(), donorName = text(form.elements.donor_name?.value), address = text(form.elements.email?.value).toLowerCase();
-    if (!money.test(amount) || !donorName || !email.test(address)) { status("donation-live-status", "Please complete a valid donation amount and donor details.", "error"); return; }
+    if (!money.test(amount)) { status("donation-live-status", "Enter a donation amount in dollars, for example 250 or 250.00.", "error"); return; }
+    if (!donorName || !email.test(address)) { status("donation-live-status", "Please add the donor name and a valid email address.", "error"); return; }
     const submit = byId("donate-button");
     try {
       submit.disabled = true; status("donation-live-status", "Preparing secure donation checkout…", "working");
@@ -78,8 +82,9 @@
   async function submitAuction(form) {
     const ready = auctionReadiness(); if (!ready.ok) { status("auction-live-status", ready.reason, "error"); return; }
     if (!form.reportValidity()) return;
-    const read = (name) => text(form.elements[name]?.value), amountValue = read("estimated_value");
-    if (!money.test(amountValue) || !email.test(read("email").toLowerCase())) { status("auction-live-status", "Please complete valid submission details.", "error"); return; }
+    const read = (name) => text(form.elements[name]?.value), amountValue = normalizeMoney(read("estimated_value"));
+    if (!money.test(amountValue)) { status("auction-live-status", "Enter the estimated value in dollars, for example 1500 or 1500.00.", "error"); return; }
+    if (!email.test(read("email").toLowerCase())) { status("auction-live-status", "Please enter a valid email address.", "error"); return; }
     const submit = byId("auction-submit-button");
     try {
       submit.disabled = true; status("auction-live-status", "Submitting for committee review…", "working");
