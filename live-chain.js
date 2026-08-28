@@ -111,7 +111,7 @@
     if (!response) throw new Error("Please complete the anti-bot check before continuing.");
     return response;
   }
-  function value(form, name) { return text(form.elements[name]?.value); }
+  function value(form, name) { return text(form.elements.namedItem(name)?.value); }
   function attendee(form, index) {
     const dietaryFlag = Boolean(form.querySelector(`[data-detail="dietary-${index}"]`)?.checked);
     const accessibilityFlag = Boolean(form.querySelector(`[data-detail="accessibility-${index}"]`)?.checked);
