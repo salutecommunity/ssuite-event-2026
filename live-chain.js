@@ -148,7 +148,7 @@
       member_attestation: code === "salute_member" && Boolean(byId("member-attestation")?.checked),
       how_heard: howHeard, attendees, combined_agreement: true,
       terms_version: p.termsVersion, privacy_version: p.privacyVersion, media_release_version: p.mediaReleaseVersion,
-      success_url: `${location.origin}${location.pathname}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${location.origin}/registration.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${location.origin}${location.pathname}?checkout=cancel`,
     };
   }

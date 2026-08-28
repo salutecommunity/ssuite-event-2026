@@ -4,6 +4,9 @@
  * or the Stripe Checkout session the buyer was returned with (?session_id=).
  * The credential is stripped from the address bar immediately and is never stored.
  *
+ * The registration details are a single list. "Edit details" turns the values in that
+ * same list into inputs in place; it never shows a second copy of the form.
+ *
  * This page states only what the server reports from the authoritative records, and it
  * only reports a change as saved after the event system confirms the write and the
  * details are re-read from the server. */
@@ -13,7 +16,10 @@
   const byId = (id) => document.getElementById(id);
   const tokenPattern = /^[0-9a-f]{64}$/;
   const sessionPattern = /^cs_(live|test)_[A-Za-z0-9]{8,320}$/;
+  const MEALS = ["Vegetarian", "Non-vegetarian"];
+  const REFERRALS = ["SALUTE community", "S.Suite community or event", "Friend or colleague", "Email", "Social media", "Search", "Other"];
   let latest = null;
+  let editing = false;
 
   function apiBase() {
     const value = (typeof cfg.apiBase === "string" ? cfg.apiBase : "").trim().replace(/\/$/, "");
@@ -48,15 +54,69 @@
     } catch { return `$${(cents / 100).toFixed(2)}`; }
   }
 
-  function row(container, label, value) {
-    if (!value) return;
+  /* One row of the details list: a label cell and a value cell. */
+  function addRow(container, label, node) {
     const cell = document.createElement("div");
     const key = document.createElement("span");
     key.textContent = label;
-    const val = document.createElement("strong");
-    val.textContent = value;
-    cell.append(key, val);
+    cell.append(key, node);
     container.append(cell);
+    return cell;
+  }
+
+  function value(text) {
+    const el = document.createElement("strong");
+    el.textContent = text;
+    return el;
+  }
+
+  function row(container, label, text) {
+    if (!text) return;
+    addRow(container, label, value(text));
+  }
+
+  function note(text) {
+    const el = document.createElement("span");
+    el.className = "row-note";
+    el.textContent = text;
+    return el;
+  }
+
+  function control(spec, current) {
+    let field;
+    if (spec.type === "select") {
+      field = document.createElement("select");
+      const blank = document.createElement("option");
+      blank.value = "";
+      blank.textContent = spec.required ? "Select" : "Prefer not to say";
+      field.append(blank);
+      for (const option of spec.options) {
+        const item = document.createElement("option");
+        item.value = option;
+        item.textContent = option;
+        field.append(item);
+      }
+    } else if (spec.type === "textarea") {
+      field = document.createElement("textarea");
+    } else {
+      field = document.createElement("input");
+      field.type = spec.type || "text";
+    }
+    field.name = spec.key;
+    field.value = current || "";
+    if (spec.required) field.required = true;
+    if (spec.max) field.maxLength = spec.max;
+    if (spec.placeholder) field.placeholder = spec.placeholder;
+    if (spec.autocomplete) field.autocomplete = spec.autocomplete;
+    field.setAttribute("aria-label", spec.label);
+    return field;
+  }
+
+  function wrap(...nodes) {
+    const holder = document.createElement("div");
+    holder.className = "field-control";
+    holder.append(...nodes);
+    return holder;
   }
 
   // Take the credential out of the address bar before anything else runs.
@@ -83,17 +143,10 @@
     }).filter(Boolean).join(", ");
   }
 
-  function renderRegistration(data) {
-    const block = byId("registration-block");
-    const rows = byId("registration-rows");
-    const note = byId("registration-note");
-    const actions = byId("registration-actions");
-    const registration = data && typeof data.registration === "object" ? data.registration : null;
-    if (!registration) { block.hidden = true; return; }
-
+  /* Read-only view of the registration: the same rows the edit mode replaces. */
+  function renderView(rows, registration, data) {
     const name = [registration.first_name, registration.last_name]
       .filter((part) => typeof part === "string" && part.trim()).join(" ").trim();
-    rows.replaceChildren();
     row(rows, "Name", name);
     row(rows, "Email", registration.email || "");
     row(rows, "Secondary email", registration.secondary_email || "");
@@ -109,13 +162,53 @@
     if (typeof data.seats_total === "number" && data.seats_total > 1) {
       row(rows, "Seats on this order", String(data.seats_total));
     }
+  }
+
+  /* Edit view: identical rows, with the values replaced by inputs in place. */
+  function renderEdit(rows, registration, data) {
+    const first = control({ key: "first_name", label: "First name", required: true, max: 120, autocomplete: "given-name", placeholder: "First name" }, registration.first_name);
+    const last = control({ key: "last_name", label: "Last name", required: true, max: 120, autocomplete: "family-name", placeholder: "Last name" }, registration.last_name);
+    const pair = document.createElement("div");
+    pair.className = "name-pair";
+    pair.append(first, last);
+    addRow(rows, "Name", pair);
+
+    addRow(rows, "Email", wrap(value(registration.email || ""),
+      note("Your email is the delivery address for every secure link on this registration, so our team changes it for you. Write to ssuite@salute.community.")));
+
+    addRow(rows, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, registration.secondary_email));
+    addRow(rows, "Phone", control({ key: "phone", label: "Phone", type: "tel", max: 100, placeholder: "Optional" }, registration.phone));
+    addRow(rows, "Job title", control({ key: "job_title", label: "Job title", required: true, max: 160 }, registration.job_title));
+    addRow(rows, "Company", control({ key: "company", label: "Company", required: true, max: 160 }, registration.company));
+    addRow(rows, "Meal preference", control({ key: "meal_preference", label: "Meal preference", type: "select", required: true, options: MEALS }, registration.meal_preference));
+    addRow(rows, "Allergies / dietary needs", control({ key: "dietary_or_allergy_details", label: "Allergies or dietary needs", max: 500, placeholder: "Leave blank if none" },
+      registration.has_dietary_or_allergy_needs ? registration.dietary_or_allergy_details : ""));
+    addRow(rows, "Accessibility needs", control({ key: "accessibility_details", label: "Accessibility needs", type: "textarea", max: 500, placeholder: "Leave blank if none" },
+      registration.has_accessibility_needs ? registration.accessibility_details : ""));
+    addRow(rows, "How you heard about us", control({ key: "how_heard", label: "How you heard about us", type: "select", options: REFERRALS }, data.how_heard));
+    if (typeof data.seats_total === "number" && data.seats_total > 1) {
+      row(rows, "Seats on this order", String(data.seats_total));
+    }
+  }
+
+  function renderRegistration(data) {
+    const block = byId("registration-block");
+    const rows = byId("registration-rows");
+    const noteEl = byId("registration-note");
+    const registration = data && typeof data.registration === "object" ? data.registration : null;
+    if (!registration) { block.hidden = true; return; }
+
+    rows.replaceChildren();
+    if (editing) renderEdit(rows, registration, data);
+    else renderView(rows, registration, data);
 
     const seated = typeof data.seats_total === "number" && data.seats_total > 1;
-    note.textContent = seated
+    noteEl.textContent = seated
       ? "These are your own details. The other seats on this order are managed from the private table link sent to the table lead."
       : "";
-    note.hidden = !seated;
-    actions.hidden = data.editable !== true;
+    noteEl.hidden = !seated;
+    byId("view-actions").hidden = editing || data.editable !== true;
+    byId("edit-actions").hidden = !editing;
     block.hidden = false;
   }
 
@@ -196,49 +289,28 @@
     }
   }
 
-  function toggleConditional(form) {
-    const dietary = form.elements.has_dietary_or_allergy_needs;
-    const accessibility = form.elements.has_accessibility_needs;
-    byId("dietary-field").hidden = !dietary.checked;
-    byId("accessibility-field").hidden = !accessibility.checked;
-    form.elements.dietary_or_allergy_details.required = dietary.checked;
-    form.elements.accessibility_details.required = accessibility.checked;
-  }
-
-  function fillForm(form, registration, howHeard) {
-    const set = (field, value) => { if (form.elements[field]) form.elements[field].value = value || ""; };
-    set("first_name", registration.first_name);
-    set("last_name", registration.last_name);
-    set("job_title", registration.job_title);
-    set("company", registration.company);
-    set("secondary_email", registration.secondary_email);
-    set("phone", registration.phone);
-    set("meal_preference", registration.meal_preference);
-    set("how_heard", howHeard);
-    form.elements.has_dietary_or_allergy_needs.checked = registration.has_dietary_or_allergy_needs === true;
-    set("dietary_or_allergy_details", registration.dietary_or_allergy_details);
-    form.elements.has_accessibility_needs.checked = registration.has_accessibility_needs === true;
-    set("accessibility_details", registration.accessibility_details);
-    toggleConditional(form);
-  }
-
-  function showForm(open) {
-    byId("registration-form").hidden = !open;
-    byId("registration-actions").hidden = open || !(latest && latest.editable === true);
-    byId("registration-rows").hidden = open;
-    byId("registration-note").hidden = open || !byId("registration-note").textContent;
-    if (!open) setFormStatus("");
+  function setEditing(open) {
+    editing = open;
+    setFormStatus("");
+    if (latest) renderRegistration(latest);
+    if (open) {
+      const first = byId("registration-form").elements.first_name;
+      if (first) first.focus();
+    }
   }
 
   async function save(event) {
     event.preventDefault();
     const form = event.currentTarget;
+    if (!editing) return;
     if (!form.reportValidity()) return;
     if (!latest || !latest.registration || !latest.registration.attendee_id) return;
     const base = apiBase();
     if (!base) { setFormStatus("This page is not configured. Please write to ssuite@salute.community.", "error"); return; }
 
-    const value = (field) => String(form.elements[field] ? form.elements[field].value : "").trim();
+    const read = (field) => String(form.elements[field] ? form.elements[field].value : "").trim();
+    const dietary = read("dietary_or_allergy_details");
+    const accessibility = read("accessibility_details");
     const buttons = form.querySelectorAll("button");
     buttons.forEach((button) => { button.disabled = true; });
     setFormStatus("Saving your changes…");
@@ -250,14 +322,12 @@
           ...credential,
           attendee_id: latest.registration.attendee_id,
           registration: {
-            first_name: value("first_name"), last_name: value("last_name"),
-            job_title: value("job_title"), company: value("company"),
-            secondary_email: value("secondary_email"), phone: value("phone"),
-            meal_preference: value("meal_preference"), how_heard: value("how_heard"),
-            has_dietary_or_allergy_needs: form.elements.has_dietary_or_allergy_needs.checked,
-            dietary_or_allergy_details: value("dietary_or_allergy_details"),
-            has_accessibility_needs: form.elements.has_accessibility_needs.checked,
-            accessibility_details: value("accessibility_details"),
+            first_name: read("first_name"), last_name: read("last_name"),
+            job_title: read("job_title"), company: read("company"),
+            secondary_email: read("secondary_email"), phone: read("phone"),
+            meal_preference: read("meal_preference"), how_heard: read("how_heard"),
+            has_dietary_or_allergy_needs: Boolean(dietary), dietary_or_allergy_details: dietary,
+            has_accessibility_needs: Boolean(accessibility), accessibility_details: accessibility,
           },
         }),
       });
@@ -267,8 +337,9 @@
         return;
       }
       // Re-read from the server so the page shows the stored record, not the typed one.
+      editing = false;
       await lookup(0);
-      showForm(false);
+      setFormStatus("");
       setStatus("Your registration details have been updated.", "success");
     } catch {
       setFormStatus("We could not reach the event system. Please check your connection and try again.", "error");
@@ -280,17 +351,9 @@
   document.addEventListener("DOMContentLoaded", () => {
     const print = byId("print-receipt");
     if (print) print.addEventListener("click", () => window.print());
-    const form = byId("registration-form");
-    form.addEventListener("submit", save);
-    form.elements.has_dietary_or_allergy_needs.addEventListener("change", () => toggleConditional(form));
-    form.elements.has_accessibility_needs.addEventListener("change", () => toggleConditional(form));
-    byId("edit-registration").addEventListener("click", () => {
-      if (!latest || !latest.registration) return;
-      fillForm(form, latest.registration, latest.how_heard);
-      showForm(true);
-      form.elements.first_name.focus();
-    });
-    byId("cancel-registration").addEventListener("click", () => showForm(false));
+    byId("registration-form").addEventListener("submit", save);
+    byId("edit-registration").addEventListener("click", () => setEditing(true));
+    byId("cancel-registration").addEventListener("click", () => setEditing(false));
 
     if (!credential) {
       byId("receipt-heading").textContent = "This page needs your private link.";
