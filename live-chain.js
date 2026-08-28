@@ -134,8 +134,14 @@
     if (!p) throw new Error("Final policies are not configured.");
     const code = ticketCode();
     const table = code === "full_table";
-    const count = table ? 1 : Number(byId("ticket-quantity")?.value);
-    if (!Number.isInteger(count) || count < 1 || count > (table ? 10 : 4)) throw new Error("Choose a valid number of attendees.");
+    const member = code === "salute_member";
+    // The member rate covers exactly one seat. Any guests a member brings are
+    // billed at the open Community rate on the same payment.
+    const guestSelect = byId("member-guest-quantity");
+    const guestSeats = member && guestSelect && !guestSelect.disabled ? Number(guestSelect.value || 0) : 0;
+    if (!Number.isInteger(guestSeats) || guestSeats < 0 || guestSeats > 4) throw new Error("Choose a valid number of guest seats.");
+    const count = table ? 1 : (member ? 1 + guestSeats : Number(byId("ticket-quantity")?.value));
+    if (!Number.isInteger(count) || count < 1 || count > (table ? 10 : (member ? 5 : 4))) throw new Error("Choose a valid number of attendees.");
     const attendees = Array.from({ length: count }, (_, i) => attendee(form, i));
     if (new Set(attendees.map((a) => a.email)).size !== attendees.length) throw new Error("Each attendee must have a unique primary email address.");
     const purchaser = attendees[0];
@@ -144,7 +150,8 @@
     const membership = value(form, "membership-email").toLowerCase();
     if (membership && !emailPattern.test(membership)) throw new Error("Enter a valid membership email address.");
     return {
-      ticket_type_code: code, order_type: table ? "table" : "ticket", quantity: table ? 1 : count,
+      ticket_type_code: code, order_type: table ? "table" : "ticket", quantity: table || member ? 1 : count,
+      guest_quantity: guestSeats,
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
       membership_email: code === "salute_member" && membership ? membership : undefined,
       member_attestation: code === "salute_member" && Boolean(byId("member-attestation")?.checked),
