@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+  <title>S.Suite — Registration details</title>
+  <link rel="stylesheet" href="./live-pages.css?v=20260827l"><script src="./config.js?v=20260827l"></script>
+</head>
+<body>
+<header class="masthead"><div class="shell"><img src="./assets/ssuite-logo-header.png" alt="S.Suite"><span>Registration details</span></div></header>
+<main class="shell">
+  <section class="card">
+    <p class="eyebrow" id="receipt-eyebrow">Registration details</p>
+    <h1 id="receipt-heading">Checking your registration…</h1>
+    <p class="lede" id="receipt-lede">This page reports only what the event system has actually recorded. Your private link is removed from the browser address immediately and is never stored by this page.</p>
+    <p id="status" class="notice" role="status" aria-live="polite">Checking your registration…</p>
+
+    <div id="receipt" hidden>
+      <p class="eyebrow receipt-section">Payment</p>
+      <div class="receipt-rows" id="receipt-rows"></div>
+
+      <div id="registration-block" hidden>
+        <p class="eyebrow receipt-section">Your registration</p>
+        <form id="registration-form" novalidate>
+          <p class="notice" id="form-status" role="status" aria-live="polite" hidden></p>
+          <div class="receipt-rows" id="registration-rows"></div>
+          <p class="field-note" id="registration-note" hidden></p>
+          <div class="actions" id="view-actions" hidden>
+            <button type="button" id="edit-registration">Edit details</button>
+          </div>
+          <div class="actions" id="edit-actions" hidden>
+            <button type="submit" id="save-registration">Save changes</button>
+            <button type="button" class="secondary" id="cancel-registration">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <p class="eyebrow receipt-section">The event</p>
+      <div class="receipt-rows">
+        <div><span>Event</span><strong>S.Suite Honors Ceremony</strong></div>
+        <div><span>Date</span><strong>Friday, November 20, 2026</strong></div>
+        <div><span>Venue</span><strong>Prince George Ballroom<br>New York City</strong></div>
+      </div>
+
+      <p class="lede" id="receipt-next"></p>
+      <div class="actions"><button type="button" id="print-receipt">Print this page</button></div>
+    </div>
+
+    <p class="lede receipt-help">Questions about your registration? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
+  </section>
+</main>
+<script src="./registration.js?v=20260827l"></script>
+</body></html>

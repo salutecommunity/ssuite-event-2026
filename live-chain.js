@@ -101,6 +101,8 @@
       turnstileWidget = api.render(container, {
         sitekey: text(cfg.turnstileSiteKey),
         action: "ssuite_checkout",
+        // Clear a stale "complete the check" notice as soon as it is actually complete.
+        "callback": () => { const el = byId("live-checkout-status"); if (el && /anti-bot check/i.test(el.textContent)) setStatus("", ""); },
         "error-callback": () => setStatus("The anti-bot check failed. Please retry.", "error"),
         "expired-callback": () => setStatus("The anti-bot check expired. Please retry.", "error"),
       });
@@ -148,7 +150,7 @@
       member_attestation: code === "salute_member" && Boolean(byId("member-attestation")?.checked),
       how_heard: howHeard, attendees, combined_agreement: true,
       terms_version: p.termsVersion, privacy_version: p.privacyVersion, media_release_version: p.mediaReleaseVersion,
-      success_url: `${location.origin}${location.pathname}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${location.origin}/registration.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${location.origin}${location.pathname}?checkout=cancel`,
     };
   }
@@ -186,13 +188,62 @@
     if (label) label.textContent = readiness.ok ? "Secure checkout available after details" : "Preview only — checkout is not configured";
     if (readiness.ok) ensureTurnstile().catch((error) => setStatus(error.message, "error"));
   }
+  function applyLiveLabels() {
+    // Preview wording ships as the safe default in the HTML. Only replace it once
+    // this deployment is genuinely wired for live payment, so the page never
+    // promises a real charge it cannot make, or a preview it will not honour.
+    if (!liveReadiness().ok) return;
+    const note = byId("attend-sales-note");
+    if (note) note.textContent = "Early-bird pricing is available through September 30, 2026, 11:59 p.m. Eastern. Registration is completed through secure checkout.";
+    const submit = byId("checkout-submit");
+    if (submit) submit.textContent = "Continue to secure checkout";
+    const fineprint = byId("checkout-fineprint");
+    if (fineprint) fineprint.textContent = "You will be taken to Stripe to complete payment securely. Your registration is confirmed only after your payment is verified.";
+    const intro = byId("drawer-intro");
+    if (intro) intro.textContent = "Enter each attendee's details. You will then be taken to Stripe to pay securely; your registration is created once your payment is verified.";
+    const tableEyebrow = byId("table-head-eyebrow");
+    if (tableEyebrow) tableEyebrow.textContent = "TABLE MANAGEMENT";
+    const tableTitle = byId("table-head-title");
+    if (tableTitle) tableTitle.textContent = "Set up your table.";
+    const tableNote = byId("table-head-note");
+    if (tableNote) tableNote.textContent = "After your payment is verified, you will receive a private link to manage your table, name it, add guests, and send seat registration links.";
+    const tablePageEyebrow = byId("table-page-eyebrow");
+    if (tablePageEyebrow) tablePageEyebrow.textContent = "YOUR PRIVATE TABLE PAGE";
+    const tablePageNote = byId("table-page-note");
+    if (tablePageNote) tablePageNote.textContent = "10 seats · Guest status · Seating controls";
+    // The local sample dashboard is a design preview only; it must not be offered
+    // alongside a real purchase that issues a genuine private table page.
+    const previewDashboard = byId("preview-dashboard");
+    if (previewDashboard) previewDashboard.hidden = true;
+    // Purchase controls ship disabled and labelled "Sales opening soon" so the
+    // page is never able to start a checkout it cannot complete. They are only
+    // enabled once this deployment is genuinely wired for live payment.
+    document.querySelectorAll(".choose").forEach((button) => {
+      const label = text(button.dataset.liveLabel);
+      if (!label) return;
+      button.disabled = false;
+      button.removeAttribute("aria-disabled");
+      button.textContent = label;
+    });
+  }
   function init() {
     policyLinks();
+    applyLiveLabels();
     createMemberFields();
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
-    const result = new URLSearchParams(location.search).get("checkout");
+    const params = new URLSearchParams(location.search);
+    const result = params.get("checkout");
     if (result === "cancel") setStatus("Checkout was cancelled. No payment was completed.", "error");
-    if (result === "success") setStatus("Checkout returned successfully. Your registration is confirmed only after Stripe and the event system finish processing.", "working");
+    if (result === "success") {
+      // Hand the buyer to the receipt page, which reports only what the
+      // authoritative order record proves. Never confirm anything here.
+      const session = text(params.get("session_id"));
+      if (/^cs_(live|test)_[A-Za-z0-9]{8,320}$/.test(session)) {
+        location.replace(`./registration.html?session_id=${encodeURIComponent(session)}`);
+        return;
+      }
+      setStatus("Checkout returned, but this browser did not carry the reference needed to display your receipt. Your confirmation email is the authoritative record. Write to ssuite@salute.community if it does not arrive.", "working");
+    }
   }
   window.SSuiteLive = { checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
