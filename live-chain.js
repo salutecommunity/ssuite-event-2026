@@ -101,6 +101,8 @@
       turnstileWidget = api.render(container, {
         sitekey: text(cfg.turnstileSiteKey),
         action: "ssuite_checkout",
+        // Clear a stale "complete the check" notice as soon as it is actually complete.
+        "callback": () => { const el = byId("live-checkout-status"); if (el && /anti-bot check/i.test(el.textContent)) setStatus("", ""); },
         "error-callback": () => setStatus("The anti-bot check failed. Please retry.", "error"),
         "expired-callback": () => setStatus("The anti-bot check expired. Please retry.", "error"),
       });
