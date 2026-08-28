@@ -165,12 +165,7 @@
     <div class="member-guest-add" id="member-guest-note" hidden><label class="quantity-wrap" id="member-guest-wrap">BRINGING GUESTS<select id="member-guest-quantity" aria-label="Guest seats at the Community rate"><option value="0">No guests</option><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option></select></label><p class="member-guest-note" id="member-guest-open-note">The member rate covers one seat, your own. Guests join at the Community rate of <span id="member-guest-rate">$350</span> each, on this same payment.</p><p class="member-guest-note" id="member-guest-closed" hidden>Guest seats at the Community rate are not available right now.</p></div>
     <div id="guest-fields"></div>
     <section class="table-options" hidden>
-      <div class="form-section-head"><p class="micro" id="table-head-eyebrow">TABLE MANAGEMENT</p><h3 id="table-head-title">Set up your table.</h3><p id="table-head-note">After your payment is verified, you will receive a private link to manage your table, name it, add guests, and send seat registration links.</p></div>
-      <div class="management-choices">
-        <label><input type="radio" name="table-method" value="manual" checked><span><b>Add guests myself</b><small>Enter and update guest details from your table dashboard.</small></span></label>
-        <label><input type="radio" name="table-method" value="invite"><span><b>Send registration links</b><small>Guests complete their own details and join your table automatically.</small></span></label>
-        <label><input type="radio" name="table-method" value="both"><span><b>Use both</b><small>Manually add some guests and invite the rest.</small></span></label>
-      </div>
+      <div class="form-section-head"><p class="micro" id="table-head-eyebrow">TABLE MANAGEMENT</p><h3 id="table-head-title">Set up your table.</h3><p id="table-head-note">After your payment is verified, you will receive a private link to manage your table: name it, assign each of your ten seats, invite your guests by email, and resend or revoke a link at any time.</p></div>
       <label class="field full-field"><span>TABLE NAME <i>OPTIONAL</i></span><input name="table-name" placeholder="e.g. your company or family name"></label>
       <div class="table-preview"><div><p class="micro" id="table-page-eyebrow">YOUR PRIVATE TABLE PAGE</p><strong id="table-page-note">10 seats · Guest status · Seating controls</strong></div></div>
     </section>
@@ -216,6 +211,6 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260828e"></script>
+<script src="./live-chain.js?v=20260828f"></script>
 <script src="./donation-auction-live.js?v=20260828e"></script>
 </body></html>

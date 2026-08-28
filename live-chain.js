@@ -213,7 +213,7 @@
     const tableTitle = byId("table-head-title");
     if (tableTitle) tableTitle.textContent = "Set up your table.";
     const tableNote = byId("table-head-note");
-    if (tableNote) tableNote.textContent = "After your payment is verified, you will receive a private link to manage your table, name it, add guests, and send seat registration links.";
+    if (tableNote) tableNote.textContent = "After your payment is verified, you will receive a private link to manage your table: name it, assign each of your ten seats, invite your guests by email, and resend or revoke a link at any time.";
     const tablePageEyebrow = byId("table-page-eyebrow");
     if (tablePageEyebrow) tablePageEyebrow.textContent = "YOUR PRIVATE TABLE PAGE";
     const tablePageNote = byId("table-page-note");
