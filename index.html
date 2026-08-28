@@ -8,7 +8,7 @@
   <title>S.Suite — Attend</title>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./donation-auction.css">
-  <script src="./config.js?v=20260827n"></script>
+  <script src="./config.js?v=20260827p"></script>
 </head>
 <body>
 <a class="skip" href="#content">Skip to content</a>
@@ -203,15 +203,16 @@ function showDrawerStep(step){registrationForm.hidden=step!=='registration';draw
 registrationForm.addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.reportValidity())return;if(window.SSuiteLive?.checkoutEnabled()){window.SSuiteLive.submitCheckout(e.currentTarget);return}notify('Secure checkout is unavailable right now. No payment was started and no registration was created.')});
 async function copyText(value){try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);return true}const temp=document.createElement('textarea');temp.value=value;temp.setAttribute('readonly','');temp.style.cssText='position:fixed;opacity:0;pointer-events:none';document.body.appendChild(temp);temp.select();const copied=document.execCommand('copy');temp.remove();return copied}catch{return false}}
 let amount=250,frequency='One-time';const amountSummary=document.querySelector('#amount-summary'),frequencySummary=document.querySelector('#frequency-summary'),donateButton=document.querySelector('#donate-button'),customAmount=document.querySelector('#custom-amount');
-function updateGift(){const hasCents=/\.\d/.test(customAmount.value.trim()),formatted=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2}).format(Number.isFinite(amount)?amount:0);amountSummary.textContent=formatted;frequencySummary.textContent=`${frequency} gift`;donateButton.textContent=`Preview giving flow — ${formatted}`}
+function giftValue(){const raw=customAmount.value.trim();if(raw){const parsed=Number(raw.replace(/[$,\s]/g,''));return Number.isFinite(parsed)&&parsed>0?parsed:0}const selected=document.querySelector('.amounts button.selected'),preset=Number(selected?.dataset.amount);return Number.isFinite(preset)?preset:0}
+function updateGift(){amount=giftValue();const hasCents=/\.\d/.test(customAmount.value.trim()),formatted=new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:hasCents?2:0,maximumFractionDigits:2}).format(amount);amountSummary.textContent=amount>0?formatted:'—';frequencySummary.textContent=`${frequency} gift`;if(window.SSuiteDonation?.enabled()){donateButton.textContent=amount>0?`Continue to secure donation checkout — ${formatted}`:'Continue to secure donation checkout'}else if(!donateButton.disabled){donateButton.textContent=`Preview giving flow — ${formatted}`}}
 document.querySelectorAll('.segmented button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.segmented button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});b.classList.add('selected');b.setAttribute('aria-pressed','true');frequency=b.dataset.frequency;updateGift()}));
-document.querySelectorAll('.amounts button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});b.classList.add('selected');b.setAttribute('aria-pressed','true');customAmount.value='';amount=Number(b.dataset.amount);updateGift()}));
-customAmount.addEventListener('input',e=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});const parsed=Number(e.target.value);amount=Number.isFinite(parsed)?Math.max(0,parsed):0;updateGift()});
+document.querySelectorAll('.amounts button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});b.classList.add('selected');b.setAttribute('aria-pressed','true');customAmount.value='';updateGift()}));
+customAmount.addEventListener('input',()=>{document.querySelectorAll('.amounts button').forEach(x=>{x.classList.remove('selected');x.setAttribute('aria-pressed','false')});updateGift()});
 document.querySelector('#donation-form').addEventListener('submit',e=>{e.preventDefault();if(window.SSuiteDonation?.enabled()){window.SSuiteDonation.submit(e.currentTarget);return}if(amount<1)return notify('Please choose a gift amount.');notify('Preview only — no donation, payment, or receipt was recorded.')});
 document.querySelector('#copy-matching-details').addEventListener('click',async()=>{const details='SALUTE Foundation\nEIN: 92-2955808\n12 East 49th Street, 11th Floor\nNew York, NY 10017',ok=await copyText(details),status=document.querySelector('#matching-status');status.textContent=ok?'Matching details copied. Open your employer’s matching-gift portal and search for SALUTE Foundation.':'Copy unavailable. Please select and copy the organization details above.';status.hidden=false;notify(ok?'Matching details copied.':'Copy unavailable — organization details remain visible.');});
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260827n"></script>
-<script src="./donation-auction-live.js?v=20260827n"></script>
+<script src="./live-chain.js?v=20260827p"></script>
+<script src="./donation-auction-live.js?v=20260827p"></script>
 </body></html>
