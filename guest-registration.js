@@ -60,17 +60,100 @@
     span.textContent = label; strong.textContent = clean; wrap.append(span, strong); container.append(wrap);
   }
 
-  function renderRegistered(guest) {
+  /* The registered details are a single list. "Edit details" turns the values in that
+     same list into inputs, rather than opening a second copy of the form below it.
+     Guests may change their own details until the published deadline; the deadline
+     itself is enforced by the event system, not by hiding this button. */
+  const MEALS = ["Vegetarian", "Non-vegetarian"];
+  let editing = false, guestOnFile = null, canEdit = false, cutoffDisplay = "", lastContext = null;
+
+  function regStatus(message, tone) {
+    const el = $("registered-status");
+    el.textContent = message || ""; el.hidden = !message;
+    el.className = "notice" + (tone ? ` ${tone}` : "");
+  }
+
+  function addRow(container, label, node) {
+    const wrap = document.createElement("div"), span = document.createElement("span");
+    span.textContent = label; wrap.append(span, node); container.append(wrap);
+  }
+
+  function control(spec, value) {
+    const holder = document.createElement("div"); holder.className = "field-control";
+    let field;
+    if (spec.type === "select") {
+      field = document.createElement("select");
+      for (const option of ["", ...spec.options]) {
+        const el = document.createElement("option");
+        el.value = option; el.textContent = option || "Select one"; field.append(el);
+      }
+    } else {
+      field = document.createElement(spec.type === "textarea" ? "textarea" : "input");
+      if (spec.type && spec.type !== "textarea") field.type = spec.type;
+      if (spec.placeholder) field.placeholder = spec.placeholder;
+    }
+    field.name = spec.key;
+    field.value = text(value);
+    if (spec.required) field.required = true;
+    if (spec.max) field.maxLength = spec.max;
+    field.setAttribute("aria-label", spec.label);
+    holder.append(field);
+    if (spec.note) {
+      const note = document.createElement("small"); note.className = "row-note"; note.textContent = spec.note;
+      holder.append(note);
+    }
+    return holder;
+  }
+
+  function renderRows() {
     const container = $("registered-rows"); container.replaceChildren();
-    const g = guest || {}, name = [text(g.first_name), text(g.last_name)].filter(Boolean).join(" ");
-    row(container, "Name", name);
-    row(container, "Email", g.email);
-    row(container, "Secondary email", g.secondary_email);
-    row(container, "Job title", g.job_title);
-    row(container, "Company", g.company);
-    row(container, "Meal preference", g.meal_preference);
-    if (g.has_dietary_or_allergy_needs) row(container, "Dietary / allergies", text(g.dietary_or_allergy_details) || "Noted");
-    if (g.has_accessibility_needs) row(container, "Accessibility", text(g.accessibility_details) || "Noted");
+    const g = guestOnFile || {};
+    if (editing) {
+      const pair = document.createElement("div"); pair.className = "name-pair";
+      pair.append(control({ key: "first_name", label: "First name", required: true, max: 120 }, g.first_name),
+                  control({ key: "last_name", label: "Last name", required: true, max: 120 }, g.last_name));
+      addRow(container, "Name", pair);
+      const held = document.createElement("div"); held.className = "field-control";
+      const shown = document.createElement("strong"); shown.textContent = text(g.email);
+      const why = document.createElement("small"); why.className = "row-note";
+      why.textContent = "Your email is where the private link to this seat was sent, so our team changes it for you. Write to ssuite@salute.community.";
+      held.append(shown, why);
+      addRow(container, "Email", held);
+      addRow(container, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, g.secondary_email));
+      addRow(container, "Job title", control({ key: "job_title", label: "Job title", required: true, max: 160 }, g.job_title));
+      addRow(container, "Company", control({ key: "company", label: "Company", required: true, max: 160 }, g.company));
+      addRow(container, "Meal preference", control({ key: "meal_preference", label: "Meal preference", type: "select", required: true, options: MEALS }, g.meal_preference));
+      addRow(container, "Allergies / dietary needs", control({ key: "dietary_or_allergy_details", label: "Allergies or dietary needs", type: "textarea", max: 500, placeholder: "Leave blank if none" }, g.has_dietary_or_allergy_needs ? g.dietary_or_allergy_details : ""));
+      addRow(container, "Accessibility needs", control({ key: "accessibility_details", label: "Accessibility needs", type: "textarea", max: 500, placeholder: "Leave blank if none" }, g.has_accessibility_needs ? g.accessibility_details : ""));
+    } else {
+      row(container, "Name", [text(g.first_name), text(g.last_name)].filter(Boolean).join(" "));
+      row(container, "Email", g.email);
+      row(container, "Secondary email", g.secondary_email);
+      row(container, "Job title", g.job_title);
+      row(container, "Company", g.company);
+      row(container, "Meal preference", g.meal_preference);
+      row(container, "Allergies / dietary needs", g.has_dietary_or_allergy_needs ? (text(g.dietary_or_allergy_details) || "Noted") : "None noted");
+      row(container, "Accessibility needs", g.has_accessibility_needs ? (text(g.accessibility_details) || "Noted") : "None noted");
+    }
+    $("view-actions").hidden = editing || !canEdit;
+    $("edit-actions").hidden = !editing;
+    const help = $("registered-help");
+    if (canEdit && cutoffDisplay) {
+      help.textContent = `You can change these details yourself until ${cutoffDisplay}. Can no longer attend? Email ssuite@salute.community and we will take care of it.`;
+    } else if (!canEdit && cutoffDisplay) {
+      help.textContent = `Guest details were final on ${cutoffDisplay}, so this list can no longer be edited here. If something needs to change, or you can no longer attend, email ssuite@salute.community and we will take care of it.`;
+    } else {
+      help.textContent = "Need to change anything, or can no longer attend? Email ssuite@salute.community and we will take care of it.";
+    }
+  }
+
+  function renderRegistered(guest, context) {
+    guestOnFile = guest || {};
+    const ctx = context || {};
+    canEdit = ctx.can_edit === true;
+    cutoffDisplay = text(ctx.details_cutoff_display);
+    editing = false;
+    renderRows();
     $("registered").hidden = false;
     $("registration").hidden = true;
   }
@@ -102,10 +185,10 @@
     if (!base() || !policy() || !String(cfg.turnstileSiteKey || "").trim() || !turnstileAction()) { $("invite-lede").textContent = "Guest registration is not available right now."; status("Guest registration is not configured for live use.", "error"); return; }
     let result;
     try { result = await api({ action: "lookup" }); } catch { status("We could not reach the invitation service. Please check your connection and refresh.", "error"); return; }
-    const context = result.body;
+    const context = result.body; lastContext = context;
     if (!result.ok || !context || typeof context.state !== "string") { status("We could not check your invitation right now. Please refresh in a moment.", "error"); return; }
     if (context.state !== "invalid") renderContext(context);
-    if (context.state === "completed") { renderRegistered(context.guest); status("You are registered. You can return to this page whenever you like.", "success"); return; }
+    if (context.state === "completed") { renderRegistered(context.guest, context); status("You are registered. You can return to this page whenever you like.", "success"); return; }
     if (context.state !== "open") { status(UNAVAILABLE[context.state] || UNAVAILABLE.unavailable, "error"); return; }
     openForm(context);
   }
@@ -135,14 +218,60 @@
       if (!response.ok || typeof response.body.attendee_id !== "string") throw new Error(typeof response.body.error === "string" ? response.body.error : "Your registration could not be completed.");
       /* Re-read from the server so the confirmation shows what was actually stored, not what was typed. */
       const confirmed = await api({ action: "lookup" }).catch(() => null);
-      if (confirmed && confirmed.ok && confirmed.body && confirmed.body.state === "completed") renderRegistered(confirmed.body.guest);
-      else renderRegistered(attendee);
+      if (confirmed && confirmed.ok && confirmed.body && confirmed.body.state === "completed") renderRegistered(confirmed.body.guest, confirmed.body);
+      else renderRegistered(attendee, lastContext);
       status("Your seat is confirmed. You can return to this page whenever you like.", "success");
     } catch (err) {
       status(err instanceof Error ? err.message : "Your registration could not be completed.", "error");
       if (widget !== null && window.turnstile && typeof window.turnstile.reset === "function") window.turnstile.reset(widget);
     } finally { button.disabled = false; }
   }
+
+  function editedDetails(form) {
+    const get = (n) => String(form.elements.namedItem(n)?.value || "").trim();
+    const secondary = get("secondary_email").toLowerCase();
+    if (secondary && !emailPattern.test(secondary)) throw new Error("Enter a valid secondary email address.");
+    if (secondary && secondary === String(guestOnFile.email || "").toLowerCase()) throw new Error("The secondary email must be different from your own email address.");
+    const dietary = get("dietary_or_allergy_details"), accessibility = get("accessibility_details");
+    return {
+      first_name: get("first_name"), last_name: get("last_name"),
+      job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"),
+      secondary_email: secondary || undefined,
+      has_dietary_or_allergy_needs: Boolean(dietary), dietary_or_allergy_details: dietary || undefined,
+      has_accessibility_needs: Boolean(accessibility), accessibility_details: accessibility || undefined
+    };
+  }
+
+  /* A change is only reported as saved once the event system confirms the write, and the
+     list is then redrawn from what the server actually holds rather than from the inputs. */
+  async function saveDetails(event) {
+    event.preventDefault();
+    if (!editing) return;
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    const button = $("save-details");
+    button.disabled = true;
+    try {
+      regStatus("Saving your changes…");
+      const response = await api({ action: "update", attendee: editedDetails(form) });
+      if (!response.ok || response.body.saved !== true) throw new Error(typeof response.body.error === "string" ? response.body.error : "We could not save those changes. Please try again.");
+      const confirmed = await api({ action: "lookup" }).catch(() => null);
+      if (confirmed && confirmed.ok && confirmed.body && confirmed.body.state === "completed") {
+        lastContext = confirmed.body;
+        guestOnFile = confirmed.body.guest || guestOnFile;
+        canEdit = confirmed.body.can_edit === true;
+        cutoffDisplay = text(confirmed.body.details_cutoff_display);
+      }
+      editing = false; renderRows();
+      regStatus("Your details are updated.", "success");
+    } catch (err) {
+      regStatus(err instanceof Error ? err.message : "We could not save those changes.", "error");
+    } finally { button.disabled = false; }
+  }
+
+  $("registered-form").addEventListener("submit", saveDetails);
+  $("edit-details").addEventListener("click", () => { editing = true; renderRows(); regStatus("Nothing is changed until you select save changes."); });
+  $("cancel-details").addEventListener("click", () => { editing = false; renderRows(); regStatus(""); });
 
   function toggle(check, details) { check.addEventListener("change", () => { details.hidden = !check.checked; details.querySelector("textarea").required = check.checked; }); }
   toggle($("guest-form").elements.dietary, $("dietary-details"));

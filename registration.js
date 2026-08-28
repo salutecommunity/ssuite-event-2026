@@ -203,10 +203,20 @@
     else renderView(rows, registration, data);
 
     const seated = typeof data.seats_total === "number" && data.seats_total > 1;
-    noteEl.textContent = seated
+    const seatedNote = seated
       ? "These are your own details. The other seats on this order are managed from the private table link sent to the table lead."
       : "";
-    noteEl.hidden = !seated;
+    /* Guests and purchasers may correct their own details until the published deadline. */
+    const cutoff = typeof data.details_cutoff_display === "string" ? data.details_cutoff_display : "";
+    let deadlineNote = "";
+    if (cutoff && data.details_open === false) {
+      deadlineNote = `Registration details were final on ${cutoff}, so they can no longer be changed here. Email ssuite@salute.community and we will take care of it.`;
+    } else if (cutoff && data.editable === true) {
+      deadlineNote = `You can change these details yourself until ${cutoff}.`;
+    }
+    const combined = [seatedNote, deadlineNote].filter(Boolean).join(" ");
+    noteEl.textContent = combined;
+    noteEl.hidden = !combined;
     byId("view-actions").hidden = editing || data.editable !== true;
     byId("edit-actions").hidden = !editing;
     block.hidden = false;
