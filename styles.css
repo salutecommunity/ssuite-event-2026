@@ -43,4 +43,4 @@
 .member-guest-add .quantity-wrap{width:100%;max-width:250px}
 .member-guest-add .quantity-wrap[hidden]{display:none!important}
 .member-guest-add select{height:50px;width:100%;border:1px solid var(--line);background:#fff;border-radius:0;padding:0 13px;font:14px var(--sans);color:#000}
-.member-guest-add .member-guest-note{margin:0;padding:0;background:none;border-left:0}
+.member-guest-add .member-guest-note{display:block;margin:0;padding:0;background:none;border-left:0;font-size:13px;line-height:1.55;color:#555}
