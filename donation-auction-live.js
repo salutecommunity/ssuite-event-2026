@@ -90,10 +90,10 @@
       submit.disabled = true; status("auction-live-status", "Submitting for committee review…", "working");
       const turnstileToken = await token("auction-turnstile", configuredTurnstileAction(auctionConfig()));
       const response = await post("auction-submission", idempotencyKey(), { name: read("name"), email: read("email").toLowerCase(), job_title: read("job_title"), company: read("company"), item: read("item"), estimated_value: amountValue, website: read("website"), turnstile_token: turnstileToken });
-      if (!response.ok) throw new Error("Unable to accept submission. Please try again later.");
-      const payload = await response.json().catch(() => ({})); if (payload.accepted !== true) throw new Error("Unable to accept submission. Please try again later.");
+      if (!response.ok) throw new Error("We could not accept this submission. Please try again shortly, or write to ssuite@salute.community.");
+      const payload = await response.json().catch(() => ({})); if (payload.accepted !== true) throw new Error("We could not accept this submission. Please try again shortly, or write to ssuite@salute.community.");
       status("auction-live-status", "Thank you. Your item was submitted for committee consideration.", "success"); form.reset(); reset("auction-turnstile");
-    } catch (error) { status("auction-live-status", error instanceof Error ? error.message : "Unable to accept submission. Please try again later.", "error"); reset("auction-turnstile"); } finally { submit.disabled = false; }
+    } catch (error) { status("auction-live-status", error instanceof Error ? error.message : "We could not accept this submission. Please try again shortly, or write to ssuite@salute.community.", "error"); reset("auction-turnstile"); } finally { submit.disabled = false; }
   }
   function init() {
     const donation = donationReadiness(), auction = auctionReadiness();

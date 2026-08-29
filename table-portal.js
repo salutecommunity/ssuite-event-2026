@@ -63,7 +63,7 @@
       else { const invite = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); detail.textContent = invite ? `Invitation ${invite.status}; awaiting details.` : "Open seat."; }
       card.append(title, detail);
       const invitation = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["queued", "sent", "opened", "started"].includes(i.status));
-      if (invitation) { const actions = document.createElement("div"); actions.className = "actions"; const resend = document.createElement("button"); resend.type = "button"; resend.className = "secondary"; resend.textContent = "Queue resend"; resend.addEventListener("click", () => resendInvitation(invitation.id)); actions.append(resend); card.append(actions); }
+      if (invitation) { const actions = document.createElement("div"); actions.className = "actions"; const resend = document.createElement("button"); resend.type = "button"; resend.className = "secondary"; resend.textContent = "Resend invitation"; resend.addEventListener("click", () => resendInvitation(invitation.id)); actions.append(resend); card.append(actions); }
       grid.append(card);
     }
     const select = $("invite-form").elements.seat_number; select.replaceChildren();
@@ -90,14 +90,14 @@
     const name = form.elements.table_name.value.trim();
     if (!changesOpen()) { setNameEditor(false); render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community for a late change.` : "Table changes are closed.", "error"); }
     if (!name || name.length > tableNameLimit || invalidTableNameCharacters.test(name)) {
-      return status("Enter a table name of 1–200 characters without control characters.", "error");
+      return status("Enter a table name between 1 and 200 characters.", "error");
     }
     const button = form.querySelector("button[type=submit]");
     button.disabled = true;
     try {
       status("Saving table name…");
       const result = await call({ action: "rename_table", table_name: name });
-      if (!result || typeof result.table_name !== "string") throw new Error("The table name response was invalid.");
+      if (!result || typeof result.table_name !== "string") throw new Error("The table name could not be updated. Your current name is unchanged.");
       table = { ...table, table_name: result.table_name };
       setNameEditor(false);
       render();
@@ -109,17 +109,17 @@
     }
   }
   async function load(message = "Refreshing secure table data…") {
-    status(message); const result = await call({ action: "get" }); table = result.table; if (!table || typeof table !== "object") throw new Error("Table data was unavailable."); render(); status("");
+    status(message); const result = await call({ action: "get" }); table = result.table; if (!table || typeof table !== "object") throw new Error("We could not load your table just now."); render(); status("");
   }
   async function invite(event) {
     event.preventDefault(); const form = event.currentTarget; const recipient = form.elements.recipient_email.value.trim().toLowerCase(), seat = Number(form.elements.seat_number.value), note = form.elements.personal_note.value.trim();
     if (!changesOpen()) { render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
-    if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return status("Enter a valid email, open seat, and optional note.", "error");
+    if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return status("Enter your guest's email address and choose an open seat.", "error");
     const button = form.querySelector("button[type=submit]"); button.disabled = true;
-    try { status("Queueing the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation queued. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { status("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
+    try { status("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation queued. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { status("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
   }
   async function resendInvitation(invitationId) {
-    try { status("Queueing resend…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend queued. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
+    try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend queued. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
   }
   async function revoke() {
     if (!confirm("Revoke this table access link? This cannot be undone from this browser.")) return;

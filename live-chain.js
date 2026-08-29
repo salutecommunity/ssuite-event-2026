@@ -122,7 +122,7 @@
     const accessibilityFlag = Boolean(form.querySelector(`[data-detail="accessibility-${index}"]`)?.checked);
     const primary = value(form, `guest-${index}-email`).toLowerCase();
     const secondary = value(form, `guest-${index}-secondary-email`).toLowerCase();
-    if (!emailPattern.test(primary) || (secondary && (!emailPattern.test(secondary) || secondary === primary))) throw new Error("Please provide distinct, valid attendee email addresses.");
+    if (!emailPattern.test(primary) || (secondary && (!emailPattern.test(secondary) || secondary === primary))) throw new Error("Please enter a valid email address for each attendee, and make sure each one is different.");
     const result = {
       first_name: value(form, `guest-${index}-first`), last_name: value(form, `guest-${index}-last`), email: primary,
       secondary_email: secondary || undefined, phone: value(form, `guest-${index}-phone`) || undefined,
@@ -254,7 +254,7 @@
         location.replace(`./registration.html?session_id=${encodeURIComponent(session)}`);
         return;
       }
-      setStatus("Checkout returned, but this browser did not carry the reference needed to display your receipt. Your confirmation email is the authoritative record. Write to ssuite@salute.community if it does not arrive.", "working");
+      setStatus("We could not load your receipt on this page. If your payment went through, your confirmation email is the record and arrives shortly. Please write to ssuite@salute.community if it does not.", "working");
     }
   }
   window.SSuiteLive = { checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern };

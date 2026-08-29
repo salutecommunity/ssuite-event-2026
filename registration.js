@@ -278,7 +278,7 @@
 
   async function lookup(attempt) {
     const base = apiBase();
-    if (!base) { setStatus("This page is not configured. Please write to ssuite@salute.community.", "error"); return; }
+    if (!base) { setStatus("This page is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community.", "error"); return; }
     try {
       const response = await fetch(`${base}/functions/v1/checkout-status`, {
         method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
@@ -316,7 +316,7 @@
     if (!form.reportValidity()) return;
     if (!latest || !latest.registration || !latest.registration.attendee_id) return;
     const base = apiBase();
-    if (!base) { setFormStatus("This page is not configured. Please write to ssuite@salute.community.", "error"); return; }
+    if (!base) { setFormStatus("This page is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community.", "error"); return; }
 
     const read = (field) => String(form.elements.namedItem(field)?.value ?? "").trim();
     const dietary = read("dietary_or_allergy_details");

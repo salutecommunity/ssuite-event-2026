@@ -201,9 +201,9 @@
     const get = (n) => String(form.elements.namedItem(n)?.value || "").trim();
     const primary = get("email").toLowerCase(), secondary = get("secondary_email").toLowerCase();
     const dietary = form.elements.dietary.checked, accessibility = form.elements.accessibility.checked;
-    if (!emailPattern.test(primary) || (secondary && (!emailPattern.test(secondary) || secondary === primary))) throw new Error("Enter distinct, valid email addresses.");
-    if (dietary && !get("dietary_or_allergy_details")) throw new Error("Describe dietary or allergy needs.");
-    if (accessibility && !get("accessibility_details")) throw new Error("Describe accessibility requirements.");
+    if (!emailPattern.test(primary) || (secondary && (!emailPattern.test(secondary) || secondary === primary))) throw new Error("Please enter valid email addresses, and make sure they are different from each other.");
+    if (dietary && !get("dietary_or_allergy_details")) throw new Error("Please tell us about your dietary or allergy needs.");
+    if (accessibility && !get("accessibility_details")) throw new Error("Please tell us what you need us to arrange.");
     return { first_name: get("first_name"), last_name: get("last_name"), email: primary, secondary_email: secondary || undefined, job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
   }
 
