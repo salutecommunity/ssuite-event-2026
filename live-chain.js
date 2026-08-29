@@ -112,6 +112,11 @@
     return response;
   }
   function value(form, name) { return text(form.elements.namedItem(name)?.value); }
+  function agreedToPolicies(form) {
+    const box = form.elements.namedItem("combined_agreement");
+    if (!box || box.checked !== true) throw new Error("Please accept the Event Terms & Conditions, Event Privacy Notice, and Media, Photo & Video Release to continue.");
+    return true;
+  }
   function attendee(form, index) {
     const dietaryFlag = Boolean(form.querySelector(`[data-detail="dietary-${index}"]`)?.checked);
     const accessibilityFlag = Boolean(form.querySelector(`[data-detail="accessibility-${index}"]`)?.checked);
@@ -155,7 +160,7 @@
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
       member_code: code === "salute_member" ? memberCode : undefined,
       member_attestation: false,
-      how_heard: howHeard, attendees, combined_agreement: true,
+      how_heard: howHeard, attendees, combined_agreement: agreedToPolicies(form),
       terms_version: p.termsVersion, privacy_version: p.privacyVersion, media_release_version: p.mediaReleaseVersion,
       success_url: `${location.origin}/registration.html?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${location.origin}${location.pathname}?checkout=cancel`,
