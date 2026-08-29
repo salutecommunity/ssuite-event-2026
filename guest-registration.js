@@ -170,7 +170,11 @@
     }
     $("registration").hidden = false;
     renderTurnstile().catch(() => { /* surfaced on submit */ });
-    status("Nothing has been submitted yet. Your details are saved only when you confirm your seat.");
+    /* The "nothing is saved until you confirm" reassurance lives in the form lede, directly
+       above the fields. Repeating it up in the notice region duplicates it and puts a neutral
+       statement in the slot reserved for real errors and progress, so it reads as a warning on
+       a clean page load. Clear the region instead and leave it for things that actually happen. */
+    status("");
   }
 
   const UNAVAILABLE = {
