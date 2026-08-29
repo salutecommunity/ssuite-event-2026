@@ -116,7 +116,7 @@
       const held = document.createElement("div"); held.className = "field-control";
       const shown = document.createElement("strong"); shown.textContent = text(g.email);
       const why = document.createElement("small"); why.className = "row-note";
-      why.textContent = "Your email is where the private link to this seat was sent, so our team changes it for you. Write to ssuite@salute.community.";
+      why.textContent = "Your email is where your invitation was sent, so our team updates it for you. Write to ssuite@salute.community.";
       held.append(shown, why);
       addRow(container, "Email", held);
       addRow(container, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, g.secondary_email));
@@ -274,7 +274,7 @@
   }
 
   $("registered-form").addEventListener("submit", saveDetails);
-  $("edit-details").addEventListener("click", () => { editing = true; renderRows(); regStatus("Nothing is changed until you select save changes."); });
+  $("edit-details").addEventListener("click", () => { editing = true; renderRows(); regStatus("Nothing is saved until you select save changes."); });
   $("cancel-details").addEventListener("click", () => { editing = false; renderRows(); regStatus(""); });
 
   function toggle(check, details) { check.addEventListener("change", () => { details.hidden = !check.checked; details.querySelector("textarea").required = check.checked; }); }

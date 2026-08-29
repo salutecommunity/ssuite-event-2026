@@ -66,9 +66,9 @@
     for (const seat of [...(table.seats || [])].sort((a, b) => a.seat_number - b.seat_number)) {
       const card = document.createElement("article"), title = document.createElement("h3"), detail = document.createElement("p");
       title.textContent = `Seat ${String(seat.seat_number).padStart(2, "0")}`;
-      if (seat.locked) detail.textContent = "This seat is locked.";
-      else if (seat.attendee_id) detail.textContent = `${[seat.first_name, seat.last_name].filter(Boolean).join(" ") || "Guest"} — ${seat.registration_status === "complete" ? "registered" : "awaiting guest completion"}`;
-      else { const invite = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); detail.textContent = invite ? `Invitation ${invite.status}; awaiting details.` : "Open seat."; }
+      if (seat.locked) detail.textContent = "This seat is not available to invite.";
+      else if (seat.attendee_id) detail.textContent = `${[seat.first_name, seat.last_name].filter(Boolean).join(" ") || "Guest"} — ${seat.registration_status === "complete" ? "registered" : "waiting on their details"}`;
+      else { const invite = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); detail.textContent = invite ? ({ draft: "Invitation not sent yet.", queued: "Invitation sending now.", sent: "Invitation sent — waiting on their details.", opened: "Invitation opened — waiting on their details.", started: "They have started — waiting on their details." }[invite.status] || "Invitation sent — waiting on their details.") : "Open seat."; }
       card.append(title, detail);
       const invitation = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["queued", "sent", "opened", "started"].includes(i.status));
       if (invitation) { const actions = document.createElement("div"); actions.className = "actions"; const resend = document.createElement("button"); resend.type = "button"; resend.className = "secondary"; resend.textContent = "Resend invitation"; resend.addEventListener("click", () => resendInvitation(invitation.id)); actions.append(resend); card.append(actions); }
@@ -116,7 +116,7 @@
       button.disabled = false;
     }
   }
-  async function load(message = "Refreshing secure table data…") {
+  async function load(message = "Updating your table…") {
     status(message); const result = await call({ action: "get" }); table = result.table; if (!table || typeof table !== "object") throw new Error("We could not load your table just now."); render(); status("");
   }
   async function invite(event) {
@@ -124,16 +124,16 @@
     if (!changesOpen()) { render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
     if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return status("Enter your guest's email address and choose an open seat.", "error");
     const button = form.querySelector("button[type=submit]"); button.disabled = true;
-    try { status("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation queued. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { status("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
+    try { status("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation is on its way. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { status("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
   }
   async function resendInvitation(invitationId) {
-    try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend queued. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
+    try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend is on its way. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
   }
   async function revoke() {
-    if (!confirm("Revoke this table access link? This cannot be undone from this browser.")) return;
-    try { await call({ action: "revoke_access" }); tableToken = ""; $("portal").hidden = true; status("This access link was revoked.", "success"); } catch { status("The access link could not be revoked.", "error"); }
+    if (!confirm("Turn off this link? Your table page will stop opening from the link in your email, and you will need to ask us for a new one.")) return;
+    try { await call({ action: "revoke_access" }); tableToken = ""; $("portal").hidden = true; status("This link is now turned off.", "success"); } catch { status("We could not turn off this link just now.", "error"); }
   }
-  $("refresh").addEventListener("click", () => load().catch(() => status("Unable to refresh this private table.", "error")));
+  $("refresh").addEventListener("click", () => load().catch(() => status("We could not update your table just now.", "error")));
   $("edit-table-name").addEventListener("click", () => setNameEditor(true));
   $("cancel-table-name").addEventListener("click", () => setNameEditor(false));
   $("table-name-form").addEventListener("submit", renameTable);

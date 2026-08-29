@@ -8,7 +8,7 @@
   <title>S.Suite — Attend</title>
   <link rel="stylesheet" href="./styles.css?v=20260828e">
   <link rel="stylesheet" href="./donation-auction.css?v=20260828e">
-  <script src="./config.js?v=20260828p"></script>
+  <script src="./config.js?v=20260828s"></script>
 </head>
 <body>
 <a class="skip" href="#content">Skip to content</a>
@@ -211,6 +211,6 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260828r"></script>
-<script src="./donation-auction-live.js?v=20260828p"></script>
+<script src="./live-chain.js?v=20260828s"></script>
+<script src="./donation-auction-live.js?v=20260828s"></script>
 </body></html>

@@ -193,7 +193,7 @@
     addRow(rows, "Name", pair);
 
     addRow(rows, "Email", wrap(value(registration.email || ""),
-      note("Your email is the delivery address for every secure link on this registration, so our team changes it for you. Write to ssuite@salute.community.")));
+      note("Your email is where we send your confirmation and your link back to this page, so our team updates it for you. Write to ssuite@salute.community.")));
 
     addRow(rows, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, registration.secondary_email));
     addRow(rows, "Phone", control({ key: "phone", label: "Phone", type: "tel", max: 100, placeholder: "Optional" }, registration.phone));
@@ -223,7 +223,7 @@
 
     const seated = typeof data.seats_total === "number" && data.seats_total > 1;
     const seatedNote = seated
-      ? "These are your own details. The other seats on this order are managed from the private table link sent to the table lead."
+      ? "These are your own details. The other seats on this order are managed by the table host, from the link we emailed them."
       : "";
     /* Guests and purchasers may correct their own details until the published deadline. */
     const cutoff = typeof data.details_cutoff_display === "string" ? data.details_cutoff_display : "";
@@ -286,7 +286,7 @@
 
     eyebrow.textContent = "Payment confirmed";
     heading.textContent = name ? `Thank you, ${name}. You're registered.` : "Thank you. You're registered.";
-    lede.textContent = "Your payment was received and your registration for the S.Suite Honors Ceremony is confirmed. Please check the details below and keep this page for your records.";
+    lede.textContent = "Your payment was received and your registration for the S.Suite Honors Ceremony is confirmed. Please check the details below. Keep your confirmation email — it has the link back to this page.";
     setStatus("Payment verified and registration confirmed.", "success");
     next.textContent = data.email_masked
       ? `A confirmation email has been sent to ${data.email_masked}. Event details and arrival information will follow closer to the date.`

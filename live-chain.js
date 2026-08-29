@@ -211,7 +211,7 @@
     updateMemberFields(code);
     const readiness = liveReadiness();
     const label = button.querySelector(".live-ticket-note");
-    if (label) label.textContent = readiness.ok ? "Secure checkout available after details" : "Preview only — checkout is not available here";
+    if (label) label.textContent = readiness.ok ? "Complete the details above to continue" : "Preview only — checkout is not available here";
     if (readiness.ok) ensureTurnstile().catch((error) => setStatus(error.message, "error"));
   }
   function applyLiveLabels() {

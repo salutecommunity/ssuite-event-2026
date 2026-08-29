@@ -97,8 +97,8 @@
   }
   function init() {
     const donation = donationReadiness(), auction = auctionReadiness();
-    if (donation.ok) { const button = byId("donate-button"), note = byId("donation-preview-note"), receiptPolicy = byId("donation-receipt-policy"); if (button) { button.textContent = "Continue to secure donation checkout"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "You will be redirected to Stripe. A receipt is issued only after verified payment and configured receipt review."; if (receiptPolicy) { const link = receiptPolicy.querySelector("a"); if (link) link.href = safeHttps(donationConfig().receiptPolicyUrl); receiptPolicy.hidden = false; } const slot = document.createElement("div"); slot.id = "donation-turnstile"; slot.className = "turnstile-slot"; byId("donation-live-status")?.before(slot); }
-    if (auction.ok) { const button = byId("auction-submit-button"), note = byId("auction-preview-note"); if (button) { button.textContent = "Submit for committee review"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "Your item will be considered by the auction committee; submission does not promise acceptance, valuation, publication, or tax treatment."; const form = byId("auction-submission-form"); if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = false; }); }
+    if (donation.ok) { const button = byId("donate-button"), note = byId("donation-preview-note"), receiptPolicy = byId("donation-receipt-policy"); if (button) { button.textContent = "Continue to secure donation checkout"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "You will be taken to Stripe to pay securely. Your receipt is emailed once your payment is confirmed."; if (receiptPolicy) { const link = receiptPolicy.querySelector("a"); if (link) link.href = safeHttps(donationConfig().receiptPolicyUrl); receiptPolicy.hidden = false; } const slot = document.createElement("div"); slot.id = "donation-turnstile"; slot.className = "turnstile-slot"; byId("donation-live-status")?.before(slot); }
+    if (auction.ok) { const button = byId("auction-submit-button"), note = byId("auction-preview-note"); if (button) { button.textContent = "Submit for committee review"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "The auction committee reviews every item. Submitting one does not guarantee it will be accepted or listed."; const form = byId("auction-submission-form"); if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = false; }); }
     // A live public page must not carry controls that cannot perform their stated
     // action. Where giving or auction intake is not open, close the control
     // honestly instead of offering a simulated run-through.
@@ -106,7 +106,7 @@
       const button = byId("donate-button");
       if (button) { button.textContent = "Giving opens soon"; button.disabled = true; button.setAttribute("aria-disabled", "true"); }
       const note = byId("donation-preview-note");
-      if (note) note.textContent = "Online giving is not open yet. No donation can be submitted, charged, or receipted here.";
+      if (note) note.textContent = "Giving is not open yet. Nothing can be donated or charged here.";
       const form = byId("donation-form");
       if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = true; });
     }
