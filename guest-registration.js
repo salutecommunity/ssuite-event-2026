@@ -27,8 +27,8 @@
   function loadTurnstile() { if (window.turnstile && typeof window.turnstile.render === "function") return Promise.resolve(window.turnstile); if (loading) return loading; if (window.turnstile && typeof window.turnstile.render !== "function") { try { delete window.turnstile; } catch { window.turnstile = undefined; } } loading = new Promise((resolve, reject) => { const s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true; s.defer = true; s.onload = () => window.turnstile && typeof window.turnstile.render === "function" ? resolve(window.turnstile) : reject(new Error("Anti-bot control did not load")); s.onerror = () => reject(new Error("Anti-bot control could not load")); document.head.append(s); }); return loading; }
   /* Rendered as soon as the form opens rather than on first submit, so the guest is never
      told to complete a check that is not on screen yet. */
-  async function renderTurnstile() { const api = await loadTurnstile(); if (widget === null) { const action = turnstileAction(); if (!action) throw new Error("Guest registration is not configured for live use."); const options = { sitekey: String(cfg.turnstileSiteKey || ""), action, "error-callback": () => status("The anti-bot check failed. Please retry.", "error"), "expired-callback": () => status("The anti-bot check expired. Please retry.", "error") }; widget = api.render($("turnstile-widget"), options); } return api; }
-  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("Please wait a moment for the anti-bot check to finish, then try again."); return result; }
+  async function renderTurnstile() { const api = await loadTurnstile(); if (widget === null) { const action = turnstileAction(); if (!action) throw new Error("Guest registration is not configured for live use."); const options = { sitekey: String(cfg.turnstileSiteKey || ""), action, "error-callback": () => status("The security check failed. Please retry.", "error"), "expired-callback": () => status("The security check expired. Please retry.", "error") }; widget = api.render($("turnstile-widget"), options); } return api; }
+  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("Please wait a moment for the security check to finish, then try again."); return result; }
 
   async function api(payload) {
     const response = await fetch(`${base()}/functions/v1/guest-registration`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invitation_token: invitationToken, ...payload }) });
@@ -159,7 +159,7 @@
   }
 
   function openForm(context) {
-    if (!agreement()) { status("Guest registration is not configured for live use.", "error"); return; }
+    if (!agreement()) { status("Registration is temporarily unavailable. Please write to ssuite@salute.community and we will confirm your seat for you.", "error"); return; }
     const invited = text(context.invited_email);
     if (invited) {
       const field = $("guest-form").elements.namedItem("email");
@@ -186,7 +186,7 @@
 
   async function load() {
     if (!invitationToken) { $("invite-lede").textContent = "This page opens from the private link in your invitation email."; status("Open the link in your invitation email to continue. The link is specific to your seat.", "error"); return; }
-    if (!base() || !policy() || !String(cfg.turnstileSiteKey || "").trim() || !turnstileAction()) { $("invite-lede").textContent = "Guest registration is not available right now."; status("Guest registration is not configured for live use.", "error"); return; }
+    if (!base() || !policy() || !String(cfg.turnstileSiteKey || "").trim() || !turnstileAction()) { $("invite-lede").textContent = "Registration is not available right now."; status("Registration is temporarily unavailable. Please write to ssuite@salute.community and we will confirm your seat for you.", "error"); return; }
     let result;
     try { result = await api({ action: "lookup" }); } catch { status("We could not reach the invitation service. Please check your connection and refresh.", "error"); return; }
     const context = result.body; lastContext = context;

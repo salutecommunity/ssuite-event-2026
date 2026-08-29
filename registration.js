@@ -233,13 +233,13 @@
 
     if (state === "pending") {
       heading.textContent = "We are still recording this payment.";
-      setStatus("Your payment has not finished recording in the event system yet. This page will keep checking for a few moments.", "");
+      setStatus("Your payment is still being recorded. This page will keep checking for a few moments.", "");
       return false;
     }
 
     if (state === "not_found") {
       heading.textContent = "We could not find this registration.";
-      setStatus("This link does not match a registration in the event system. It may have expired or been replaced. Please write to ssuite@salute.community and we will help.", "error");
+      setStatus("This link does not match a registration we can find. It may have expired or been replaced. Please write to ssuite@salute.community and we will help.", "error");
       return true;
     }
 
@@ -295,7 +295,7 @@
         setStatus("Your payment is still being recorded. Your confirmation email will arrive once it completes. If you do not receive it, write to ssuite@salute.community with your name.", "");
       }
     } catch {
-      setStatus("We could not reach the event system. Please check your connection and try again.", "error");
+      setStatus("We could not connect just now. Please check your connection and try again.", "error");
     }
   }
 
@@ -352,7 +352,7 @@
       setFormStatus("");
       setStatus("Your registration details have been updated.", "success");
     } catch {
-      setFormStatus("We could not reach the event system. Please check your connection and try again.", "error");
+      setFormStatus("We could not connect just now. Please check your connection and try again.", "error");
     } finally {
       buttons.forEach((button) => { button.disabled = false; });
     }

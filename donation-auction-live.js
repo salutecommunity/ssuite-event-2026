@@ -37,8 +37,8 @@
   async function token(slotId, action) {
     const slot = byId(slotId); if (!slot) throw new Error("Anti-bot verification is unavailable.");
     const api = await loadTurnstile(); let id = widgets.get(slotId);
-    if (id === undefined) { id = api.render(slot, { sitekey: text(cfg.turnstileSiteKey), action: text(action), "error-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The anti-bot check failed. Please retry.", "error"), "expired-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The anti-bot check expired. Please retry.", "error") }); widgets.set(slotId, id); }
-    const result = api.getResponse(id); if (!result) throw new Error("Please complete the anti-bot check before continuing."); return result;
+    if (id === undefined) { id = api.render(slot, { sitekey: text(cfg.turnstileSiteKey), action: text(action), "error-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The security check failed. Please retry.", "error"), "expired-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The security check expired. Please retry.", "error") }); widgets.set(slotId, id); }
+    const result = api.getResponse(id); if (!result) throw new Error("Please complete the security check before continuing."); return result;
   }
   function reset(slotId) { const id = widgets.get(slotId); if (id !== undefined && window.turnstile) window.turnstile.reset(id); }
   function post(name, key, body) { return fetch(`${apiBase()}/functions/v1/${name}`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json", "Idempotency-Key": key }, body: JSON.stringify(body) }); }

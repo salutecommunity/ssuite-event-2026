@@ -34,7 +34,7 @@
     if (cfg.mode !== "live") return { ok: false, reason: "This site is in preview mode. No registration or payment will be created." };
     if (!apiBase()) return { ok: false, reason: "Checkout is not configured for this site." };
     if (!policy()) return { ok: false, reason: "Final policy links and versions are not configured." };
-    if (!text(cfg.turnstileSiteKey)) return { ok: false, reason: "Checkout is unavailable until the anti-bot check is configured." };
+    if (!text(cfg.turnstileSiteKey)) return { ok: false, reason: "Checkout is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community." };
     return { ok: true, reason: "" };
   }
   function endpoint(name) { return `${apiBase()}/functions/v1/${name}`; }
@@ -95,20 +95,20 @@
     const readiness = liveReadiness();
     if (!readiness.ok) throw new Error(readiness.reason);
     const container = turnstileContainer();
-    if (!container) throw new Error("Checkout anti-bot control is unavailable.");
+    if (!container) throw new Error("Checkout is temporarily unavailable. Please try again shortly.");
     const api = await loadTurnstile();
     if (turnstileWidget === null) {
       turnstileWidget = api.render(container, {
         sitekey: text(cfg.turnstileSiteKey),
         action: "ssuite_checkout",
         // Clear a stale "complete the check" notice as soon as it is actually complete.
-        "callback": () => { const el = byId("live-checkout-status"); if (el && /anti-bot check/i.test(el.textContent)) setStatus("", ""); },
-        "error-callback": () => setStatus("The anti-bot check failed. Please retry.", "error"),
-        "expired-callback": () => setStatus("The anti-bot check expired. Please retry.", "error"),
+        "callback": () => { const el = byId("live-checkout-status"); if (el && /security check/i.test(el.textContent)) setStatus("", ""); },
+        "error-callback": () => setStatus("The security check failed. Please retry.", "error"),
+        "expired-callback": () => setStatus("The security check expired. Please retry.", "error"),
       });
     }
     const response = api.getResponse(turnstileWidget);
-    if (!response) throw new Error("Please complete the anti-bot check before continuing.");
+    if (!response) throw new Error("Please complete the security check before continuing.");
     return response;
   }
   function value(form, name) { return text(form.elements.namedItem(name)?.value); }

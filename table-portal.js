@@ -116,10 +116,10 @@
     if (!changesOpen()) { render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
     if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return status("Enter a valid email, open seat, and optional note.", "error");
     const button = form.querySelector("button[type=submit]"); button.disabled = true;
-    try { status("Queueing the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation queued. It has not been represented as sent; the server delivery worker must accept it.", "success"); } catch { status("Unable to queue this invitation. Confirm that this secure link remains active and try again.", "error"); } finally { button.disabled = false; }
+    try { status("Queueing the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation queued. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { status("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
   }
   async function resendInvitation(invitationId) {
-    try { status("Queueing resend…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend queued. Delivery still requires server-worker and provider acceptance.", "success"); } catch { status("Unable to queue the resend.", "error"); }
+    try { status("Queueing resend…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend queued. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
   }
   async function revoke() {
     if (!confirm("Revoke this table access link? This cannot be undone from this browser.")) return;
@@ -130,7 +130,7 @@
   $("cancel-table-name").addEventListener("click", () => setNameEditor(false));
   $("table-name-form").addEventListener("submit", renameTable);
   $("invite-form").addEventListener("submit", invite); $("revoke-access").addEventListener("click", revoke);
-  if (!tableToken) status("This private table link is missing or invalid. Request a new link from the table lead process.", "error");
-  else if (!base()) status("The table portal is not configured for live access.", "error");
+  if (!tableToken) status("This link is missing or incomplete. Please open the private link from your table email, or write to ssuite@salute.community and we will send you a new one.", "error");
+  else if (!base()) status("Your table page is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community.", "error");
   else load().catch(() => status("This private table link is unavailable or has expired.", "error"));
 })();
