@@ -85,8 +85,8 @@
       const script = document.createElement("script");
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true; script.defer = true;
-      script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error("Turnstile did not load"));
-      script.onerror = () => reject(new Error("Turnstile could not load"));
+      script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error("The security check could not load. Please refresh the page and try again."));
+      script.onerror = () => reject(new Error("The security check could not load. Please refresh the page and try again."));
       document.head.appendChild(script);
     });
     return turnstileLoading;
@@ -136,7 +136,7 @@
   }
   function requestBody(form) {
     const p = policy();
-    if (!p) throw new Error("Final policies are not configured.");
+    if (!p) throw new Error("Checkout is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community.");
     const code = ticketCode();
     const table = code === "full_table";
     const member = code === "salute_member";
@@ -182,7 +182,7 @@
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || typeof payload.checkout_url !== "string") throw new Error(text(payload.error) || "Checkout could not be started. No payment has been completed.");
       const destination = new URL(payload.checkout_url);
-      if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout returned an unsafe redirect and was stopped.");
+      if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout could not be opened securely and was stopped. No payment was taken. Please try again, or write to ssuite@salute.community.");
       setStatus("Redirecting to secure checkout…", "working");
       location.assign(destination.toString());
     } catch (error) {

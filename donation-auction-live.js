@@ -30,12 +30,12 @@
     if (turnstileLoad) return turnstileLoad;
     turnstileLoad = new Promise((resolve, reject) => {
       const script = document.createElement("script"); script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; script.async = true; script.defer = true;
-      script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error("Anti-bot verification did not load.")); script.onerror = () => reject(new Error("Anti-bot verification could not load.")); document.head.appendChild(script);
+      script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error("The security check could not load. Please refresh the page and try again.")); script.onerror = () => reject(new Error("The security check could not load. Please refresh the page and try again.")); document.head.appendChild(script);
     });
     return turnstileLoad;
   }
   async function token(slotId, action) {
-    const slot = byId(slotId); if (!slot) throw new Error("Anti-bot verification is unavailable.");
+    const slot = byId(slotId); if (!slot) throw new Error("The security check is unavailable. Please refresh the page and try again.");
     const api = await loadTurnstile(); let id = widgets.get(slotId);
     if (id === undefined) { id = api.render(slot, { sitekey: text(cfg.turnstileSiteKey), action: text(action), "error-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The security check failed. Please retry.", "error"), "expired-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The security check expired. Please retry.", "error") }); widgets.set(slotId, id); }
     const result = api.getResponse(id); if (!result) throw new Error("Please complete the security check before continuing."); return result;
@@ -67,7 +67,7 @@
       const turnstileToken = await token("donation-turnstile", configuredTurnstileAction(donationConfig()));
       const response = await post("donation-create-checkout", idempotencyKey(), { donor_name: donorName, email: address, amount, frequency: document.querySelector(".segmented button.selected")?.dataset.frequency === "Monthly" ? "recurring_monthly" : "one_time", turnstile_token: turnstileToken });
       const payload = await response.json().catch(() => ({})); if (!response.ok || typeof payload.checkout_url !== "string") throw new Error(text(payload.error) || "Donation checkout could not be started.");
-      const destination = new URL(payload.checkout_url); if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout returned an unsafe redirect and was stopped.");
+      const destination = new URL(payload.checkout_url); if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout could not be opened securely and was stopped. No payment was taken. Please try again, or write to ssuite@salute.community.");
       status("donation-live-status", "Redirecting to secure checkout…", "working"); location.assign(destination.toString());
     } catch (error) { status("donation-live-status", error instanceof Error ? error.message : "Donation checkout could not be started.", "error"); reset("donation-turnstile"); } finally { submit.disabled = false; }
   }
