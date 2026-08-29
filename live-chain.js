@@ -32,8 +32,8 @@
   }
   function liveReadiness() {
     if (cfg.mode !== "live") return { ok: false, reason: "This site is in preview mode. No registration or payment will be created." };
-    if (!apiBase()) return { ok: false, reason: "Checkout is not configured for this site." };
-    if (!policy()) return { ok: false, reason: "Final policy links and versions are not configured." };
+    if (!apiBase()) return { ok: false, reason: "Checkout is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community." };
+    if (!policy()) return { ok: false, reason: "Checkout is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community." };
     if (!text(cfg.turnstileSiteKey)) return { ok: false, reason: "Checkout is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community." };
     return { ok: true, reason: "" };
   }
@@ -197,7 +197,7 @@
     updateMemberFields(code);
     const readiness = liveReadiness();
     const label = button.querySelector(".live-ticket-note");
-    if (label) label.textContent = readiness.ok ? "Secure checkout available after details" : "Preview only — checkout is not configured";
+    if (label) label.textContent = readiness.ok ? "Secure checkout available after details" : "Preview only — checkout is not available here";
     if (readiness.ok) ensureTurnstile().catch((error) => setStatus(error.message, "error"));
   }
   function applyLiveLabels() {
