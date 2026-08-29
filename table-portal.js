@@ -5,11 +5,19 @@
   const email = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
   const tableNameLimit = 200;
   const invalidTableNameCharacters = /[\u0000-\u001f\u007f]/;
-  const token = new URLSearchParams(location.hash.slice(1)).get("token") || "";
-  // Fragments never leave the browser in an HTTP request, but remove them at
-  // once so users cannot accidentally copy, bookmark, or report the token.
+  const TOKEN_PATTERN = /^[0-9a-f]{64}$/i, TOKEN_STORE = "ssuite.table.portal";
+  /* The token arrives in the URL fragment. Fragments never leave the browser in an
+     HTTP request, but it is taken out of the address bar at once so it cannot be
+     copied, bookmarked or screenshotted by accident. It is then kept for this tab
+     only, so a refresh or a back navigation still opens the table. */
+  function readToken() {
+    const fromLink = new URLSearchParams(location.hash.slice(1)).get("token") || "";
+    if (TOKEN_PATTERN.test(fromLink)) { try { sessionStorage.setItem(TOKEN_STORE, fromLink.toLowerCase()); } catch { /* storage unavailable */ } return fromLink.toLowerCase(); }
+    try { const stored = sessionStorage.getItem(TOKEN_STORE) || ""; if (TOKEN_PATTERN.test(stored)) return stored.toLowerCase(); } catch { /* storage unavailable */ }
+    return "";
+  }
+  let tableToken = readToken();
   history.replaceState(null, "", `${location.pathname}${location.search}`);
-  let tableToken = /^[0-9a-f]{64}$/i.test(token) ? token.toLowerCase() : "";
   let table = null;
   let editingTableName = false;
 

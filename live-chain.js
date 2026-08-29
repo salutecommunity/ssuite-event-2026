@@ -166,6 +166,19 @@
       cancel_url: `${location.origin}${location.pathname}?checkout=cancel`,
     };
   }
+  /* Stripe's hosted checkout URL carries the session reference. Remember it for this
+     tab before handing the buyer over, so that if they return without it in the address
+     bar we can still show them their own record rather than a dead end. */
+  const RECEIPT_STORE = "ssuite.order.receipt";
+  function rememberPendingCheckout(destination) {
+    const match = /cs_(?:live|test)_[A-Za-z0-9]{8,320}/.exec(String(destination.pathname || ""));
+    if (!match) return;
+    try { sessionStorage.setItem(RECEIPT_STORE, JSON.stringify({ session_id: match[0] })); } catch { /* storage unavailable */ }
+  }
+  function forgetPendingCheckout() {
+    try { sessionStorage.removeItem(RECEIPT_STORE); } catch { /* storage unavailable */ }
+  }
+
   async function submitCheckout(form) {
     const readiness = liveReadiness();
     if (!readiness.ok) { setStatus(readiness.reason, "error"); return; }
@@ -183,6 +196,7 @@
       if (!response.ok || typeof payload.checkout_url !== "string") throw new Error(text(payload.error) || "Checkout could not be started. No payment has been completed.");
       const destination = new URL(payload.checkout_url);
       if (destination.protocol !== "https:" || destination.hostname !== "checkout.stripe.com") throw new Error("Checkout could not be opened securely and was stopped. No payment was taken. Please try again, or write to ssuite@salute.community.");
+      rememberPendingCheckout(destination);
       setStatus("Redirecting to secure checkout…", "working");
       location.assign(destination.toString());
     } catch (error) {
@@ -245,7 +259,7 @@
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
     const params = new URLSearchParams(location.search);
     const result = params.get("checkout");
-    if (result === "cancel") setStatus("Checkout was cancelled. No payment was completed.", "error");
+    if (result === "cancel") { forgetPendingCheckout(); setStatus("Checkout was cancelled. No payment was completed.", "error"); }
     if (result === "success") {
       // Hand the buyer to the receipt page, which reports only what the
       // authoritative order record proves. Never confirm anything here.
@@ -254,7 +268,10 @@
         location.replace(`./registration.html?session_id=${encodeURIComponent(session)}`);
         return;
       }
-      setStatus("We could not load your receipt on this page. If your payment went through, your confirmation email is the record and arrives shortly. Please write to ssuite@salute.community if it does not.", "working");
+      // The address bar lost the reference. The receipt page can still recover it from
+      // this tab, and if it cannot, it tells the buyer exactly how to reach their record.
+      location.replace("./registration.html");
+      return;
     }
   }
   window.SSuiteLive = { checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern };

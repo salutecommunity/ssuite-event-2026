@@ -2,7 +2,8 @@
  *
  * Accepts either the private receipt token from the confirmation email (#token=)
  * or the Stripe Checkout session the buyer was returned with (?session_id=).
- * The credential is stripped from the address bar immediately and is never stored.
+ * The credential is stripped from the address bar immediately and is held for the
+ * current browser tab only, so a refresh or a back navigation still shows the record.
  *
  * The registration details are a single list. "Edit details" turns the values in that
  * same list into inputs in place; it never shows a second copy of the form.
@@ -119,17 +120,35 @@
     return holder;
   }
 
-  // Take the credential out of the address bar before anything else runs.
+  // Take the credential out of the address bar before anything else runs, then keep
+  // it for this browser tab only. Someone who has just paid will refresh, navigate
+  // back, or reopen the tab, and their record has to still be there when they do.
+  const CREDENTIAL_STORE = "ssuite.order.receipt";
+
+  function remember(credential) {
+    try { sessionStorage.setItem(CREDENTIAL_STORE, JSON.stringify(credential)); } catch { /* storage unavailable */ }
+    return credential;
+  }
+
+  function recall() {
+    try {
+      const stored = JSON.parse(sessionStorage.getItem(CREDENTIAL_STORE) || "null");
+      if (stored && tokenPattern.test(String(stored.token || "").toLowerCase())) return { token: String(stored.token).toLowerCase() };
+      if (stored && sessionPattern.test(String(stored.session_id || ""))) return { session_id: String(stored.session_id) };
+    } catch { /* unreadable or unavailable */ }
+    return null;
+  }
+
   function readCredential() {
     const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
     const token = (hash.get("token") || "").trim().toLowerCase();
     const query = new URLSearchParams(location.search);
     const session = (query.get("session_id") || "").trim();
     const clean = () => { try { history.replaceState(null, "", location.pathname); } catch { /* ignore */ } };
-    if (tokenPattern.test(token)) { clean(); return { token }; }
-    if (sessionPattern.test(session)) { clean(); return { session_id: session }; }
+    if (tokenPattern.test(token)) { clean(); return remember({ token }); }
+    if (sessionPattern.test(session)) { clean(); return remember({ session_id: session }); }
     clean();
-    return null;
+    return recall();
   }
 
   const credential = readCredential();
