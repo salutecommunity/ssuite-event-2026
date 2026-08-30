@@ -57,6 +57,9 @@
         $("meta-holding").textContent = text(table.name) || "Reserved";
         $("meta-holding-row").hidden = false;
       }
+      // Without a table there are two facts, not three: let the row sit as a pair
+      // rather than leaving an empty cell where a start time is not yet published.
+      $("context-meta").classList.toggle("two-up", !table);
       $("context-meta").hidden = false;
     }
   }

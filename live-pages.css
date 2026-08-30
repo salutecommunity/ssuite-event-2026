@@ -4,3 +4,6 @@
 .field-note{margin:16px 0 0;color:#555;font-size:13px;line-height:1.5}.field-note a{color:inherit}.field i{font-style:normal;color:#777;font-weight:400;letter-spacing:.06em}#registration-form{margin-top:24px;padding-top:24px;border-top:1px solid var(--line)}#registration-form .fields{gap:16px}@media print{.receipt-rows .row-note,#form-status{display:none}}
 .receipt-rows .field-control{display:grid;gap:8px}.receipt-rows input,.receipt-rows select,.receipt-rows textarea{min-height:42px;padding:9px 10px;font-size:15px}.receipt-rows textarea{min-height:82px}.name-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.receipt-rows .row-note{display:block;font-size:12px;line-height:1.45;color:#666;font-weight:400;letter-spacing:0;text-transform:none;padding-top:0}@media(max-width:640px){.name-pair{grid-template-columns:1fr}}
 .actions a.button{display:inline-block;text-decoration:none;border:1px solid #111;background:#111;color:#fff;padding:13px 17px;font:700 12px/1 Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase}.actions a.button:hover,.actions a.button:focus-visible{background:#333}
+.table-meta.two-up{grid-template-columns:repeat(2,1fr)}
+.table-meta.two-up div:nth-child(2){border-right:0}
+@media(max-width:640px){.table-meta.two-up{grid-template-columns:1fr}.table-meta.two-up div:nth-child(2){border-right:0}}
