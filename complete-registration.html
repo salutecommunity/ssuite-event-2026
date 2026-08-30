@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex,nofollow">
+<title>S.Suite Honors Ceremony — Your registration</title>
+<link rel="stylesheet" href="./live-pages.css?v=20260830b">
+<script src="./config.js?v=20260830b"></script>
+</head>
+<body>
+<header class="masthead"><div class="shell"><img src="./assets/ssuite-logo-header.png" alt="S.Suite"><span>Your registration</span></div></header>
+
+<main class="shell">
+
+  <section class="card">
+    <p class="eyebrow" id="context-eyebrow">Your registration</p>
+    <h1>The S.Suite Honors Ceremony.</h1>
+    <p class="lede" id="context-lede">Opening your registration…</p>
+    <div class="table-meta" id="context-meta" hidden>
+      <div><span>Date</span><strong id="meta-date"></strong></div>
+      <div><span>Venue</span><strong id="meta-venue"></strong></div>
+      <div id="meta-holding-row" hidden><span id="meta-holding-label">Your table</span><strong id="meta-holding"></strong></div>
+    </div>
+    <p id="status" class="notice" role="status" aria-live="polite">Opening your registration…</p>
+  </section>
+
+  <section id="registered" class="card" hidden>
+    <p class="eyebrow">Registration complete</p>
+    <h2 id="registered-heading">You are registered.</h2>
+    <p class="lede" id="registered-lede">This is what we have on file for you.</p>
+    <div class="actions" id="table-actions" hidden>
+      <a class="button" id="open-table" href="#" rel="noopener">Open your table</a>
+    </div>
+    <p class="receipt-help" id="table-help" hidden></p>
+    <form id="registered-form" novalidate>
+      <p class="notice" id="registered-status" role="status" aria-live="polite" hidden></p>
+      <div class="receipt-rows" id="registered-rows"></div>
+      <div class="actions" id="view-actions" hidden>
+        <button type="button" id="edit-details">Edit details</button>
+      </div>
+      <div class="actions" id="edit-actions" hidden>
+        <button type="submit" id="save-details">Save changes</button>
+        <button type="button" class="secondary" id="cancel-details">Cancel</button>
+      </div>
+    </form>
+    <p class="receipt-help" id="registered-help"></p>
+  </section>
+
+  <section id="registration" class="card" hidden>
+    <h2>Your details</h2>
+    <p class="lede">These are the details we need from you. Nothing is submitted until you select finish my registration.</p>
+    <form id="completion-form" novalidate>
+      <div class="fields">
+        <label class="field"><span>FIRST NAME</span><input name="first_name" required maxlength="200" autocomplete="given-name"></label>
+        <label class="field"><span>LAST NAME</span><input name="last_name" required maxlength="200" autocomplete="family-name"></label>
+        <label class="field"><span>SECONDARY EMAIL <em>(optional)</em></span><input name="secondary_email" maxlength="320" type="email" autocomplete="email"></label>
+        <label class="field"><span>JOB TITLE</span><input name="job_title" required maxlength="300" autocomplete="organization-title"></label>
+        <label class="field"><span>COMPANY</span><input name="company" required maxlength="300" autocomplete="organization"></label>
+        <label class="field"><span>MEAL PREFERENCE</span><select name="meal_preference" required><option value="">Select one</option><option>Vegetarian</option><option>Non-vegetarian</option></select></label>
+        <label class="field full" id="how-heard-field" hidden><span>HOW DID YOU HEAR ABOUT S.SUITE?</span><select name="how_heard"><option value="">Select</option><option>SALUTE community</option><option>S.Suite community or event</option><option>Friend or colleague</option><option>Email</option><option>Social media</option><option>Search</option><option>Other</option></select></label>
+      </div>
+      <p class="field-note" id="email-note" hidden></p>
+      <label class="check"><input type="checkbox" name="dietary"><span>I have allergies or additional dietary needs.</span></label>
+      <label class="field" id="dietary-details" hidden><span>ALLERGIES / DIETARY NEEDS</span><textarea name="dietary_or_allergy_details" maxlength="2000"></textarea></label>
+      <label class="check"><input type="checkbox" name="accessibility"><span>I have accessibility requirements.</span></label>
+      <label class="field" id="accessibility-details" hidden><span>ACCESSIBILITY REQUIREMENTS</span><textarea name="accessibility_details" maxlength="2000"></textarea></label>
+      <div id="policy-agreement"></div>
+      <p class="field-note" id="agreement-note" hidden></p>
+      <div id="turnstile-widget" class="turnstile"></div>
+      <div class="actions"><button type="submit">Finish my registration</button></div>
+    </form>
+  </section>
+
+</main>
+<script src="./complete-registration.js?v=20260830b"></script>
+</body>
+</html>

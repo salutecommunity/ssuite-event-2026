@@ -243,7 +243,10 @@ function renderTables(host, payload) {
     const buyerLine = element("p", "buyer-line", buyer ? `Table purchaser: ${text(buyer.purchaser_first_name)} ${text(buyer.purchaser_last_name)} · ${text(buyer.purchaser_email)} · ${money(buyer.total_cents, buyer.currency)} paid ${date(buyer.paid_at)}` : "Table purchaser: No linked purchase — staff-reserved table");
     const leadLine = element("p", "lead-line", `Table host: ${lead ? `${text(lead.first_name)} ${text(lead.last_name)} · ${text(lead.email)}` : "Not assigned"} · ${accessLabel}`);
     card.append(buyerLine, leadLine);
-    if (lead) {
+    if (lead && lead.registration_status !== "complete") {
+      card.append(completionLinkControls(lead, "This host has not completed their own registration yet, so their table cannot open. The link below asks them for the missing details and their agreement — the one thing staff cannot enter for them. Their table opens for them the moment they finish."));
+    }
+    if (lead && lead.registration_status === "complete") {
       const reveal = element("button", "quiet compact", "Show / copy management link"); reveal.type = "button";
       const linkBox = element("div", "management-link-box"); linkBox.hidden = true;
       reveal.addEventListener("click", async () => {
@@ -364,6 +367,54 @@ function formField(labelText, name, value = "", options = {}) {
   label.append(control); return label;
 }
 
+/* A person can sit on the guest list with an incomplete record — a table host whose payment
+   arrived outside the site, or anyone staff added by hand. This hands staff the private link
+   that lets that person finish it themselves. Issuing a link sends nothing: delivery stays a
+   separate, deliberate act, so nobody is emailed by the act of being added. */
+function completionLinkControls(attendee, note) {
+  const box = element("div", "completion-controls");
+  box.append(element("p", "fineprint", note));
+  const reveal = element("button", "quiet compact", "Show / copy finish-registration link"); reveal.type = "button";
+  const revoke = element("button", "quiet compact", "Revoke link"); revoke.type = "button";
+  const linkBox = element("div", "management-link-box"); linkBox.hidden = true;
+
+  reveal.addEventListener("click", async () => {
+    setBusy(reveal, true);
+    try {
+      const result = await call({ action: "registration_completion_link_reveal", attendee_id: attendee.id });
+      const input = document.createElement("input");
+      input.type = "text"; input.readOnly = true; input.value = result.completion_url;
+      input.setAttribute("aria-label", "Private finish-registration link");
+      const copy = element("button", "button dark compact", "Copy link"); copy.type = "button";
+      copy.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(input.value); status("Finish-registration link copied. Nothing was emailed.", "success"); }
+        catch { input.select(); status("Select the link and copy it. Nothing was emailed.", "success"); }
+      });
+      linkBox.replaceChildren(
+        element("p", "fineprint", `Private link for ${text(result.recipient)}. Send it yourself, or leave it — nothing was emailed. It stays valid until they finish or you revoke it.`),
+        input, copy
+      );
+      linkBox.hidden = false;
+      status(result.created ? "Finish-registration link issued and recorded in the audit log. Nothing was emailed." : "Existing finish-registration link shown and recorded in the audit log. Nothing was emailed.", "success");
+    } catch (error) { status(error.message || "The finish-registration link could not be prepared.", "error"); }
+    finally { setBusy(reveal, false); }
+  });
+
+  revoke.addEventListener("click", async () => {
+    if (!confirm(`Revoke the finish-registration link for ${text(attendee.first_name)} ${text(attendee.last_name)}? Any copy already sent stops working.`)) return;
+    setBusy(revoke, true);
+    try {
+      const result = await call({ action: "registration_completion_link_revoke", attendee_id: attendee.id });
+      linkBox.replaceChildren(); linkBox.hidden = true;
+      status(result.revoked > 0 ? "Finish-registration link revoked. Any copy already sent no longer opens." : "There was no active finish-registration link to revoke.", "success");
+    } catch (error) { status(error.message || "The finish-registration link could not be revoked.", "error"); }
+    finally { setBusy(revoke, false); }
+  });
+
+  box.append(reveal, revoke, linkBox);
+  return box;
+}
+
 function renderAttendeeDetail(payload, message = "") {
   const a = payload.attendee; const n = payload.needs; const host = $("attendee-detail"); clear(host);
   host.append(element("p", "eyebrow", "Restricted attendee record"));
@@ -378,6 +429,12 @@ function renderAttendeeDetail(payload, message = "") {
   profile.append(element("p", "", a.bio ? `Bio: ${a.bio}` : "No bio added."), element("p", "", a.pronunciation ? `Pronunciation: ${a.pronunciation}` : ""), element("p", "", a.relationship_notes ? `Relationship notes: ${a.relationship_notes}` : "")); host.append(profile);
   const needs = element("section", "detail-section sensitive"); needs.append(element("h3", "", "Meal & access needs"), element("small", "", "Sensitive operational information — visible only after approved-admin server authorization."), element("p", "", n ? `Meal: ${text(n.meal_preference)}\nDietary/allergy: ${n.has_dietary_or_allergy_needs ? text(n.dietary_or_allergy_details) : "None reported"}\nAccessibility: ${n.has_accessibility_needs ? text(n.accessibility_details) : "None reported"}` : "No needs record.")); host.append(needs);
   const consent = element("section", "detail-section"); consent.append(element("h3", "", "Recorded consent"), element("p", "", payload.consents?.length ? payload.consents.map((c) => `${text(c.scope)} · accepted ${date(c.accepted_at)} · terms ${text(c.terms_version)}`).join("\n") : "No attendee-specific consent record.")); host.append(consent);
+  if (a.registration_status !== "complete") {
+    const section = element("section", "detail-section");
+    section.append(element("h3", "", "Finish their registration"));
+    section.append(completionLinkControls(a, "Adding someone here sends nothing. This private link opens their own record, asks only for what is missing, and takes their agreement in their own hands — staff can enter every factual detail for them, but never the agreement."));
+    host.append(section);
+  }
   const edit = element("button", "button dark", "Edit attendee information"); edit.type = "button"; edit.addEventListener("click", () => renderAttendeeEdit(payload)); host.append(edit);
 }
 
