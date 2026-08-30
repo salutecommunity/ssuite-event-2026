@@ -374,9 +374,30 @@ function formField(labelText, name, value = "", options = {}) {
 function completionLinkControls(attendee, note) {
   const box = element("div", "completion-controls");
   box.append(element("p", "fineprint", note));
+  const send = element("button", "button dark compact", "Send finish-registration email"); send.type = "button";
   const reveal = element("button", "quiet compact", "Show / copy finish-registration link"); reveal.type = "button";
   const revoke = element("button", "quiet compact", "Revoke link"); revoke.type = "button";
   const linkBox = element("div", "management-link-box"); linkBox.hidden = true;
+
+  /* The one control here that actually puts a message in someone's inbox. It is deliberately
+     separate from revealing the link, and deliberately says "queued" rather than "sent" —
+     the outbox worker, not this button, is what hands the message to the provider. */
+  send.addEventListener("click", async () => {
+    const who = `${text(attendee.first_name)} ${text(attendee.last_name)}`.trim() || "this person";
+    if (!confirm(`Email the finish-registration link to ${who}?\n\nThis puts a real S.Suite message in their inbox.`)) return;
+    setBusy(send, true);
+    try {
+      const result = await call({ action: "registration_completion_send", attendee_id: attendee.id });
+      const held = result.held_until && Date.parse(result.held_until) > Date.now();
+      status(
+        held
+          ? `Queued for ${text(result.recipient)}. It is waiting on Klaviyo's review of this new template and will leave on its own the moment that clears — nothing has been delivered yet.`
+          : `Queued for ${text(result.recipient)}. The mail worker picks it up within a minute.`,
+        "success",
+      );
+    } catch (error) { status(error.message || "The finish-registration email could not be queued.", "error"); }
+    finally { setBusy(send, false); }
+  });
 
   reveal.addEventListener("click", async () => {
     setBusy(reveal, true);
@@ -411,7 +432,8 @@ function completionLinkControls(attendee, note) {
     finally { setBusy(revoke, false); }
   });
 
-  box.append(reveal, revoke, linkBox);
+  box.append(send, reveal, revoke, linkBox);
+  box.append(element("p", "fineprint", "Sending is your choice, per person: email it from here, copy the link and send it yourself, or leave it alone."));
   return box;
 }
 
