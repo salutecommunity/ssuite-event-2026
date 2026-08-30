@@ -61,7 +61,7 @@
     const currentTableName = typeof table.table_name === "string" ? table.table_name.trim() : "";
     $("table-name").textContent = currentTableName || (table.table_number ? `Table ${table.table_number}` : "Your table");
     if (!editingTableName) $("table-name-input").value = currentTableName;
-    const meta = $("table-meta"); meta.replaceChildren(cell("Table", String(table.table_number || "—")), cell("Seats", String((table.seats || []).length)), cell("Lead", "Secure access"));
+    const meta = $("table-meta"); meta.replaceChildren(cell("Table", String(table.table_number || "—")), cell("Seats", String((table.seats || []).length)), cell("Host", "Secure access"));
     const grid = $("seats"); grid.replaceChildren();
     for (const seat of [...(table.seats || [])].sort((a, b) => a.seat_number - b.seat_number)) {
       const card = document.createElement("article"), title = document.createElement("h3"), detail = document.createElement("p");
