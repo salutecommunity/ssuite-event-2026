@@ -91,7 +91,10 @@
     });
     return turnstileLoading;
   }
-  async function ensureTurnstile() {
+  // Render the challenge without demanding a token yet. Warming and waiting are
+  // kept separate so warming early can never surface an error to someone who has
+  // not pressed anything.
+  async function warmTurnstile() {
     const readiness = liveReadiness();
     if (!readiness.ok) throw new Error(readiness.reason);
     const container = turnstileContainer();
@@ -107,9 +110,17 @@
         "expired-callback": () => setStatus("The security check expired. Please retry.", "error"),
       });
     }
-    const response = api.getResponse(turnstileWidget);
-    if (!response) throw new Error("Please complete the security check before continuing.");
-    return response;
+    return api;
+  }
+  async function ensureTurnstile() {
+    const api = await warmTurnstile();
+    const deadline = Date.now() + 15000;
+    for (;;) {
+      const response = api.getResponse(turnstileWidget);
+      if (response) return response;
+      if (Date.now() >= deadline) throw new Error("The security check has not cleared yet. This is usually a browser extension or network blocking it. Please refresh and try again, or write to ssuite@salute.community and we will take it from there.");
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
   }
   function value(form, name) { return text(form.elements.namedItem(name)?.value); }
   function agreedToPolicies(form) {
@@ -212,7 +223,7 @@
     const readiness = liveReadiness();
     const label = button.querySelector(".live-ticket-note");
     if (label) label.textContent = readiness.ok ? "Complete the details above to continue" : "Preview only — checkout is not available here";
-    if (readiness.ok) ensureTurnstile().catch((error) => setStatus(error.message, "error"));
+    if (readiness.ok) warmTurnstile().catch(() => {});
   }
   function applyLiveLabels() {
     // Preview wording ships as the safe default in the HTML. Only replace it once

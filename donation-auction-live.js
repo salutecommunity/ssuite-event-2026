@@ -34,11 +34,43 @@
     });
     return turnstileLoad;
   }
+  const slotStatusId = (slotId) => slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status";
+  // Create the widget without demanding a token. A freshly rendered challenge has
+  // no token for a second or two, so asking for one in the same instant made the
+  // first press fail every time. Warm it early, then wait for it below.
+  async function warmTurnstile(slotId, action) {
+    const slot = byId(slotId); if (!slot) return undefined;
+    let id = widgets.get(slotId);
+    if (id !== undefined) return id;
+    const api = await loadTurnstile();
+    id = widgets.get(slotId);
+    if (id !== undefined) return id;
+    id = api.render(slot, {
+      sitekey: text(cfg.turnstileSiteKey), action: text(action),
+      "error-callback": () => status(slotStatusId(slotId), "The security check failed. Please retry.", "error"),
+      "expired-callback": () => status(slotStatusId(slotId), "The security check expired. Please retry.", "error"),
+    });
+    widgets.set(slotId, id);
+    return id;
+  }
+  function warmOnFirstUse(formId, slotId, action) {
+    const form = byId(formId); if (!form) return;
+    const warm = () => { warmTurnstile(slotId, action).catch(() => {}); };
+    form.addEventListener("focusin", warm, { once: true });
+    form.addEventListener("input", warm, { once: true });
+  }
   async function token(slotId, action) {
     const slot = byId(slotId); if (!slot) throw new Error("The security check is unavailable. Please refresh the page and try again.");
-    const api = await loadTurnstile(); let id = widgets.get(slotId);
-    if (id === undefined) { id = api.render(slot, { sitekey: text(cfg.turnstileSiteKey), action: text(action), "error-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The security check failed. Please retry.", "error"), "expired-callback": () => status(slotId === "donation-turnstile" ? "donation-live-status" : "auction-live-status", "The security check expired. Please retry.", "error") }); widgets.set(slotId, id); }
-    const result = api.getResponse(id); if (!result) throw new Error("Please complete the security check before continuing."); return result;
+    const api = await loadTurnstile();
+    const id = await warmTurnstile(slotId, action);
+    if (id === undefined) throw new Error("The security check is unavailable. Please refresh the page and try again.");
+    const deadline = Date.now() + 15000;
+    for (;;) {
+      const result = api.getResponse(id);
+      if (result) return result;
+      if (Date.now() >= deadline) throw new Error("The security check has not cleared yet. This is usually a browser extension or network blocking it. Please refresh and try again, or write to ssuite@salute.community and we will take it from there.");
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
   }
   function reset(slotId) { const id = widgets.get(slotId); if (id !== undefined && window.turnstile) window.turnstile.reset(id); }
   function post(name, key, body) { return fetch(`${apiBase()}/functions/v1/${name}`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json", "Idempotency-Key": key }, body: JSON.stringify(body) }); }
@@ -97,8 +129,8 @@
   }
   function init() {
     const donation = donationReadiness(), auction = auctionReadiness();
-    if (donation.ok) { const button = byId("donate-button"), note = byId("donation-preview-note"), receiptPolicy = byId("donation-receipt-policy"); if (button) { button.textContent = "Continue to secure donation checkout"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "You will be taken to Stripe to pay securely. Your receipt is emailed once your payment is confirmed."; if (receiptPolicy) { const link = receiptPolicy.querySelector("a"); if (link) link.href = safeHttps(donationConfig().receiptPolicyUrl); receiptPolicy.hidden = false; } const slot = document.createElement("div"); slot.id = "donation-turnstile"; slot.className = "turnstile-slot"; byId("donation-live-status")?.before(slot); }
-    if (auction.ok) { const button = byId("auction-submit-button"), note = byId("auction-preview-note"); if (button) { button.textContent = "Submit for committee review"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "The auction committee reviews every item. Submitting one does not guarantee it will be accepted or listed."; const form = byId("auction-submission-form"); if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = false; }); }
+    if (donation.ok) { const button = byId("donate-button"), note = byId("donation-preview-note"), receiptPolicy = byId("donation-receipt-policy"); if (button) { button.textContent = "Continue to secure donation checkout"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "You will be taken to Stripe to pay securely. Your receipt is emailed once your payment is confirmed."; if (receiptPolicy) { const link = receiptPolicy.querySelector("a"); if (link) link.href = safeHttps(donationConfig().receiptPolicyUrl); receiptPolicy.hidden = false; } const slot = document.createElement("div"); slot.id = "donation-turnstile"; slot.className = "turnstile-slot"; byId("donation-live-status")?.before(slot); warmOnFirstUse("donation-form", "donation-turnstile", configuredTurnstileAction(donationConfig())); }
+    if (auction.ok) { const button = byId("auction-submit-button"), note = byId("auction-preview-note"); if (button) { button.textContent = "Submit for committee review"; button.disabled = false; button.removeAttribute("aria-disabled"); } if (note) note.textContent = "The auction committee reviews every item. Submitting one does not guarantee it will be accepted or listed."; const form = byId("auction-submission-form"); if (form) form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = false; }); warmOnFirstUse("auction-submission-form", "auction-turnstile", configuredTurnstileAction(auctionConfig())); }
     // A live public page must not carry controls that cannot perform their stated
     // action. Where giving or auction intake is not open, close the control
     // honestly instead of offering a simulated run-through.
