@@ -20,13 +20,45 @@
   function base() { try { const u = new URL(String(cfg.apiBase || "")); return (cfg.mode === "live" || cfg.mode === "isolated-staging") && u.protocol === "https:" ? u.origin : ""; } catch { return ""; } }
   function turnstileAction() { const value = String(cfg.turnstileAction || "").trim(); return /^[A-Za-z0-9_-]{1,32}$/.test(value) ? value : ""; }
   function policy() { const p = cfg.policy || {}; try { const urls = [new URL(p.termsUrl), new URL(p.privacyUrl), new URL(p.mediaReleaseUrl)]; return urls.every((u) => u.protocol === "https:") && [p.termsVersion, p.privacyVersion, p.mediaReleaseVersion].every((v) => typeof v === "string" && v.trim()) ? p : null; } catch { return null; } }
-  function status(message, type = "") { const el = $("status"); el.textContent = message; el.className = `notice ${type}`; el.hidden = !message; }
+  function reveal(el) { const box = el.getBoundingClientRect(); if (box.top < 0 || box.bottom > window.innerHeight) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  function status(message, type = "") { const el = $("status"); el.textContent = message; el.className = `notice ${type}`; el.hidden = !message; if (message) reveal(el); }
 
   function agreement() { const p = policy(), slot = $("policy-agreement"); if (!p) return false; const label = document.createElement("label"), check = document.createElement("input"), span = document.createElement("span"); const documents = [["Event Terms & Conditions", "./event-terms.html"], ["Event Privacy Notice", "./event-privacy.html"], ["Media, Photo & Video Release", "./media-release.html"]]; label.className = "check"; check.type = "checkbox"; check.name = "combined_agreement"; check.required = true; span.append("I agree to the "); for (const [name, href] of documents) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = name; span.append(a, document.createTextNode(name === "Media, Photo & Video Release" ? "." : ", ")); } label.append(check, span); slot.replaceChildren(label); return true; }
 
   function loadTurnstile() { if (window.turnstile && typeof window.turnstile.render === "function") return Promise.resolve(window.turnstile); if (loading) return loading; if (window.turnstile && typeof window.turnstile.render !== "function") { try { delete window.turnstile; } catch { window.turnstile = undefined; } } loading = new Promise((resolve, reject) => { const s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true; s.defer = true; s.onload = () => window.turnstile && typeof window.turnstile.render === "function" ? resolve(window.turnstile) : reject(new Error("The security check could not load. Please refresh the page and try again.")); s.onerror = () => reject(new Error("The security check could not load. Please refresh the page and try again.")); document.head.append(s); }); return loading; }
-  async function renderTurnstile() { const api = await loadTurnstile(); if (widget === null) { const action = turnstileAction(); if (!action) throw new Error("Registration is temporarily unavailable. Please write to ssuite@salute.community and we will finish this for you."); const options = { sitekey: String(cfg.turnstileSiteKey || ""), action, "error-callback": () => status("The security check failed. Please retry.", "error"), "expired-callback": () => status("The security check expired. Please retry.", "error") }; widget = api.render($("turnstile-widget"), options); } return api; }
-  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("Please wait a moment for the security check to finish, then try again."); return result; }
+  /* Everything about the act of finishing is reported directly above the button that was pressed.
+     The page-level notice lives in the first card, well off screen once someone has scrolled down
+     to the button, so a message delivered there reads as nothing happening at all. */
+  function formStatus(message, type = "") {
+    const el = $("form-status");
+    if (!el) { status(message, type); return; }
+    el.textContent = message; el.className = `notice form-notice${type ? ` ${type}` : ""}`; el.hidden = !message;
+    if (message) reveal(el);
+  }
+  function setFinishEnabled(enabled) { const button = $("finish-registration"); if (button) button.disabled = !enabled; }
+  function hasSecurityToken() { try { return Boolean(window.turnstile && widget !== null && window.turnstile.getResponse(widget)); } catch { return false; } }
+
+  async function renderTurnstile() {
+    const api = await loadTurnstile();
+    if (widget === null) {
+      const action = turnstileAction();
+      if (!action) throw new Error("Registration is temporarily unavailable. Please write to ssuite@salute.community and we will finish this for you.");
+      const options = {
+        sitekey: String(cfg.turnstileSiteKey || ""), action,
+        /* The button stays unavailable until the check has actually produced a token. Pressing a
+           second too early would otherwise be refused for a reason shown off screen, while the
+           check itself then turns green — which looks exactly like a finished registration. */
+        callback: () => { setFinishEnabled(true); formStatus(""); },
+        "error-callback": () => { setFinishEnabled(false); formStatus("The security check could not complete. Please refresh the page, or email ssuite@salute.community and we will finish this for you.", "error"); },
+        /* Tokens lapse after a few minutes, so a slow, careful reader is not punished for it: the
+           check refreshes silently and the button returns on its own. */
+        "expired-callback": () => { setFinishEnabled(false); formStatus("The security check expired while this page was open. Refreshing it now — one moment."); try { api.reset(widget); } catch { /* refreshed on the next attempt */ } }
+      };
+      widget = api.render($("turnstile-widget"), options);
+    }
+    return api;
+  }
+  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("The security check has not finished yet. It refreshes by itself — please try again in a moment."); return result; }
 
   async function api(payload) {
     const response = await fetch(`${base()}/functions/v1/registration-completion`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ completion_token: completionToken, ...payload }) });
@@ -192,7 +224,9 @@
       : "This agreement is yours alone.";
     note.hidden = false;
     $("registration").hidden = false;
-    renderTurnstile().catch(() => { /* surfaced on submit */ });
+    setFinishEnabled(false);
+    formStatus("One moment — finishing the security check. Finish my registration becomes available as soon as it clears.");
+    renderTurnstile().catch(() => { setFinishEnabled(false); formStatus("The security check could not load, so this cannot be completed here right now. Please refresh the page, or email ssuite@salute.community and we will finish this for you.", "error"); });
     status("");
   }
 
@@ -240,11 +274,11 @@
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
     const agreed = form.elements.namedItem("combined_agreement");
-    if (!agreed || agreed.checked !== true) { status("Please accept the terms, privacy notice and media release to continue.", "error"); return; }
+    if (!agreed || agreed.checked !== true) { formStatus("Please accept the terms, privacy notice and media release to continue.", "error"); return; }
     const button = form.querySelector("button[type=submit]");
     button.disabled = true;
     try {
-      status("Finishing your registration…");
+      formStatus("Finishing your registration…");
       const attendee = data(form);
       const howHeard = String(form.elements.namedItem("how_heard")?.value || "").trim();
       const response = await api({ attendee, how_heard: howHeard || undefined, combined_agreement: agreed.checked === true, turnstile_token: await turnstileToken() });
@@ -257,11 +291,19 @@
         if (!portalUrl) portalUrl = text(confirmed.body.table_portal_url);
         renderRegistered(confirmed.body.attendee, confirmed.body, { justFinished: true });
       } else renderRegistered(attendee, lastContext, { justFinished: true });
+      formStatus("");
       status(role === "table_host" ? "You are registered. Your table is open below." : "You are registered. You can return to this page whenever you like.", "success");
+      /* The record replaces the form higher up the page, so bring it into view rather than leaving
+         someone looking at the empty space where the button used to be. */
+      $("registered").scrollIntoView({ block: "start", behavior: "smooth" });
     } catch (err) {
-      status(err instanceof Error ? err.message : "Your registration could not be completed.", "error");
+      formStatus(err instanceof Error ? err.message : "Your registration could not be completed.", "error");
       if (widget !== null && window.turnstile && typeof window.turnstile.reset === "function") window.turnstile.reset(widget);
-    } finally { button.disabled = false; }
+    } finally {
+      /* Only hand the button back while the check still holds a token. After a failure the check is
+         reset, and its own callback re-enables the button once the fresh one clears. */
+      button.disabled = !hasSecurityToken();
+    }
   }
 
   function editedDetails(form) {

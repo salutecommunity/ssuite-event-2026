@@ -32,12 +32,16 @@
     } catch { return ""; }
   }
 
+  /* A notice that lands off screen reads as nothing happening, so bring it into view. */
+  function reveal(el) { const box = el.getBoundingClientRect(); if (box.top < 0 || box.bottom > window.innerHeight) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+
   function setStatus(message, kind = "") {
     const el = byId("status");
     if (!el) return;
     el.hidden = false;
     el.textContent = message;
     el.className = `notice${kind ? ` ${kind}` : ""}`;
+    if (message) reveal(el);
   }
 
   function setFormStatus(message, kind = "") {
@@ -46,6 +50,7 @@
     el.hidden = !message;
     el.textContent = message;
     el.className = `notice${kind ? ` ${kind}` : ""}`;
+    if (message) reveal(el);
   }
 
   function money(cents, currency) {

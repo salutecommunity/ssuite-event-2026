@@ -122,6 +122,8 @@ main.shell{flex:1 0 auto;padding-bottom:80px}
 .notice.error{border-color:var(--danger);border-left-width:4px;background:var(--soft);color:#101010}
 .notice.success{border-color:var(--muted);border-left-width:4px;background:var(--soft)}
 .notice[hidden]{display:none}
+/* Sits immediately above the button it describes, so the answer to a press is where the press was. */
+.form-notice{margin:0 0 18px}
 
 /* ---------- forms ---------- */
 form{margin:0}

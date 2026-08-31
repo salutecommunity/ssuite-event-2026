@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
-  <title>S.Suite — Table portal</title><link rel="stylesheet" href="./live-pages.css?v=20260831b"><script src="./config.js?v=20260831b"></script>
+  <title>S.Suite — Table portal</title><link rel="stylesheet" href="./live-pages.css?v=20260831c"><script src="./config.js?v=20260831c"></script>
 </head>
 <body>
 <header class="masthead"><div class="shell"><img src="./assets/ssuite-logo-header.png" alt="S.Suite"><span>Private table portal</span></div></header>
@@ -23,11 +23,12 @@
     <form id="invite-form" class="invite-form" novalidate>
       <p class="eyebrow">Invite an open seat</p><h2>Invite your guest.</h2><p class="lede">Your guest receives a private link to confirm their details. Invitations send within about a minute, and each seat below shows whether it has gone out.</p>
       <div class="fields"><label class="field"><span>RECIPIENT EMAIL</span><input name="recipient_email" type="email" required maxlength="320" autocomplete="email"></label><label class="field"><span>OPEN SEAT</span><select name="seat_number" required></select></label><label class="field full"><span>PERSONAL NOTE <em>(optional)</em></span><textarea name="personal_note" maxlength="2000"></textarea></label></div>
+      <p class="notice form-notice" id="invite-status" role="status" aria-live="polite" hidden></p>
       <div class="actions"><button type="submit">Send invitation</button></div>
     </form>
   </section>
 </main>
-<script src="./table-portal.js?v=20260831b"></script>
+<script src="./table-portal.js?v=20260831c"></script>
 
 <footer class="site-footer">
   <div class="footer-inner">

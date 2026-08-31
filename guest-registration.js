@@ -20,15 +20,49 @@
   function base() { try { const u = new URL(String(cfg.apiBase || "")); return (cfg.mode === "live" || cfg.mode === "isolated-staging") && u.protocol === "https:" ? u.origin : ""; } catch { return ""; } }
   function turnstileAction() { const value = String(cfg.turnstileAction || "").trim(); return /^[A-Za-z0-9_-]{1,32}$/.test(value) ? value : ""; }
   function policy() { const p = cfg.policy || {}; try { const urls = [new URL(p.termsUrl), new URL(p.privacyUrl), new URL(p.mediaReleaseUrl)]; return urls.every((u) => u.protocol === "https:") && [p.termsVersion, p.privacyVersion, p.mediaReleaseVersion].every((v) => typeof v === "string" && v.trim()) ? p : null; } catch { return null; } }
-  function status(message, type = "") { const el = $("status"); el.textContent = message; el.className = `notice ${type}`; el.hidden = !message; }
+  function reveal(el) { const box = el.getBoundingClientRect(); if (box.top < 0 || box.bottom > window.innerHeight) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  function status(message, type = "") { const el = $("status"); el.textContent = message; el.className = `notice ${type}`; el.hidden = !message; if (message) reveal(el); }
+
+  /* Everything about the act of confirming is reported directly above the button that was pressed.
+     The page-level notice sits in the first card, which is several hundred pixels off screen once a
+     guest has scrolled down to the button, so a message delivered there reads as nothing happening
+     at all: the guest presses confirm, is told something in a place they cannot see, and reasonably
+     concludes the page is broken or the seat is taken. */
+  function formStatus(message, type = "") {
+    const el = $("form-status");
+    if (!el) { status(message, type); return; }
+    el.textContent = message; el.className = `notice form-notice${type ? ` ${type}` : ""}`; el.hidden = !message;
+    if (message) reveal(el);
+  }
+  function setConfirmEnabled(enabled) { const button = $("confirm-seat"); if (button) button.disabled = !enabled; }
+  function hasSecurityToken() { try { return Boolean(window.turnstile && widget !== null && window.turnstile.getResponse(widget)); } catch { return false; } }
 
   function agreement() { const p = policy(), slot = $("policy-agreement"); if (!p) return false; const label = document.createElement("label"), check = document.createElement("input"), span = document.createElement("span"); const documents = [["Event Terms & Conditions", "./event-terms.html"], ["Event Privacy Notice", "./event-privacy.html"], ["Media, Photo & Video Release", "./media-release.html"]]; label.className = "check"; check.type = "checkbox"; check.name = "combined_agreement"; check.required = true; span.append("I agree to the "); for (const [name, href] of documents) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = name; span.append(a, document.createTextNode(name === "Media, Photo & Video Release" ? "." : ", ")); } label.append(check, span); slot.replaceChildren(label); return true; }
 
   function loadTurnstile() { if (window.turnstile && typeof window.turnstile.render === "function") return Promise.resolve(window.turnstile); if (loading) return loading; if (window.turnstile && typeof window.turnstile.render !== "function") { try { delete window.turnstile; } catch { window.turnstile = undefined; } } loading = new Promise((resolve, reject) => { const s = document.createElement("script"); s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"; s.async = true; s.defer = true; s.onload = () => window.turnstile && typeof window.turnstile.render === "function" ? resolve(window.turnstile) : reject(new Error("The security check could not load. Please refresh the page and try again.")); s.onerror = () => reject(new Error("The security check could not load. Please refresh the page and try again.")); document.head.append(s); }); return loading; }
   /* Rendered as soon as the form opens rather than on first submit, so the guest is never
      told to complete a check that is not on screen yet. */
-  async function renderTurnstile() { const api = await loadTurnstile(); if (widget === null) { const action = turnstileAction(); if (!action) throw new Error("Registration is temporarily unavailable. Please write to ssuite@salute.community and we will confirm your seat for you."); const options = { sitekey: String(cfg.turnstileSiteKey || ""), action, "error-callback": () => status("The security check failed. Please retry.", "error"), "expired-callback": () => status("The security check expired. Please retry.", "error") }; widget = api.render($("turnstile-widget"), options); } return api; }
-  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("Please wait a moment for the security check to finish, then try again."); return result; }
+  async function renderTurnstile() {
+    const api = await loadTurnstile();
+    if (widget === null) {
+      const action = turnstileAction();
+      if (!action) throw new Error("Registration is temporarily unavailable. Please write to ssuite@salute.community and we will confirm your seat for you.");
+      const options = {
+        sitekey: String(cfg.turnstileSiteKey || ""), action,
+        /* Confirm my seat stays unavailable until the check has actually produced a token. A guest
+           who presses a second too early would otherwise be refused for a reason they never see,
+           while the check itself then turns green — which looks exactly like a confirmed seat. */
+        callback: () => { setConfirmEnabled(true); formStatus(""); },
+        "error-callback": () => { setConfirmEnabled(false); formStatus("The security check could not complete. Please refresh the page, or email ssuite@salute.community and we will confirm your seat for you.", "error"); },
+        /* Tokens lapse after a few minutes. A guest filling this in slowly should not be punished
+           for it, so the check is refreshed silently and the button returns on its own. */
+        "expired-callback": () => { setConfirmEnabled(false); formStatus("The security check expired while this page was open. Refreshing it now — one moment."); try { api.reset(widget); } catch { /* refreshed on the next attempt */ } }
+      };
+      widget = api.render($("turnstile-widget"), options);
+    }
+    return api;
+  }
+  async function turnstileToken() { const api = await renderTurnstile(); const result = api.getResponse(widget); if (!result) throw new Error("The security check has not finished yet. It refreshes by itself — please try again in a moment."); return result; }
 
   async function api(payload) {
     const response = await fetch(`${base()}/functions/v1/guest-registration`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ invitation_token: invitationToken, ...payload }) });
@@ -169,7 +203,9 @@
       note.hidden = false;
     }
     $("registration").hidden = false;
-    renderTurnstile().catch(() => { /* surfaced on submit */ });
+    setConfirmEnabled(false);
+    formStatus("One moment — finishing the security check. Confirm my seat becomes available as soon as it clears.");
+    renderTurnstile().catch(() => { setConfirmEnabled(false); formStatus("The security check could not load, so this seat cannot be confirmed here right now. Please refresh the page, or email ssuite@salute.community and we will confirm your seat for you.", "error"); });
     /* The "nothing is saved until you confirm" reassurance lives in the form lede, directly
        above the fields. Repeating it up in the notice region duplicates it and puts a neutral
        statement in the slot reserved for real errors and progress, so it reads as a warning on
@@ -212,11 +248,11 @@
     const form = event.currentTarget;
     if (!form.reportValidity()) return;
     const agreed = form.elements.namedItem("combined_agreement");
-    if (!agreed || agreed.checked !== true) { status("Please accept the terms, privacy notice and media release to continue.", "error"); return; }
+    if (!agreed || agreed.checked !== true) { formStatus("Please accept the terms, privacy notice and media release to continue.", "error"); return; }
     const button = form.querySelector("button[type=submit]");
     button.disabled = true;
     try {
-      status("Confirming your seat…");
+      formStatus("Confirming your seat…");
       const attendee = data(form);
       const response = await api({ attendee, combined_agreement: agreed.checked === true, turnstile_token: await turnstileToken() });
       if (!response.ok || typeof response.body.attendee_id !== "string") throw new Error(typeof response.body.error === "string" ? response.body.error : "Your registration could not be completed.");
@@ -224,11 +260,20 @@
       const confirmed = await api({ action: "lookup" }).catch(() => null);
       if (confirmed && confirmed.ok && confirmed.body && confirmed.body.state === "completed") renderRegistered(confirmed.body.guest, confirmed.body);
       else renderRegistered(attendee, lastContext);
+      formStatus("");
       status("Your seat is confirmed. You can return to this page whenever you like.", "success");
+      /* The confirmation replaces the form higher up the page, so bring it into view instead of
+         leaving the guest looking at the empty space where the button used to be. */
+      $("registered").scrollIntoView({ block: "start", behavior: "smooth" });
     } catch (err) {
-      status(err instanceof Error ? err.message : "Your registration could not be completed.", "error");
+      formStatus(err instanceof Error ? err.message : "Your registration could not be completed.", "error");
       if (widget !== null && window.turnstile && typeof window.turnstile.reset === "function") window.turnstile.reset(widget);
-    } finally { button.disabled = false; }
+    } finally {
+      /* Only hand the button back while the check still holds a token. After a failure the check is
+         reset, and its own callback re-enables the button the moment the fresh one clears, so the
+         button is never pressable without a token behind it. */
+      button.disabled = !hasSecurityToken();
+    }
   }
 
   function editedDetails(form) {

@@ -24,7 +24,13 @@
   function base() {
     try { const u = new URL(String(cfg.apiBase || "")); return cfg.mode === "live" && u.protocol === "https:" ? u.origin : ""; } catch { return ""; }
   }
-  function status(message, kind = "") { const node = $("status"); node.textContent = message; node.className = `notice ${kind}`; node.hidden = !message; }
+  /* A message about something a host just did has to be somewhere they can see. This page runs long
+     — ten seat cards sit between the top notice and the invite form — so any notice that lands off
+     screen is brought into view rather than being announced into empty space. */
+  function reveal(node) { const box = node.getBoundingClientRect(); if (box.top < 0 || box.bottom > window.innerHeight) node.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  function status(message, kind = "") { const node = $("status"); node.textContent = message; node.className = `notice ${kind}`; node.hidden = !message; if (message) reveal(node); }
+  /* Invitation feedback belongs directly above the Send invitation button that produced it. */
+  function inviteStatus(message, kind = "") { const node = $("invite-status"); if (!node) { status(message, kind); return; } node.textContent = message; node.className = `notice form-notice${kind ? ` ${kind}` : ""}`; node.hidden = !message; if (message) reveal(node); }
   function randomKey() { const bytes = new Uint8Array(32); crypto.getRandomValues(bytes); return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(""); }
   async function call(body) {
     const response = await fetch(`${base()}/functions/v1/table-portal`, { method: "POST", mode: "cors", credentials: "omit", cache: "no-store", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...body, table_token: tableToken }) });
@@ -121,10 +127,10 @@
   }
   async function invite(event) {
     event.preventDefault(); const form = event.currentTarget; const recipient = form.elements.recipient_email.value.trim().toLowerCase(), seat = Number(form.elements.seat_number.value), note = form.elements.personal_note.value.trim();
-    if (!changesOpen()) { render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
-    if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return status("Enter your guest's email address and choose an open seat.", "error");
+    if (!changesOpen()) { render(); return inviteStatus(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
+    if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return inviteStatus("Enter your guest's email address and choose an open seat.", "error");
     const button = form.querySelector("button[type=submit]"); button.disabled = true;
-    try { status("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); status("Invitation is on its way. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { status("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
+    try { inviteStatus("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); inviteStatus("Invitation is on its way. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { inviteStatus("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
   }
   async function resendInvitation(invitationId) {
     try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend is on its way. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
