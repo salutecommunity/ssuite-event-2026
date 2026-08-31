@@ -175,9 +175,18 @@
     const invited = text(context.invited_email);
     if (invited) {
       const field = $("guest-form").elements.namedItem("email");
-      if (field && !field.value) field.value = invited;
+      if (field) {
+        /* The seat is registered under the address the invitation was sent to, and the database
+           enforces that exactly. So the field is filled from the invitation and held there.
+           It used to be filled only when empty, which let browser autofill drop in a personal
+           address; the server then refused the registration and the reason was discarded. */
+        field.value = invited;
+        field.readOnly = true;
+        field.setAttribute("autocomplete", "off");
+        field.setAttribute("aria-readonly", "true");
+      }
       const note = $("email-note");
-      note.textContent = `This invitation was sent to ${invited}. You may register under a different address if you prefer.`;
+      note.textContent = `This invitation was sent to ${invited}. Your seat is held under that address. To use a different one, write to ssuite@salute.community.`;
       note.hidden = false;
     }
     $("registration").hidden = false;
@@ -211,7 +220,11 @@
 
   function data(form) {
     const get = (n) => String(form.elements.namedItem(n)?.value || "").trim();
-    const primary = get("email").toLowerCase(), secondary = get("secondary_email").toLowerCase();
+    /* The invitation is authoritative for the primary address. Reading it from the invitation
+       rather than the input means no browser autofill, extension or stale value can produce a
+       submission the server is bound to reject. */
+    const invitedEmail = text(lastContext && lastContext.invited_email).toLowerCase();
+    const primary = invitedEmail || get("email").toLowerCase(), secondary = get("secondary_email").toLowerCase();
     const dietary = form.elements.dietary.checked, accessibility = form.elements.accessibility.checked;
     if (!emailPattern.test(primary)) throw new Error("Please enter a valid email address.");
     /* A secondary address that repeats the primary one is what browser autofill produces,
