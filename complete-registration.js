@@ -37,9 +37,9 @@
   /* What they already hold, before anything is asked of them. A table host is told their
      table is paid and waiting; nobody is asked to re-establish what the event already knows. */
   const ROLE_LEDE = {
-    table_host: "Your table is confirmed and paid. The only thing still outstanding is your own registration — the details below are yours alone, and your agreement is the one thing our team cannot complete for you.",
-    table_guest: "Your seat is confirmed. The only thing still outstanding is your own registration — the details below are yours alone, and your agreement is the one thing our team cannot complete for you.",
-    attendee: "Your place is confirmed. The only thing still outstanding is your own registration — the details below are yours alone, and your agreement is the one thing our team cannot complete for you."
+    table_host: "To finalize your registration, we need a few details from you. Your table is already reserved.",
+    table_guest: "To finalize your registration, we need a few details from you. Your seat is already held.",
+    attendee: "To finalize your registration and proceed to table assignments, we need a few details from you."
   };
 
   function renderContext(context) {

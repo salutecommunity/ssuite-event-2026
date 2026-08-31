@@ -211,20 +211,20 @@ button:disabled{background:#d5d5d2;border-color:#d5d5d2;color:#767674;cursor:not
   display:grid;grid-template-columns:repeat(auto-fill,minmax(232px,1fr));
   gap:16px;margin-top:26px;
 }
-.seat{
+.seat,.seat-grid>article{
   border:1px solid var(--line);
   padding:20px 18px;
   background:#fff;
   min-height:150px;
   display:flex;flex-direction:column;
 }
-.seat h3{
+.seat h3,.seat-grid>article h3{
   font:11px/1 var(--sans);font-weight:600;letter-spacing:.15em;text-transform:uppercase;
   color:var(--muted);margin:0 0 12px;
 }
-.seat p{margin:0 0 6px;font-size:15px;line-height:1.45}
-.seat .actions{margin:auto 0 0;padding-top:16px;gap:10px}
-.seat button{height:40px;padding:0 16px;font-size:11px;letter-spacing:.11em}
+.seat p,.seat-grid>article p{margin:0 0 6px;font-size:15px;line-height:1.45}
+.seat .actions,.seat-grid>article .actions{margin:auto 0 0;padding-top:16px;gap:10px}
+.seat button,.seat-grid>article button{height:40px;padding:0 16px;font-size:11px;letter-spacing:.11em}
 
 .table-name-form{margin-top:26px}
 .table-name-form .actions{margin-top:18px}
@@ -267,6 +267,6 @@ button:disabled{background:#d5d5d2;border-color:#d5d5d2;color:#767674;cursor:not
   .receipt-rows div{grid-template-columns:1fr;gap:7px}
   .actions{gap:10px}
   button,.actions a.button{width:100%}
-  .seat .actions button{width:100%}
+.seat .actions button,.seat-grid>article .actions button{width:100%}
   .site-footer .footer-inner{grid-template-columns:1fr;gap:22px}
 }

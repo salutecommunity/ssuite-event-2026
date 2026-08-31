@@ -223,7 +223,7 @@
 
     const seated = typeof data.seats_total === "number" && data.seats_total > 1;
     const seatedNote = seated
-      ? "These are your own details. The other seats on this order are managed by the table host, from the link we emailed them."
+      ? "These are your details. The other seats on this order are managed by the table host, from the link we emailed them."
       : "";
     /* Guests and purchasers may correct their own details until the published deadline. */
     const cutoff = typeof data.details_cutoff_display === "string" ? data.details_cutoff_display : "";
