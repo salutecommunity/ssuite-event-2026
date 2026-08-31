@@ -32,8 +32,15 @@
     const el = $("form-status");
     if (!el) { status(message, type); return; }
     el.textContent = message; el.className = `notice form-notice${type ? ` ${type}` : ""}`; el.hidden = !message;
+    el.dataset.tone = message ? type : "";
     if (message) reveal(el);
   }
+  /* A failed attempt resets the challenge, and the challenge calls back the moment it
+     solves again. Clearing this region from that callback erased the reason the attempt
+     failed roughly a second after it appeared, which from the outside is a button that
+     does nothing at all. Progress notes are cleared; a reported failure is left alone
+     until the next attempt replaces it. */
+  function clearProgressNote() { const el = $("form-status"); if (el && el.dataset.tone === "error") return; formStatus(""); }
   function setConfirmEnabled(enabled) { const button = $("confirm-seat"); if (button) button.disabled = !enabled; }
   function hasSecurityToken() { try { return Boolean(window.turnstile && widget !== null && window.turnstile.getResponse(widget)); } catch { return false; } }
 
@@ -52,7 +59,7 @@
         /* Confirm my seat stays unavailable until the check has actually produced a token. A guest
            who presses a second too early would otherwise be refused for a reason they never see,
            while the check itself then turns green — which looks exactly like a confirmed seat. */
-        callback: () => { setConfirmEnabled(true); formStatus(""); },
+        callback: () => { setConfirmEnabled(true); clearProgressNote(); },
         "error-callback": () => { setConfirmEnabled(false); formStatus("The security check could not complete. Please refresh the page, or email ssuite@salute.community and we will confirm your seat for you.", "error"); },
         /* Tokens lapse after a few minutes. A guest filling this in slowly should not be punished
            for it, so the check is refreshed silently and the button returns on its own. */
@@ -241,10 +248,13 @@
     const get = (n) => String(form.elements.namedItem(n)?.value || "").trim();
     const primary = get("email").toLowerCase(), secondary = get("secondary_email").toLowerCase();
     const dietary = form.elements.dietary.checked, accessibility = form.elements.accessibility.checked;
-    if (!emailPattern.test(primary) || (secondary && (!emailPattern.test(secondary) || secondary === primary))) throw new Error("Please enter valid email addresses, and make sure they are different from each other.");
+    if (!emailPattern.test(primary)) throw new Error("Please enter a valid email address.");
+    /* A secondary address that repeats the primary one is what browser autofill produces,
+       not a mistake worth stopping a registration over. It is dropped just below. */
+    if (secondary && !emailPattern.test(secondary)) throw new Error("Please enter a valid secondary email address, or leave that field blank.");
     if (dietary && !get("dietary_or_allergy_details")) throw new Error("Please tell us about your dietary or allergy needs.");
     if (accessibility && !get("accessibility_details")) throw new Error("Please tell us what you need us to arrange.");
-    return { first_name: get("first_name"), last_name: get("last_name"), email: primary, secondary_email: secondary || undefined, job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
+    return { first_name: get("first_name"), last_name: get("last_name"), email: primary, secondary_email: secondary && secondary !== primary ? secondary : undefined, job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
   }
 
   async function submit(event) {
@@ -255,10 +265,13 @@
     if (!agreed || agreed.checked !== true) { formStatus("Please accept the terms, privacy notice and media release to continue.", "error"); return; }
     const button = form.querySelector("button[type=submit]");
     button.disabled = true;
+    let spent = false;
     try {
       formStatus("Confirming your seat…");
       const attendee = data(form);
-      const response = await api({ attendee, combined_agreement: agreed.checked === true, turnstile_token: await turnstileToken() });
+      const token = await turnstileToken();
+      spent = true;
+      const response = await api({ attendee, combined_agreement: agreed.checked === true, turnstile_token: token });
       if (!response.ok || typeof response.body.attendee_id !== "string") throw new Error(typeof response.body.error === "string" ? response.body.error : "Your registration could not be completed.");
       /* Re-read from the server so the confirmation shows what was actually stored, not what was typed. */
       const confirmed = await api({ action: "lookup" }).catch(() => null);
@@ -271,7 +284,9 @@
       $("registered").scrollIntoView({ block: "start", behavior: "smooth" });
     } catch (err) {
       formStatus(err instanceof Error ? err.message : "Your registration could not be completed.", "error");
-      if (widget !== null && window.turnstile && typeof window.turnstile.reset === "function") window.turnstile.reset(widget);
+      /* Only a token that actually went to the server has been spent. Resetting after a
+         refusal raised here takes the button away for a second and gains nothing. */
+      if (spent && widget !== null && window.turnstile && typeof window.turnstile.reset === "function") window.turnstile.reset(widget);
     } finally {
       /* Only hand the button back while the check still holds a token. After a failure the check is
          reset, and its own callback re-enables the button the moment the fresh one clears, so the
@@ -284,12 +299,12 @@
     const get = (n) => String(form.elements.namedItem(n)?.value || "").trim();
     const secondary = get("secondary_email").toLowerCase();
     if (secondary && !emailPattern.test(secondary)) throw new Error("Enter a valid secondary email address.");
-    if (secondary && secondary === String(guestOnFile.email || "").toLowerCase()) throw new Error("The secondary email must be different from your own email address.");
+    const ownAddress = String(guestOnFile.email || "").toLowerCase();
     const dietary = get("dietary_or_allergy_details"), accessibility = get("accessibility_details");
     return {
       first_name: get("first_name"), last_name: get("last_name"),
       job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"),
-      secondary_email: secondary || undefined,
+      secondary_email: secondary && secondary !== ownAddress ? secondary : undefined,
       has_dietary_or_allergy_needs: Boolean(dietary), dietary_or_allergy_details: dietary || undefined,
       has_accessibility_needs: Boolean(accessibility), accessibility_details: accessibility || undefined
     };
