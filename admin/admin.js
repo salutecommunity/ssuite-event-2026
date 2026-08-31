@@ -114,14 +114,21 @@ function signInFailure(error, thing) {
 
 async function requestCode() {
   if (!supabase || !configured()) return;
-  const button = $("request-code"); setBusy(button, true); authStatus("Requesting a one-time email code…");
+  const button = $("request-code"); setBusy(button, true); authStatus("Sending a sign-in code…");
   try {
-    // Omitting emailRedirectTo requests the numeric OTP rather than a magic link.
-    const { error } = await supabase.auth.signInWithOtp({ email: APPROVED_EMAIL });
-    if (error) throw error;
-    authStatus("If the approved mailbox is available, a one-time code has been sent. It does not grant access until server authorization succeeds.", "success");
+    // Supabase's own sign-in mail carries no code and redirects to a development address, so the
+    // code is minted server-side and delivered by the S.Suite sender like every other message.
+    const response = await fetch(`${apiBase()}/functions/v1/admin-signin`, {
+      method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
+      headers: { "Content-Type": "application/json" }, body: "{}",
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload?.ok !== true) {
+      throw new Error(typeof payload?.error === "string" ? payload.error : "");
+    }
+    authStatus("A sign-in code is on its way to the S.Suite staff mailbox. Enter it below.", "success");
     $("admin-otp").focus();
-  } catch (error) { authStatus(signInFailure(error, "one-time email code"), "error"); }
+  } catch (error) { authStatus(signInFailure(error, "sign-in code"), "error"); }
   finally { setBusy(button, false); }
 }
 
@@ -135,17 +142,6 @@ async function verifyCode(event) {
     if (!data?.session) throw new Error("The one-time code did not create a session.");
     await openDashboard(data.session);
   } catch { authStatus("The one-time email code could not be verified. Request a fresh code and try again.", "error"); }
-  finally { setBusy(button, false); }
-}
-
-async function sendLink(event) {
-  event.preventDefault(); if (!supabase || !configured()) return;
-  const button = $("send-link"); setBusy(button, true); authStatus("Requesting a passwordless sign-in link…");
-  try {
-    const { error } = await supabase.auth.signInWithOtp({ email: APPROVED_EMAIL, options: { emailRedirectTo: `${location.origin}${location.pathname}` } });
-    if (error) throw error;
-    authStatus("If the approved mailbox is available, a private sign-in link has been sent. It does not grant access until server authorization succeeds.", "success");
-  } catch (error) { authStatus(signInFailure(error, "private sign-in link"), "error"); }
   finally { setBusy(button, false); }
 }
 
@@ -488,5 +484,5 @@ function renderAttendeeEdit(payload) {
 
 async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); renderAttendeeDetail(payload); if (!$("attendee-dialog").open) $("attendee-dialog").showModal(); status(""); } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); } }
 
-$("magic-form").addEventListener("submit", sendLink); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
+$("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
 initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));
