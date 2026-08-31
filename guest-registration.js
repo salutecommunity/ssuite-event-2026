@@ -206,6 +206,10 @@
     setConfirmEnabled(false);
     formStatus("One moment — finishing the security check. Confirm my seat becomes available as soon as it clears.");
     renderTurnstile().catch(() => { setConfirmEnabled(false); formStatus("The security check could not load, so this seat cannot be confirmed here right now. Please refresh the page, or email ssuite@salute.community and we will confirm your seat for you.", "error"); });
+    /* A check that never resolves must not leave a guest watching a message that never changes and
+       a button that never wakes up. It normally clears in a second or two; if it has not, say what
+       to look for and give a way through. If it clears later, its own callback takes over. */
+    window.setTimeout(() => { if (!hasSecurityToken()) formStatus("The security check has not cleared yet. If it shows a box to tick, please tick it. If it never finishes, some networks and browser privacy extensions block it — try refreshing or another browser, or email ssuite@salute.community and we will confirm your seat for you."); }, 15000);
     /* The "nothing is saved until you confirm" reassurance lives in the form lede, directly
        above the fields. Repeating it up in the notice region duplicates it and puts a neutral
        statement in the slot reserved for real errors and progress, so it reads as a warning on

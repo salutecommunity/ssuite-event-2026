@@ -227,6 +227,10 @@
     setFinishEnabled(false);
     formStatus("One moment — finishing the security check. Finish my registration becomes available as soon as it clears.");
     renderTurnstile().catch(() => { setFinishEnabled(false); formStatus("The security check could not load, so this cannot be completed here right now. Please refresh the page, or email ssuite@salute.community and we will finish this for you.", "error"); });
+    /* A check that never resolves must not leave someone watching a message that never changes and
+       a button that never wakes up. It normally clears in a second or two; if it has not, say what
+       to look for and give a way through. If it clears later, its own callback takes over. */
+    window.setTimeout(() => { if (!hasSecurityToken()) formStatus("The security check has not cleared yet. If it shows a box to tick, please tick it. If it never finishes, some networks and browser privacy extensions block it — try refreshing or another browser, or email ssuite@salute.community and we will finish this for you."); }, 15000);
     status("");
   }
 
