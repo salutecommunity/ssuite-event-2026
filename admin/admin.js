@@ -184,7 +184,25 @@ function renderOverview(host, overview) {
   const event = overview.event || {}; const counts = overview.counts || {};
   if (overview.notice) host.append(element("p", "notice", overview.notice));
   const eventCard = element("article", "event-card"); eventCard.append(element("span", "record-label", "Launch status"), element("h2", "", text(event.name)), element("p", "", `${text(event.display_date)} · ${text(event.venue_name)}, ${text(event.city)}`), chip(event.sales_status)); host.append(eventCard);
-  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Auction pending", counts.auction_pending], ["Donations received", money(counts.donations_paid_cents)]];
+  const revenue = overview.revenue;
+  if (revenue) {
+    const unit = (count, singular, plural) => `${Number(count) || 0} ${Number(count) === 1 ? singular : plural}`;
+    const moneyFields = [
+      ["Total received", money(revenue.net_cents, revenue.currency), "Seats, tables and giving"],
+      ["Seats", money(revenue.seats_cents, revenue.currency), unit(revenue.seat_order_count, "order", "orders")],
+      ["Tables", money(revenue.tables_cents, revenue.currency), unit(revenue.table_order_count, "order", "orders")],
+      ["Donations", money(revenue.donations_net_cents, revenue.currency), unit(revenue.donation_count, "gift", "gifts")]
+    ];
+    if (Number(revenue.refunded_cents) > 0) moneyFields.push(["Refunded", `− ${money(revenue.refunded_cents, revenue.currency)}`, "Reconciled from Stripe"]);
+    host.append(element("h2", "band-title", "Revenue received"));
+    const moneyGrid = element("div", "summary money");
+    for (const [label, value, note] of moneyFields) { const card = element("article", "metric"); card.append(element("span", "", label), element("strong", "", value), element("small", "", note)); moneyGrid.append(card); }
+    host.append(moneyGrid);
+    host.append(element("p", "band-note", "Figures are net of refunds reconciled from Stripe. Isolated validation transactions are excluded."));
+  }
+  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Auction pending", counts.auction_pending]];
+  if (!revenue) fields.push(["Donations received", money(counts.donations_paid_cents)]);
+  host.append(element("h2", "band-title", "Operations"));
   const grid = element("div", "summary"); for (const [label, value] of fields) { const card = element("article", "metric"); card.append(element("span", "", label), element("strong", "", String(value ?? 0))); grid.append(card); } host.append(grid);
   const note = element("p", "fineprint", "Sales status is shown for visibility only. This dashboard intentionally provides no control to open sales, release holds, send communications, or process money."); host.append(note);
 }
