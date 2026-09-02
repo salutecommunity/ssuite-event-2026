@@ -231,7 +231,10 @@
     // promises a real charge it cannot make, or a preview it will not honour.
     if (!liveReadiness().ok) return;
     const note = byId("attend-sales-note");
-    if (note) note.textContent = "Early-bird pricing is available through September 30, 2026, 11:59 p.m. Eastern. Registration is completed through secure checkout.";
+    // No deadline is asserted here. live-pricing.js adds the early-bird sentence from
+    // the event database only while that window is genuinely open, so a stale build
+    // can never advertise a discount that has already ended.
+    if (note) note.textContent = "Registration is completed through secure checkout.";
     const submit = byId("checkout-submit");
     if (submit) submit.textContent = "Continue to secure checkout";
     const fineprint = byId("checkout-fineprint");

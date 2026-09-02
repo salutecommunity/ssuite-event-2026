@@ -223,6 +223,7 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260831e"></script>
+<script src="./live-chain.js?v=20260902a"></script>
+<script src="./live-pricing.js?v=20260902a"></script>
 <script src="./donation-auction-live.js?v=20260831e"></script>
 </body></html>
