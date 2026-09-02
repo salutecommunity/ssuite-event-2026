@@ -124,7 +124,48 @@
     applySalesState(data);
   }
 
+  /* Offline safety net.
+   *
+   * The lookup above is authoritative, but it can fail — an outage, a tightened
+   * origin allowlist, a blocked request. Failing back to the figures written into
+   * the HTML is only safe while those figures are current; once early-bird ends
+   * they become a quote we would not honour. So each tier also carries both of its
+   * published prices and the cut-over instant, and this pass picks the right one
+   * before the network is consulted. Both numbers are real and already public, so
+   * nothing is invented — the page simply stops asserting a discount that ended.
+   *
+   * It relies on the visitor's clock, which is why it is a fallback and not the
+   * source of truth: the server response overrides it moments later.
+   */
+  function shippedTickets() {
+    const tickets = [];
+    document.querySelectorAll(".choose[data-price-cutover]").forEach((button) => {
+      const code = text(button.dataset.ticketCode);
+      const cutover = new Date(text(button.dataset.priceCutover));
+      const early = Number(button.dataset.earlyPrice);
+      const regular = Number(button.dataset.regularPrice);
+      if (!/^[a-z0-9_]{1,64}$/.test(code) || Number.isNaN(cutover.getTime())) return;
+      if (!Number.isFinite(early) || !Number.isFinite(regular) || early <= 0 || regular <= 0) return;
+      const earlyBirdActive = Date.now() < cutover.getTime();
+      tickets.push({
+        code,
+        amount_cents: Math.round((earlyBirdActive ? early : regular) * 100),
+        compare_at_cents: earlyBirdActive ? Math.round(regular * 100) : null,
+        early_bird_active: earlyBirdActive,
+      });
+    });
+    return tickets;
+  }
+
+  function applyShipped() {
+    const tickets = shippedTickets().filter(usableTicket);
+    if (tickets.length === 0) return;
+    tickets.forEach(applyTicket);
+    applyGuestRate(tickets);
+  }
+
   async function load() {
+    applyShipped();
     const base = apiBase();
     if (!base) return;
     try {
