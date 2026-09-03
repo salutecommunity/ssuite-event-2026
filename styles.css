@@ -50,3 +50,6 @@
 /* Shown in place of a buy control while a tier is withheld from public sale. */
 .sale-window-note{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:#4a4a4a}
 .sale-window-note[hidden]{display:none}
+/* A withheld tier must read as unavailable rather than as the page's loudest
+   call to action. Grayscale only, consistent with the brand. */
+.choose[data-public-sale-open="false"],.choose[data-public-sale-open="false"]:hover{background:#f4f4f4;color:#8a8a8a;border:1px solid #dcdcdc;cursor:default;box-shadow:none}
