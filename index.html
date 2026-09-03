@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="no-referrer">
   <title>S.Suite Honors Ceremony — Friday, November 20, 2026 — New York City</title>
-  <link rel="stylesheet" href="./styles.css?v=20260828e">
+  <link rel="stylesheet" href="./styles.css?v=20260903a">
   <link rel="stylesheet" href="./donation-auction.css?v=20260828e">
   <script src="./config.js?v=20260831e"></script>
   <!-- share-meta:start -->
@@ -74,17 +74,20 @@
           <div><p class="micro">EARLY BIRD / INDIVIDUAL</p><h3>SALUTE Member Ticket</h3><div class="price-row"><p class="price">$275</p><p class="original-price"><span class="sr-only">Original price </span>$350</p></div><p class="price-note">Early-bird price</p></div>
           <p>For current and former SALUTE members. One seat per member — guests are welcome at the Community rate. Requires the member access code from your SALUTE email.</p>
           <button class="button button-outline choose" type="button" data-ticket-code="salute_member" data-live-label="Choose this ticket" data-ticket="SALUTE Member Ticket" data-price="275" data-early-price="275" data-regular-price="350" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Sales opening soon</button>
+          <p class="sale-window-note" hidden></p>
         </article>
         <article class="ticket-card featured">
           <div class="flag">INDIVIDUAL</div>
           <div><p class="micro">EARLY BIRD / GENERAL ADMISSION</p><h3>Community Ticket</h3><div class="price-row"><p class="price">$350</p><p class="original-price"><span class="sr-only">Original price </span>$400</p></div><p class="price-note">Early-bird price</p></div>
           <p>One reserved seat, event communications, and access to the full evening.</p>
-          <button class="button button-dark choose" type="button" data-ticket-code="community" data-live-label="Choose this ticket" data-ticket="Community Ticket" data-price="350" data-early-price="350" data-regular-price="400" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Sales opening soon</button>
+          <button class="button button-dark choose" type="button" data-ticket-code="community" data-live-label="Choose this ticket" data-withheld-label="Opening soon" data-public-sale-open="false" data-ticket="Community Ticket" data-price="350" data-early-price="350" data-regular-price="400" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Opening soon</button>
+          <p class="sale-window-note">SALUTE members are registering first. Community tickets open shortly.</p>
         </article>
         <article class="ticket-card table-card">
           <div><p class="micro">EARLY BIRD / HOST THE TABLE</p><h3>Table for ten</h3><div class="price-row"><p class="price">$5,000</p><p class="original-price"><span class="sr-only">Original price </span>$7,500</p></div><p class="price-note">Early-bird price</p></div>
           <p>Ten seats plus a private link to invite guests, collect details, and manage your table.</p>
           <button class="button button-light choose" type="button" data-ticket-code="full_table" data-live-label="Host a table" data-ticket="Table for ten" data-price="5000" data-early-price="5000" data-regular-price="7500" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Sales opening soon</button>
+          <p class="sale-window-note" hidden></p>
         </article>
       </div>
     </section>
@@ -206,7 +209,7 @@ function bindConditionalFields(){guestFields.querySelectorAll('[data-detail]').f
 function renderGuests(){const count=isTable?1:(isMember?1+guestSeats():Number(qty.value));guestFields.innerHTML=Array.from({length:count},(_,i)=>guestCard(i)).join('');bindConditionalFields();tableOptions.hidden=!isTable;document.querySelector('#selection-note').textContent=isTable?'Full table registration':'Ticket selection'}
 function updateTotal(){document.querySelector('#ticket-total').textContent=usd(isTable?unitPrice:(isMember?unitPrice+communityPrice*guestSeats():unitPrice*Number(qty.value)))}
 function closeDrawer(){drawer.setAttribute('aria-hidden','true');backdrop.hidden=true}
-document.querySelectorAll('.choose').forEach(b=>b.addEventListener('click',()=>{showDrawerStep('registration');unitPrice=Number(b.dataset.price);isTable=b.dataset.ticket==='Table for ten';document.querySelector('#ticket-name').textContent=b.dataset.ticket;qty.value='1';isMember=b.dataset.ticketCode==='salute_member';qty.closest('.quantity-wrap').hidden=isTable||isMember;if(memberNote){memberNote.hidden=!isMember;const guestsOpen=!!communityChoose&&!communityChoose.disabled;if(communityChoose)communityPrice=Number(communityChoose.dataset.price)||communityPrice;if(memberGuestRate)memberGuestRate.textContent=usd(communityPrice);if(memberGuestQty){memberGuestQty.value='0';memberGuestQty.disabled=!guestsOpen}if(memberGuestWrap)memberGuestWrap.hidden=!guestsOpen;if(memberGuestOpenNote)memberGuestOpenNote.hidden=!guestsOpen;if(memberGuestClosed)memberGuestClosed.hidden=guestsOpen}renderGuests();updateTotal();backdrop.hidden=false;drawer.setAttribute('aria-hidden','false');drawer.scrollTop=0;setTimeout(()=>drawer.querySelector('input').focus(),320)}));qty.addEventListener('change',()=>{renderGuests();updateTotal()});if(memberGuestQty)memberGuestQty.addEventListener('change',()=>{renderGuests();updateTotal()});drawer.querySelector('.close').addEventListener('click',closeDrawer);backdrop.addEventListener('click',closeDrawer);
+document.querySelectorAll('.choose').forEach(b=>b.addEventListener('click',()=>{showDrawerStep('registration');unitPrice=Number(b.dataset.price);isTable=b.dataset.ticket==='Table for ten';document.querySelector('#ticket-name').textContent=b.dataset.ticket;qty.value='1';isMember=b.dataset.ticketCode==='salute_member';qty.closest('.quantity-wrap').hidden=isTable||isMember;if(memberNote){memberNote.hidden=!isMember;const guestsOpen=document.body.dataset.guestSeatsOpen!=='false';if(communityChoose)communityPrice=Number(communityChoose.dataset.price)||communityPrice;if(memberGuestRate)memberGuestRate.textContent=usd(communityPrice);if(memberGuestQty){memberGuestQty.value='0';memberGuestQty.disabled=!guestsOpen}if(memberGuestWrap)memberGuestWrap.hidden=!guestsOpen;if(memberGuestOpenNote)memberGuestOpenNote.hidden=!guestsOpen;if(memberGuestClosed)memberGuestClosed.hidden=guestsOpen}renderGuests();updateTotal();backdrop.hidden=false;drawer.setAttribute('aria-hidden','false');drawer.scrollTop=0;setTimeout(()=>drawer.querySelector('input').focus(),320)}));qty.addEventListener('change',()=>{renderGuests();updateTotal()});if(memberGuestQty)memberGuestQty.addEventListener('change',()=>{renderGuests();updateTotal()});drawer.querySelector('.close').addEventListener('click',closeDrawer);backdrop.addEventListener('click',closeDrawer);
 document.querySelectorAll('.legal-consent a').forEach(a=>a.addEventListener('click',e=>{if(a.dataset.policyLink&&window.SSuiteLive?.policy())return;e.preventDefault();notify('Policy documents are unavailable in this preview.')}));
 const registrationForm=document.querySelector('#registration-form');
 function showDrawerStep(step){registrationForm.hidden=step!=='registration';drawer.scrollTop=0}
@@ -223,7 +226,7 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260902a"></script>
-<script src="./live-pricing.js?v=20260902b"></script>
+<script src="./live-chain.js?v=20260903a"></script>
+<script src="./live-pricing.js?v=20260903a"></script>
 <script src="./donation-auction-live.js?v=20260831e"></script>
 </body></html>

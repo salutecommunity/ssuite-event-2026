@@ -261,6 +261,16 @@
     document.querySelectorAll(".choose").forEach((button) => {
       const label = text(button.dataset.liveLabel);
       if (!label) return;
+      // A tier can be withheld from public sale while the event as a whole is
+      // selling -- a members-first window, for example. Server-side checkout
+      // refuses it, so the page must not hand over a control that only errors.
+      if (button.dataset.publicSaleOpen === "false") {
+        const withheld = text(button.dataset.withheldLabel);
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+        if (withheld) button.textContent = withheld;
+        return;
+      }
       button.disabled = false;
       button.removeAttribute("aria-disabled");
       button.textContent = label;

@@ -114,6 +114,53 @@
     if (total) total.textContent = usd(community.amount_cents);
   }
 
+  /* Per-tier sale window.
+   *
+   * A tier can be withheld from public sale while the event as a whole is selling
+   * -- a members-first registration period, for example. This is server truth and
+   * moves in both directions, so reopening a tier is one database update with no
+   * redeploy. The shipped markup starts from the withheld state, so the first paint
+   * never offers a control the server would refuse, and an unreachable lookup fails
+   * towards not selling rather than towards a checkout that errors.
+   */
+  function applySaleWindows(data) {
+    const tickets = Array.isArray(data.tickets) ? data.tickets : [];
+    tickets.forEach((ticket) => {
+      if (typeof ticket.code !== "string" || !/^[a-z0-9_]{1,64}$/.test(ticket.code)) return;
+      const button = document.querySelector(`.choose[data-ticket-code="${ticket.code}"]`);
+      if (!button) return;
+      const card = button.closest(".ticket-card");
+      const note = card ? card.querySelector(".sale-window-note") : null;
+      const isOpen = ticket.public_sale_open !== false;
+      button.dataset.publicSaleOpen = isOpen ? "true" : "false";
+
+      if (isOpen) {
+        if (note) { note.hidden = true; note.textContent = ""; }
+        const label = text(button.dataset.liveLabel);
+        if (data.sales_open === true && label) {
+          button.disabled = false;
+          button.removeAttribute("aria-disabled");
+          button.textContent = label;
+        }
+        return;
+      }
+
+      const withheld = text(button.dataset.withheldLabel);
+      button.disabled = true;
+      button.setAttribute("aria-disabled", "true");
+      if (withheld) button.textContent = withheld;
+      if (note) {
+        const sentence = text(ticket.public_sale_note);
+        if (sentence) { note.textContent = sentence; note.hidden = false; }
+        else { note.hidden = true; note.textContent = ""; }
+      }
+    });
+
+    // Member guest seats are governed separately, so closing the Community tier to
+    // the public does not strand a member part-way through bringing guests.
+    document.body.dataset.guestSeatsOpen = data.member_guest_seats_open === false ? "false" : "true";
+  }
+
   function apply(data) {
     if (!data || typeof data !== "object" || !Array.isArray(data.tickets)) return;
     const tickets = data.tickets.filter(usableTicket);
@@ -121,6 +168,7 @@
     tickets.forEach(applyTicket);
     applyGuestRate(tickets);
     applySalesNote(data);
+    applySaleWindows(data);
     applySalesState(data);
   }
 
