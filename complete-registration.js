@@ -136,6 +136,11 @@
       why.textContent = "Your email is where this link was sent, so our team updates it for you. Write to ssuite@salute.community.";
       held.append(shown, why);
       addRow(container, "Email", held);
+      const phoneHeld = document.createElement("div"); phoneHeld.className = "field-control";
+      const phoneNote = document.createElement("small"); phoneNote.className = "row-note";
+      phoneNote.textContent = "We may text you about the event — arrival details, or a change on the night. Message and data rates may apply. Reply STOP at any time to stop messages.";
+      phoneHeld.append(control({ key: "phone", label: "Mobile phone", type: "tel", required: true, max: 100 }, g.phone), phoneNote);
+      addRow(container, "Mobile phone", phoneHeld);
       addRow(container, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, g.secondary_email));
       addRow(container, "Job title", control({ key: "job_title", label: "Job title", required: true, max: 160 }, g.job_title));
       addRow(container, "Company", control({ key: "company", label: "Company", required: true, max: 160 }, g.company));
@@ -145,6 +150,7 @@
     } else {
       row(container, "Name", [text(g.first_name), text(g.last_name)].filter(Boolean).join(" "));
       row(container, "Email", g.email);
+      row(container, "Mobile phone", g.phone);
       row(container, "Secondary email", g.secondary_email);
       row(container, "Job title", g.job_title);
       row(container, "Company", g.company);
@@ -196,6 +202,7 @@
     const set = (name, value) => { const field = form.elements.namedItem(name); if (field && !field.value) field.value = text(value); };
     set("first_name", a.first_name); set("last_name", a.last_name);
     set("job_title", a.job_title); set("company", a.company); set("secondary_email", a.secondary_email);
+    set("phone", a.phone);
     if (text(a.email)) { const note = $("email-note"); note.textContent = `Your registration is held under ${text(a.email)}. To use a different address, write to ssuite@salute.community.`; note.hidden = false; }
     if (context.needs_how_heard === true) $("how-heard-field").hidden = false;
     const note = $("agreement-note");
@@ -292,6 +299,7 @@
     return {
       first_name: get("first_name"), last_name: get("last_name"),
       job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"),
+      phone: get("phone"),
       secondary_email: secondary || undefined,
       has_dietary_or_allergy_needs: Boolean(dietary), dietary_or_allergy_details: dietary || undefined,
       has_accessibility_needs: Boolean(accessibility), accessibility_details: accessibility || undefined

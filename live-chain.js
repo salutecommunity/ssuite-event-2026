@@ -437,7 +437,17 @@
       // A tier can be withheld from public sale while the event as a whole is
       // selling -- a members-first window, for example. Server-side checkout
       // refuses it, so the page must not hand over a control that only errors.
-      if (button.dataset.publicSaleOpen === "false") {
+      //
+      // This reads as "enable only what is known to be open", not "disable what
+      // is known to be closed". The difference matters: this pass runs on
+      // DOMContentLoaded, while live-pricing.js learns the per-tier sale window
+      // from the event database a few hundred milliseconds later. Treating an
+      // unknown state as open enabled a withheld tier for that gap on every
+      // single page load, so the control was briefly live before the database
+      // answer arrived to take it away again. The shipped markup carries the
+      // state for exactly this reason, and anything else now stays disabled
+      // until the lookup confirms the tier is selling.
+      if (button.dataset.publicSaleOpen !== "true") {
         const withheld = text(button.dataset.withheldLabel);
         button.disabled = true;
         button.setAttribute("aria-disabled", "true");

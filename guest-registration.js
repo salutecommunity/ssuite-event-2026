@@ -131,6 +131,11 @@
       why.textContent = "Your email is where your invitation was sent, so our team updates it for you. Write to ssuite@salute.community.";
       held.append(shown, why);
       addRow(container, "Email", held);
+      const phoneHeld = document.createElement("div"); phoneHeld.className = "field-control";
+      const phoneNote = document.createElement("small"); phoneNote.className = "row-note";
+      phoneNote.textContent = "We may text you about the event — arrival details, or a change on the night. Message and data rates may apply. Reply STOP at any time to stop messages.";
+      phoneHeld.append(control({ key: "phone", label: "Mobile phone", type: "tel", required: true, max: 100 }, g.phone), phoneNote);
+      addRow(container, "Mobile phone", phoneHeld);
       addRow(container, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, g.secondary_email));
       addRow(container, "Job title", control({ key: "job_title", label: "Job title", required: true, max: 160 }, g.job_title));
       addRow(container, "Company", control({ key: "company", label: "Company", required: true, max: 160 }, g.company));
@@ -140,6 +145,7 @@
     } else {
       row(container, "Name", [text(g.first_name), text(g.last_name)].filter(Boolean).join(" "));
       row(container, "Email", g.email);
+      row(container, "Mobile phone", g.phone);
       row(container, "Secondary email", g.secondary_email);
       row(container, "Job title", g.job_title);
       row(container, "Company", g.company);
@@ -232,7 +238,7 @@
     if (secondary && !emailPattern.test(secondary)) throw new Error("Please enter a valid secondary email address, or leave that field blank.");
     if (dietary && !get("dietary_or_allergy_details")) throw new Error("Please tell us about your dietary or allergy needs.");
     if (accessibility && !get("accessibility_details")) throw new Error("Please tell us what you need us to arrange.");
-    return { first_name: get("first_name"), last_name: get("last_name"), email: primary, secondary_email: secondary && secondary !== primary ? secondary : undefined, job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
+    return { first_name: get("first_name"), last_name: get("last_name"), email: primary, phone: get("phone"), secondary_email: secondary && secondary !== primary ? secondary : undefined, job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
   }
 
   async function submit(event) {
@@ -273,6 +279,7 @@
     return {
       first_name: get("first_name"), last_name: get("last_name"),
       job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"),
+      phone: get("phone"),
       secondary_email: secondary && secondary !== ownAddress ? secondary : undefined,
       has_dietary_or_allergy_needs: Boolean(dietary), dietary_or_allergy_details: dietary || undefined,
       has_accessibility_needs: Boolean(accessibility), accessibility_details: accessibility || undefined

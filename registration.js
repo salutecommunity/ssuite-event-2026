@@ -174,7 +174,7 @@
     row(rows, "Name", name);
     row(rows, "Email", registration.email || "");
     row(rows, "Secondary email", registration.secondary_email || "");
-    row(rows, "Phone", registration.phone || "");
+    row(rows, "Mobile phone", registration.phone || "");
     row(rows, "Job title", registration.job_title || "");
     row(rows, "Company", registration.company || "");
     row(rows, "Meal preference", registration.meal_preference || "");
@@ -201,7 +201,7 @@
       note("Your email is where we send your confirmation and your link back to this page, so our team updates it for you. Write to ssuite@salute.community.")));
 
     addRow(rows, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, registration.secondary_email));
-    addRow(rows, "Phone", control({ key: "phone", label: "Phone", type: "tel", max: 100, placeholder: "Optional" }, registration.phone));
+    addRow(rows, "Mobile phone", wrap(control({ key: "phone", label: "Mobile phone", type: "tel", required: true, max: 100 }, registration.phone), note("We may text you about the event — arrival details, or a change on the night. Message and data rates may apply. Reply STOP at any time to stop messages.")));
     addRow(rows, "Job title", control({ key: "job_title", label: "Job title", required: true, max: 160 }, registration.job_title));
     addRow(rows, "Company", control({ key: "company", label: "Company", required: true, max: 160 }, registration.company));
     addRow(rows, "Meal preference", control({ key: "meal_preference", label: "Meal preference", type: "select", required: true, options: MEALS }, registration.meal_preference));
