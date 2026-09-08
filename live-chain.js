@@ -75,6 +75,157 @@
     section.querySelectorAll("input").forEach((input) => { input.disabled = section.hidden; });
   }
   function ticketCode() { return text(document.querySelector(".checkout-drawer")?.dataset.ticketCode); }
+
+  /* Partner organization access code.
+   *
+   * The nonprofit partner rate is confidential. It has no tile, the public
+   * pricing feed withholds it, and -- deliberately -- its figure appears nowhere
+   * in this file. A valid code is the only thing that reveals the price, and the
+   * number shown comes from the server's answer to that code. Writing it in here
+   * would both put a discounted rate on the public record and go stale the
+   * moment early-bird pricing rolls over.
+   *
+   * It rides on the Community path because that is where someone buying a single
+   * seat starts. Nothing is claimed before the code is checked, and the rate the
+   * page shows is the rate checkout bills.
+   */
+  const PARTNER_HOST_TIER = "community";
+  let partnerRate = null;
+  let linkedPartnerCode = "";
+
+  function normalizeCode(value) { return String(value ?? "").replace(/[^A-Za-z0-9]/g, "").toUpperCase(); }
+  function partnerActive() { return partnerRate !== null && ticketCode() === PARTNER_HOST_TIER; }
+  function money(cents) {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100);
+  }
+  function partnerStatus(message) {
+    const el = byId("partner-code-status");
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = !message;
+  }
+  function createPartnerFields() {
+    const selection = document.querySelector(".selection");
+    if (!selection || byId("partner-verification")) return;
+    const section = document.createElement("section");
+    section.id = "partner-verification";
+    section.className = "member-verification";
+    section.hidden = true;
+    section.innerHTML = `<p class="micro">PARTNER ORGANIZATION</p><p>Invited by one of our nonprofit partner organizations? Enter the code from your invitation and your rate is applied here, before you pay.</p><label class="field"><span>ACCESS CODE <i>OPTIONAL</i></span><input id="partner-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from the organization that invited you"></label><div class="member-note"><button type="button" class="button button-outline" id="partner-code-apply">Apply code</button></div><p class="member-note" id="partner-code-status" role="status" aria-live="polite" hidden></p>`;
+    selection.insertAdjacentElement("afterend", section);
+    byId("partner-code-apply").addEventListener("click", () => { applyPartnerCode().catch(() => {}); });
+    const input = byId("partner-code");
+    // An edited code must never leave a partner price on screen. The rate is
+    // dropped the moment the field stops matching what the server approved.
+    input.addEventListener("input", () => {
+      if (partnerRate && normalizeCode(input.value) !== partnerRate.code) clearPartnerRate("Code removed. The Community rate applies.");
+    });
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      applyPartnerCode().catch(() => {});
+    });
+  }
+  function updatePartnerFields(code) {
+    createPartnerFields();
+    const section = byId("partner-verification");
+    if (!section) return;
+    const applies = code === PARTNER_HOST_TIER;
+    section.hidden = !applies;
+    section.querySelectorAll("input").forEach((input) => { input.disabled = !applies; });
+  }
+  function applyPartnerDisplay() {
+    if (!partnerRate) return;
+    const name = byId("ticket-name");
+    if (name) name.textContent = partnerRate.name || "Nonprofit Partner Ticket";
+    const note = byId("selection-note");
+    if (note) note.textContent = partnerRate.organization ? `${partnerRate.organization} · one seat` : "Partner rate · one seat";
+    const quantity = byId("ticket-quantity");
+    if (quantity) {
+      quantity.value = "1";
+      const wrap = quantity.closest(".quantity-wrap");
+      if (wrap) wrap.hidden = true;
+    }
+    // Rebuild the attendee list only if it is not already a single person, so
+    // applying a code cannot discard details somebody has already typed.
+    if (document.querySelectorAll("#guest-fields .guest-card").length !== 1 && typeof window.renderGuests === "function") {
+      window.renderGuests();
+    }
+    const total = byId("ticket-total");
+    if (total) total.textContent = money(partnerRate.amountCents);
+    const seats = typeof partnerRate.seatsRemaining === "number"
+      ? ` ${partnerRate.seatsRemaining} ${partnerRate.seatsRemaining === 1 ? "seat remains" : "seats remain"} on this code.`
+      : "";
+    const who = partnerRate.organization ? `${partnerRate.organization} rate` : "Partner rate";
+    partnerStatus(`${who} applied — ${money(partnerRate.amountCents)}, one seat.${seats}`);
+  }
+  function clearPartnerRate(message) {
+    partnerRate = null;
+    const drawer = document.querySelector(".checkout-drawer");
+    if (drawer) delete drawer.dataset.partnerCode;
+    const quantity = byId("ticket-quantity");
+    const wrap = quantity ? quantity.closest(".quantity-wrap") : null;
+    if (wrap) wrap.hidden = ticketCode() !== PARTNER_HOST_TIER;
+    const button = document.querySelector(`.choose[data-ticket-code="${PARTNER_HOST_TIER}"]`);
+    const name = byId("ticket-name");
+    if (name && button && ticketCode() === PARTNER_HOST_TIER) name.textContent = text(button.dataset.ticket) || "Community Ticket";
+    const note = byId("selection-note");
+    if (note && ticketCode() === PARTNER_HOST_TIER) note.textContent = "Ticket selection";
+    if (typeof window.updateTotal === "function") window.updateTotal();
+    partnerStatus(message || "");
+  }
+  async function applyPartnerCode() {
+    const input = byId("partner-code");
+    if (!input) return;
+    const code = normalizeCode(input.value);
+    if (!code) { clearPartnerRate("Enter the code from your invitation."); return; }
+    const base = apiBase();
+    if (!base) { partnerStatus("Codes cannot be checked right now. Please try again shortly, or write to ssuite@salute.community."); return; }
+    const apply = byId("partner-code-apply");
+    if (apply) apply.disabled = true;
+    partnerStatus("Checking your code…");
+    try {
+      const response = await fetch(`${base}/functions/v1/event-pricing?code=${encodeURIComponent(code)}`, {
+        method: "GET", mode: "cors", credentials: "omit", cache: "no-store",
+      });
+      const payload = response.ok ? await response.json().catch(() => null) : null;
+      const state = payload && typeof payload === "object" ? payload.access_code : null;
+      if (!state || typeof state !== "object") {
+        partnerStatus("Your code could not be checked just now. Please try again shortly, or write to ssuite@salute.community.");
+        return;
+      }
+      if (state.result === "ok" && Number.isInteger(state.amount_cents) && state.amount_cents > 0
+          && typeof state.ticket_type_code === "string" && /^[a-z0-9_]{1,64}$/.test(state.ticket_type_code)) {
+        partnerRate = {
+          code, tier: state.ticket_type_code, organization: text(state.organization), name: text(state.name),
+          amountCents: state.amount_cents,
+          seatsRemaining: Number.isInteger(state.seats_remaining) ? state.seats_remaining : null,
+        };
+        const drawer = document.querySelector(".checkout-drawer");
+        if (drawer) drawer.dataset.partnerCode = code;
+        applyPartnerDisplay();
+        return;
+      }
+      if (state.result === "exhausted") {
+        const org = text(state.organization);
+        clearPartnerRate(`Every seat on this code has been taken${org ? ` for ${org}` : ""}. Please write to ssuite@salute.community and we will sort it out.`);
+        return;
+      }
+      if (state.result === "rate_limited") {
+        clearPartnerRate("Too many code checks from this connection. Please wait a few minutes and try again.");
+        return;
+      }
+      if (state.result === "unavailable") {
+        clearPartnerRate("This rate cannot be applied right now. Please write to ssuite@salute.community.");
+        return;
+      }
+      clearPartnerRate("That code is not recognized. Please check it against your invitation, or write to ssuite@salute.community. If it is your SALUTE member code, choose the SALUTE Member ticket instead.");
+    } catch {
+      partnerStatus("Your code could not be checked just now. Please try again shortly, or write to ssuite@salute.community.");
+    } finally {
+      if (apply) apply.disabled = false;
+    }
+  }
   function turnstileContainer() { return byId("checkout-turnstile"); }
   let turnstileWidget = null;
   let turnstileLoading = null;
@@ -149,6 +300,10 @@
     const p = policy();
     if (!p) throw new Error("Checkout is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community.");
     const code = ticketCode();
+    // A verified partner code re-prices this order onto its own tier. One seat
+    // per use, no guest seats: the cap counts uses, so a code that could carry
+    // extra seats would seat more people than the organization was given.
+    const partner = partnerActive() ? partnerRate : null;
     const table = code === "full_table";
     const member = code === "salute_member";
     // The member rate covers exactly one seat. Any guests a member brings are
@@ -156,7 +311,7 @@
     const guestSelect = byId("member-guest-quantity");
     const guestSeats = member && guestSelect && !guestSelect.disabled ? Number(guestSelect.value || 0) : 0;
     if (!Number.isInteger(guestSeats) || guestSeats < 0 || guestSeats > 4) throw new Error("Choose a valid number of guest seats.");
-    const count = table ? 1 : (member ? 1 + guestSeats : Number(byId("ticket-quantity")?.value));
+    const count = partner ? 1 : (table ? 1 : (member ? 1 + guestSeats : Number(byId("ticket-quantity")?.value)));
     if (!Number.isInteger(count) || count < 1 || count > (table ? 10 : (member ? 5 : 4))) throw new Error("Choose a valid number of attendees.");
     const attendees = Array.from({ length: count }, (_, i) => attendee(form, i));
     if (new Set(attendees.map((a) => a.email)).size !== attendees.length) throw new Error("Each attendee must have a unique primary email address.");
@@ -166,10 +321,12 @@
     const memberCode = String(byId("member-code")?.value || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
     if (code === "salute_member" && !memberCode) throw new Error("Enter your member access code to use the member rate. It is in your SALUTE email — or write to ssuite@salute.community and we will send it.");
     return {
-      ticket_type_code: code, order_type: table ? "table" : "ticket", quantity: table || member ? 1 : count,
-      guest_quantity: guestSeats,
+      ticket_type_code: partner ? partner.tier : code,
+      order_type: table ? "table" : "ticket",
+      quantity: table || member || partner ? 1 : count,
+      guest_quantity: partner ? 0 : guestSeats,
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
-      member_code: code === "salute_member" ? memberCode : undefined,
+      member_code: partner ? partner.code : (code === "salute_member" ? memberCode : undefined),
       member_attestation: false,
       how_heard: howHeard, attendees, combined_agreement: agreedToPolicies(form),
       terms_version: p.termsVersion, privacy_version: p.privacyVersion, media_release_version: p.mediaReleaseVersion,
@@ -220,6 +377,22 @@
     const drawer = document.querySelector(".checkout-drawer");
     if (drawer) drawer.dataset.ticketCode = code;
     updateMemberFields(code);
+    updatePartnerFields(code);
+    if (code !== PARTNER_HOST_TIER) {
+      // The partner rate lives on the Community path only. Choosing another tier
+      // drops it rather than carrying a price into a tier it does not apply to.
+      if (partnerRate) clearPartnerRate("");
+    } else {
+      const input = byId("partner-code");
+      if (input && linkedPartnerCode && !normalizeCode(input.value)) {
+        // Arrived on a partner invitation link. Fill it in and check it, so the
+        // rate is settled before any details are typed.
+        input.value = linkedPartnerCode;
+        applyPartnerCode().catch(() => {});
+      } else if (partnerRate) {
+        applyPartnerDisplay();
+      }
+    }
     const readiness = liveReadiness();
     const label = button.querySelector(".live-ticket-note");
     if (label) label.textContent = readiness.ok ? "Complete the details above to continue" : "Preview only — checkout is not available here";
@@ -280,8 +453,12 @@
     policyLinks();
     applyLiveLabels();
     createMemberFields();
+    createPartnerFields();
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
     const params = new URLSearchParams(location.search);
+    // A partner invitation link carries the organization's code. Remember it for
+    // the moment the drawer opens; nothing is checked or shown until then.
+    linkedPartnerCode = normalizeCode(params.get("code")).slice(0, 64);
     const result = params.get("checkout");
     if (result === "cancel") { forgetPendingCheckout(); setStatus("Checkout was cancelled. No payment was completed.", "error"); }
     if (result === "success") {
@@ -298,6 +475,9 @@
       return;
     }
   }
-  window.SSuiteLive = { checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern };
+  window.SSuiteLive = {
+    checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern,
+    applyPartnerCode, partnerState: () => (partnerRate ? { ...partnerRate } : null),
+  };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
 })();
