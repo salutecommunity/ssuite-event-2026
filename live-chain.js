@@ -233,7 +233,11 @@
   function codeSeatLimit() {
     if (!partnerRate) return 1;
     const remaining = Number.isInteger(partnerRate.seatsRemaining) ? partnerRate.seatsRemaining : 1;
-    return Math.max(1, Math.min(remaining, 4));
+    // A shared organization code is one seat per checkout, so ten seats cannot
+    // be taken by the first two people to open the link. A personal invitation
+    // carries the seats it was issued for. The server enforces both.
+    const perOrder = Number.isInteger(partnerRate.maxSeatsPerOrder) ? partnerRate.maxSeatsPerOrder : 1;
+    return Math.max(1, Math.min(remaining, perOrder, 4));
   }
   function codeSeatsChosen() {
     const quantity = byId("ticket-quantity");
@@ -345,6 +349,7 @@
           code, tier: state.ticket_type_code, organization: text(state.organization), name: text(state.name),
           amountCents: state.amount_cents,
           seatsRemaining: Number.isInteger(state.seats_remaining) ? state.seats_remaining : null,
+          maxSeatsPerOrder: Number.isInteger(state.max_seats_per_order) ? state.max_seats_per_order : null,
         };
         const drawer = document.querySelector(".checkout-drawer");
         if (drawer) drawer.dataset.partnerCode = code;
