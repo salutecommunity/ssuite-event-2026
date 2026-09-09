@@ -55,3 +55,14 @@
 .choose[data-public-sale-open="false"],.choose[data-public-sale-open="false"]:hover{background:#f4f4f4;color:#8a8a8a;border:1px solid #dcdcdc;cursor:default;box-shadow:none}
 .reveal-link{border:0;background:none;padding:0;font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:#555;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
 .reveal-link:hover,.reveal-link:focus-visible{color:#000}
+
+/* Invitation gate: eligibility line, the request door, and the request dialog's
+   own field types (the shared dialog rules only styled text inputs). */
+.ticket-card .ticket-eligibility{font-size:13px;font-weight:600;line-height:1.5;color:var(--ink);max-width:270px}
+.table-card .ticket-eligibility{color:#fff}
+.ticket-card .button+.button{margin-top:10px}
+dialog .dialog-lede{font-size:14px;line-height:1.55;color:#696969;margin:0 0 34px;max-width:430px}
+dialog select,dialog textarea{display:block;width:100%;margin-top:8px;border:1px solid var(--line);font:14px var(--sans);background:#fff;color:var(--ink)}
+dialog select{height:54px;padding:0 15px}
+dialog textarea{padding:15px;min-height:92px;resize:vertical}
+dialog label i{font-style:normal;font-weight:600;color:#8a8a8a}

@@ -161,15 +161,77 @@
     document.body.dataset.guestSeatsOpen = data.member_guest_seats_open === false ? "false" : "true";
   }
 
+  /* Per-tier access gate.
+   *
+   * A listed tier can be open to everyone or sold by invitation, and that is a
+   * database fact, not a fact about this file. Community is sold by invitation:
+   * the tile has to say so, the buy control has to ask for a code rather than
+   * open an order the server would refuse, and the "request an invitation" door
+   * has to appear. Reverting to an open tier is the same single update in the
+   * other direction, with no redeploy.
+   *
+   * Both eligibility lines ship hidden. Exactly one is revealed here, so a
+   * visitor whose lookup never answers is told nothing rather than told the
+   * wrong thing -- and the buy controls stay disabled in that case anyway.
+   */
+  function applyAccessGate(data) {
+    const tickets = Array.isArray(data.tickets) ? data.tickets : [];
+    tickets.forEach((ticket) => {
+      if (typeof ticket.code !== "string" || !/^[a-z0-9_]{1,64}$/.test(ticket.code)) return;
+      const button = document.querySelector(`.choose[data-ticket-code="${ticket.code}"]`);
+      if (!button) return;
+      const gated = ticket.access_code_required === true;
+      const saleOpen = ticket.public_sale_open !== false;
+      button.dataset.accessCodeRequired = gated ? "true" : "false";
+
+      const card = button.closest(".ticket-card");
+      if (card) {
+        card.querySelectorAll("[data-eligibility]").forEach((line) => {
+          const wanted = gated ? "gated" : "open";
+          line.hidden = line.dataset.eligibility !== wanted;
+        });
+      }
+
+      // The request door is only offered for a tier that is both gated and
+      // actually selling. Asking for an invitation to something withheld from
+      // sale would be a request nobody can fulfil.
+      document.querySelectorAll(`[data-request-invitation="${ticket.code}"]`).forEach((request) => {
+        request.hidden = !(gated && saleOpen && data.sales_open === true);
+      });
+
+      if (gated && saleOpen && data.sales_open === true) {
+        const label = text(button.dataset.gatedLabel);
+        if (label) button.textContent = label;
+      }
+    });
+  }
+
+  // Nothing here can quote a price or open a purchase, so say what is true and
+  // give people the one route that still works.
+  function showUnavailableNote() {
+    const note = document.getElementById("attend-sales-note");
+    if (!note) return;
+    note.innerHTML = "";
+    note.append(
+      document.createTextNode("Registration cannot be opened in this browser right now. Please email "),
+    );
+    const link = document.createElement("a");
+    link.href = "mailto:ssuite@salute.community";
+    link.textContent = "ssuite@salute.community";
+    note.append(link, document.createTextNode(" and we will register you."));
+  }
+
   function apply(data) {
-    if (!data || typeof data !== "object" || !Array.isArray(data.tickets)) return;
+    if (!data || typeof data !== "object" || !Array.isArray(data.tickets)) return false;
     const tickets = data.tickets.filter(usableTicket);
-    if (tickets.length === 0) return;
+    if (tickets.length === 0) return false;
     tickets.forEach(applyTicket);
     applyGuestRate(tickets);
     applySalesNote(data);
     applySaleWindows(data);
+    applyAccessGate(data);
     applySalesState(data);
+    return true;
   }
 
   /* Offline safety net.
@@ -215,15 +277,18 @@
   async function load() {
     applyShipped();
     const base = apiBase();
-    if (!base) return;
+    if (!base) { showUnavailableNote(); return; }
     try {
       const response = await fetch(`${base}/functions/v1/event-pricing`, {
         method: "GET", mode: "cors", credentials: "omit", cache: "no-store",
       });
-      if (!response.ok) return;
-      apply(await response.json());
+      if (!response.ok) { showUnavailableNote(); return; }
+      if (!apply(await response.json())) showUnavailableNote();
     } catch {
-      // Leave the shipped prices in place. Nothing is claimed that cannot be billed.
+      // Leave the shipped prices in place. Nothing is claimed that cannot be
+      // billed -- and because the buy controls are only ever enabled from a
+      // successful lookup, they stay closed. Say so, with a way through.
+      showUnavailableNote();
     }
   }
 

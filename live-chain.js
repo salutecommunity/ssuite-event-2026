@@ -115,7 +115,7 @@
     // in its default view made buyers ask whether a code was required at all, so
     // the field is kept behind one quiet line and only the few people who hold a
     // partner code ever open it. Partner links carrying ?code= open it themselves.
-    section.innerHTML = `<p class="member-note"><button type="button" class="reveal-link" id="partner-code-reveal" aria-expanded="false" aria-controls="partner-code-fields">Have a code from a partner organization?</button></p><div id="partner-code-fields" hidden><p class="micro">PARTNER ORGANIZATION</p><p>Enter the code from your invitation and your rate is applied here, before you pay.</p><label class="field"><span>ACCESS CODE</span><input id="partner-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from the organization that invited you"></label><div class="member-note"><button type="button" class="button button-outline" id="partner-code-apply">Apply code</button></div><p class="member-note" id="partner-code-status" role="status" aria-live="polite" hidden></p></div>`;
+    section.innerHTML = `<p class="member-note" id="partner-code-reveal-wrap"><button type="button" class="reveal-link" id="partner-code-reveal" aria-expanded="false" aria-controls="partner-code-fields">Have a code from a partner organization?</button></p><div id="partner-code-fields" hidden><p class="micro" id="partner-code-eyebrow">PARTNER ORGANIZATION</p><p id="partner-code-lede">Enter the code from your invitation and your rate is applied here, before you pay.</p><label class="field"><span id="partner-code-label">ACCESS CODE</span><input id="partner-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from the organization that invited you"></label><div class="member-note"><button type="button" class="button button-outline" id="partner-code-apply">Apply code</button></div><p class="member-note" id="partner-code-status" role="status" aria-live="polite" hidden></p></div>`;
     selection.insertAdjacentElement("afterend", section);
     byId("partner-code-apply").addEventListener("click", () => { applyPartnerCode().catch(() => {}); });
     byId("partner-code-reveal").addEventListener("click", () => { revealPartnerFields(); byId("partner-code").focus(); });
@@ -139,6 +139,79 @@
     reveal.setAttribute("aria-expanded", "true");
     if (reveal.parentElement) reveal.parentElement.hidden = true;
   }
+  /* Is the chosen tier sold by invitation?
+   *
+   * Read off the buy control, which live-pricing.js sets from the database. A
+   * gated tier cannot be bought without a code, so the field stops being an
+   * optional aside and becomes the first thing asked for; an open tier keeps
+   * the quiet reveal, so a general-admission buyer is never made to wonder
+   * whether they need a code. Neither state is hardcoded here.
+   */
+  function tierIsGated(code) {
+    const button = document.querySelector(`.choose[data-ticket-code="${code}"]`);
+    return Boolean(button) && button.dataset.accessCodeRequired === "true";
+  }
+
+  function setCodeMode(gated) {
+    const revealWrap = byId("partner-code-reveal-wrap");
+    const fields = byId("partner-code-fields");
+    const eyebrow = byId("partner-code-eyebrow");
+    const lede = byId("partner-code-lede");
+    const label = byId("partner-code-label");
+    const input = byId("partner-code");
+    if (!fields) return;
+    if (gated) {
+      if (revealWrap) revealWrap.hidden = true;
+      fields.hidden = false;
+      if (eyebrow) eyebrow.textContent = "INVITATION CODE";
+      if (lede) lede.textContent = "These seats are by invitation. Enter the code from your invitation and your seat and rate are applied here, before you pay. If you do not have one, close this and choose Request an invitation.";
+      if (label) label.textContent = "INVITATION CODE";
+      if (input) input.placeholder = "Code from your invitation";
+      return;
+    }
+    if (revealWrap) revealWrap.hidden = false;
+    if (eyebrow) eyebrow.textContent = "PARTNER ORGANIZATION";
+    if (lede) lede.textContent = "Enter the code from your invitation and your rate is applied here, before you pay.";
+    if (label) label.textContent = "ACCESS CODE";
+    if (input) input.placeholder = "Code from the organization that invited you";
+    const reveal = byId("partner-code-reveal");
+    if (reveal && reveal.getAttribute("aria-expanded") !== "true") fields.hidden = true;
+  }
+
+  /* A gated tier with no verified code cannot proceed. Say so on the control
+   * itself rather than letting someone fill in a whole form and be refused. */
+  function syncGateState() {
+    const code = ticketCode();
+    const gated = tierIsGated(code);
+    const form = document.querySelector(".checkout-drawer form");
+    const submit = form ? form.querySelector('button[type="submit"]') : null;
+    if (!submit) return;
+    if (!gated) {
+      if (submit.dataset.gateHeld === "true") {
+        submit.disabled = false;
+        submit.removeAttribute("aria-disabled");
+        delete submit.dataset.gateHeld;
+        if (submit.dataset.gateLabel) { submit.textContent = submit.dataset.gateLabel; delete submit.dataset.gateLabel; }
+      }
+      return;
+    }
+    const verified = partnerRate !== null;
+    if (verified) {
+      if (submit.dataset.gateHeld === "true") {
+        submit.disabled = false;
+        submit.removeAttribute("aria-disabled");
+        delete submit.dataset.gateHeld;
+        if (submit.dataset.gateLabel) { submit.textContent = submit.dataset.gateLabel; delete submit.dataset.gateLabel; }
+      }
+      return;
+    }
+    if (submit.dataset.gateHeld !== "true") submit.dataset.gateLabel = submit.textContent;
+    submit.dataset.gateHeld = "true";
+    submit.disabled = true;
+    submit.setAttribute("aria-disabled", "true");
+    submit.textContent = "Enter your invitation code to continue";
+  }
+
   function updatePartnerFields(code) {
     createPartnerFields();
     const section = byId("partner-verification");
@@ -146,39 +219,97 @@
     const applies = code === PARTNER_HOST_TIER;
     section.hidden = !applies;
     section.querySelectorAll("input").forEach((input) => { input.disabled = !applies; });
+    if (applies) setCodeMode(tierIsGated(code));
+    syncGateState();
+  }
+  /* How many seats this code may still take, in one place.
+   *
+   * The cap on a code counts seats, not orders, and the server enforces that.
+   * So a code with room for two can buy both in one checkout, and the selector
+   * offered here never exceeds what the code actually covers -- a buyer is
+   * never shown a quantity that checkout would refuse. An unknown remaining
+   * count means one seat.
+   */
+  function codeSeatLimit() {
+    if (!partnerRate) return 1;
+    const remaining = Number.isInteger(partnerRate.seatsRemaining) ? partnerRate.seatsRemaining : 1;
+    return Math.max(1, Math.min(remaining, 4));
+  }
+  function codeSeatsChosen() {
+    const quantity = byId("ticket-quantity");
+    if (!quantity) return 1;
+    const wrap = quantity.closest(".quantity-wrap");
+    if (wrap && wrap.hidden) return 1;
+    const chosen = Number(quantity.value || 1);
+    return Number.isInteger(chosen) && chosen >= 1 ? Math.min(chosen, codeSeatLimit()) : 1;
+  }
+  // The drawer's own total is computed from the tile price, which is not the
+  // price a code carries. Recompute it whenever a coded rate is on screen.
+  function applyCodedTotal() {
+    if (!partnerRate) return;
+    const total = byId("ticket-total");
+    if (total) total.textContent = money(partnerRate.amountCents * codeSeatsChosen());
   }
   function applyPartnerDisplay() {
     if (!partnerRate) return;
+    const limit = codeSeatLimit();
     const name = byId("ticket-name");
     if (name) name.textContent = partnerRate.name || "Nonprofit Partner Ticket";
-    const note = byId("selection-note");
-    if (note) note.textContent = partnerRate.organization ? `${partnerRate.organization} · one seat` : "Partner rate · one seat";
     const quantity = byId("ticket-quantity");
     if (quantity) {
-      quantity.value = "1";
+      // Offer exactly the seats the code still covers, no more.
+      const previous = Number(quantity.value || 1);
+      quantity.innerHTML = "";
+      for (let seat = 1; seat <= limit; seat += 1) {
+        const option = document.createElement("option");
+        option.textContent = String(seat);
+        quantity.append(option);
+      }
+      quantity.value = String(Math.min(Math.max(previous, 1), limit));
       const wrap = quantity.closest(".quantity-wrap");
-      if (wrap) wrap.hidden = true;
+      if (wrap) wrap.hidden = limit <= 1;
     }
-    // Rebuild the attendee list only if it is not already a single person, so
+    const chosen = codeSeatsChosen();
+    const note = byId("selection-note");
+    if (note) {
+      const seatWord = chosen === 1 ? "one seat" : `${chosen} seats`;
+      note.textContent = partnerRate.organization ? `${partnerRate.organization} · ${seatWord}` : `Invitation code · ${seatWord}`;
+    }
+    // Rebuild the attendee list only when the number of people has changed, so
     // applying a code cannot discard details somebody has already typed.
-    if (document.querySelectorAll("#guest-fields .guest-card").length !== 1 && typeof window.renderGuests === "function") {
+    if (document.querySelectorAll("#guest-fields .guest-card").length !== chosen && typeof window.renderGuests === "function") {
       window.renderGuests();
     }
-    const total = byId("ticket-total");
-    if (total) total.textContent = money(partnerRate.amountCents);
-    const seats = typeof partnerRate.seatsRemaining === "number"
+    applyCodedTotal();
+    const seats = Number.isInteger(partnerRate.seatsRemaining)
       ? ` ${partnerRate.seatsRemaining} ${partnerRate.seatsRemaining === 1 ? "seat remains" : "seats remain"} on this code.`
       : "";
-    const who = partnerRate.organization ? `${partnerRate.organization} rate` : "Partner rate";
-    partnerStatus(`${who} applied — ${money(partnerRate.amountCents)}, one seat.${seats}`);
+    const who = partnerRate.organization ? `${partnerRate.organization} rate` : "Invitation";
+    const covers = chosen === 1 ? "one seat" : `${chosen} seats`;
+    partnerStatus(`${who} applied — ${money(partnerRate.amountCents)} per seat, ${covers}.${seats}`);
+    syncGateState();
   }
   function clearPartnerRate(message) {
     partnerRate = null;
     const drawer = document.querySelector(".checkout-drawer");
     if (drawer) delete drawer.dataset.partnerCode;
     const quantity = byId("ticket-quantity");
+    if (quantity) {
+      // Restore the tile's own range: dropping a code must not leave the
+      // narrower list the code allowed.
+      const previous = Number(quantity.value || 1);
+      quantity.innerHTML = "";
+      for (let seat = 1; seat <= 4; seat += 1) {
+        const option = document.createElement("option");
+        option.textContent = String(seat);
+        quantity.append(option);
+      }
+      quantity.value = String(Math.min(Math.max(previous, 1), 4));
+    }
     const wrap = quantity ? quantity.closest(".quantity-wrap") : null;
-    if (wrap) wrap.hidden = ticketCode() !== PARTNER_HOST_TIER;
+    // On a gated tier there is no quantity to choose until a code says how many
+    // seats it covers, so the selector stays out of the way until then.
+    if (wrap) wrap.hidden = ticketCode() !== PARTNER_HOST_TIER || tierIsGated(ticketCode());
     const button = document.querySelector(`.choose[data-ticket-code="${PARTNER_HOST_TIER}"]`);
     const name = byId("ticket-name");
     if (name && button && ticketCode() === PARTNER_HOST_TIER) name.textContent = text(button.dataset.ticket) || "Community Ticket";
@@ -186,6 +317,7 @@
     if (note && ticketCode() === PARTNER_HOST_TIER) note.textContent = "Ticket selection";
     if (typeof window.updateTotal === "function") window.updateTotal();
     partnerStatus(message || "");
+    syncGateState();
   }
   async function applyPartnerCode() {
     const input = byId("partner-code");
@@ -324,7 +456,12 @@
     const guestSelect = byId("member-guest-quantity");
     const guestSeats = member && guestSelect && !guestSelect.disabled ? Number(guestSelect.value || 0) : 0;
     if (!Number.isInteger(guestSeats) || guestSeats < 0 || guestSeats > 4) throw new Error("Choose a valid number of guest seats.");
-    const count = partner ? 1 : (table ? 1 : (member ? 1 + guestSeats : Number(byId("ticket-quantity")?.value)));
+    // A gated tier cannot be bought without a verified code. The server refuses
+    // it either way; stopping here means nobody fills in a form to be told no.
+    if (tierIsGated(code) && !partner) {
+      throw new Error("These seats are by invitation. Enter the code from your invitation to continue, or close this and choose Request an invitation.");
+    }
+    const count = partner ? codeSeatsChosen() : (table ? 1 : (member ? 1 + guestSeats : Number(byId("ticket-quantity")?.value)));
     if (!Number.isInteger(count) || count < 1 || count > (table ? 10 : (member ? 5 : 4))) throw new Error("Choose a valid number of attendees.");
     const attendees = Array.from({ length: count }, (_, i) => attendee(form, i));
     if (new Set(attendees.map((a) => a.email)).size !== attendees.length) throw new Error("Each attendee must have a unique primary email address.");
@@ -336,7 +473,7 @@
     return {
       ticket_type_code: partner ? partner.tier : code,
       order_type: table ? "table" : "ticket",
-      quantity: table || member || partner ? 1 : count,
+      quantity: table || member ? 1 : count,
       guest_quantity: partner ? 0 : guestSeats,
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
       member_code: partner ? partner.code : (code === "salute_member" ? memberCode : undefined),
@@ -488,7 +625,42 @@
       }
       button.disabled = false;
       button.removeAttribute("aria-disabled");
-      button.textContent = label;
+      // A tier sold by invitation gets the label that says so. The state is
+      // carried in the shipped markup for the same reason the sale window is:
+      // this pass runs on DOMContentLoaded and the database answer arrives a
+      // few hundred milliseconds later, so an unknown gate would leave a
+      // by-invitation tier reading "Choose this ticket" on every page load.
+      // live-pricing.js overrides both label and notes from server truth.
+      const gatedLabel = text(button.dataset.gatedLabel);
+      button.textContent = button.dataset.accessCodeRequired === "true" && gatedLabel ? gatedLabel : label;
+    });
+    applyShippedGate();
+  }
+
+  /* First-paint eligibility, from the shipped state.
+   *
+   * Both eligibility lines and the request-an-invitation control ship hidden,
+   * so a browser with no JavaScript makes no claim about who may buy -- it
+   * cannot buy anything either way. This reveals the right one immediately;
+   * live-pricing.js re-runs the same decision from the database moments later
+   * and wins if the two ever disagree.
+   */
+  function applyShippedGate() {
+    const ready = liveReadiness().ok;
+    document.querySelectorAll(".choose").forEach((button) => {
+      const code = text(button.dataset.ticketCode);
+      if (!code) return;
+      const gated = button.dataset.accessCodeRequired === "true";
+      const saleOpen = button.dataset.publicSaleOpen === "true";
+      const card = button.closest(".ticket-card");
+      if (card) {
+        card.querySelectorAll("[data-eligibility]").forEach((line) => {
+          line.hidden = line.dataset.eligibility !== (gated ? "gated" : "open");
+        });
+      }
+      document.querySelectorAll(`[data-request-invitation="${code}"]`).forEach((request) => {
+        request.hidden = !(gated && saleOpen && ready);
+      });
     });
   }
   function init() {
@@ -497,6 +669,16 @@
     createMemberFields();
     createPartnerFields();
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
+    // The drawer's own total is computed from the tile price. When a code
+    // carries a different rate, that total is wrong the instant the quantity
+    // changes, so recompute after the drawer's handler has run. Registered
+    // here, after the inline handler, so this one runs second and wins.
+    const quantitySelect = byId("ticket-quantity");
+    if (quantitySelect) {
+      quantitySelect.addEventListener("change", () => {
+        if (partnerActive()) applyPartnerDisplay();
+      });
+    }
     const params = new URLSearchParams(location.search);
     // A partner invitation link carries the organization's code. Remember it for
     // the moment the drawer opens; nothing is checked or shown until then.
