@@ -115,12 +115,6 @@
       status("Please enter a valid email address.", "error");
       return;
     }
-    const seats = Number(read(form, "seats_requested") || "1");
-    if (!Number.isInteger(seats) || seats < 1 || seats > 4) {
-      status("Please choose between one and four seats.", "error");
-      return;
-    }
-
     const button = byId("invitation-submit-button");
     if (button) button.disabled = true;
     status("Sending your request…", "working");
@@ -131,9 +125,10 @@
         email: address,
         job_title: read(form, "job_title"),
         company: read(form, "company"),
-        seats_requested: seats,
+        // Seat count and free-text note are deliberately not collected: the form
+        // asks only what staff need to decide, and staff follow up by email.
+        // Nothing is sent for them, so nothing is recorded for them either.
         referral_source: read(form, "referral_source") || undefined,
-        note: read(form, "note") || undefined,
         turnstile_token: await token(),
       };
       const response = await fetch(`${apiBase()}/functions/v1/invitation-request`, {
