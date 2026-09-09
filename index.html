@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="no-referrer">
   <title>S.Suite Honors Ceremony — Friday, November 20, 2026 — New York City</title>
-  <link rel="stylesheet" href="./styles.css?v=20260908b">
+  <link rel="stylesheet" href="./styles.css?v=20260909a">
   <link rel="stylesheet" href="./donation-auction.css?v=20260828e">
   <script src="./config.js?v=20260831e"></script>
   <!-- share-meta:start -->
@@ -67,26 +67,28 @@
       <header class="section-heading">
         <p class="eyebrow">ATTEND</p>
         <h2>Choose how you’ll join us.</h2>
-        <p id="attend-sales-note">Ticket sales are not open yet. Pricing is shown for advance planning; registration and checkout will become available here when sales open.</p>
+        <p id="attend-sales-note">Registration is completed through secure checkout.</p>
+        <noscript><p id="attend-noscript-note">Registration needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we'll register you.</p></noscript>
       </header>
       <div class="ticket-grid">
         <article class="ticket-card">
           <div><p class="micro">EARLY BIRD / INDIVIDUAL</p><h3>SALUTE Member Ticket</h3><div class="price-row"><p class="price">$275</p><p class="original-price"><span class="sr-only">Original price </span>$350</p></div><p class="price-note">Early-bird price</p></div>
           <p>For current and former SALUTE members. One seat per member — guests are welcome at the Community rate. Requires the member access code from your SALUTE email.</p>
-          <button class="button button-outline choose" type="button" data-ticket-code="salute_member" data-public-sale-open="true" data-live-label="Choose this ticket" data-withheld-label="Opening soon" data-ticket="SALUTE Member Ticket" data-price="275" data-early-price="275" data-regular-price="350" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Sales opening soon</button>
+          <button class="button button-outline choose" type="button" data-ticket-code="salute_member" data-public-sale-open="true" data-live-label="Choose this ticket" data-withheld-label="Opening soon" data-ticket="SALUTE Member Ticket" data-price="275" data-early-price="275" data-regular-price="350" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Loading…</button>
           <p class="sale-window-note" hidden></p>
         </article>
         <article class="ticket-card featured">
           <div class="flag">INDIVIDUAL</div>
           <div><p class="micro">EARLY BIRD / GENERAL ADMISSION</p><h3>Community Ticket</h3><div class="price-row"><p class="price">$350</p><p class="original-price"><span class="sr-only">Original price </span>$400</p></div><p class="price-note">Early-bird price</p></div>
           <p>One reserved seat, event communications, and access to the full evening.</p>
-          <button class="button button-dark choose" type="button" data-ticket-code="community" data-public-sale-open="true" data-live-label="Choose this ticket" data-withheld-label="Opening soon" data-ticket="Community Ticket" data-price="350" data-early-price="350" data-regular-price="400" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Sales opening soon</button>
+          <p>Open to everyone. No invitation or code needed.</p>
+          <button class="button button-dark choose" type="button" data-ticket-code="community" data-public-sale-open="true" data-live-label="Choose this ticket" data-withheld-label="Opening soon" data-ticket="Community Ticket" data-price="350" data-early-price="350" data-regular-price="400" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Loading…</button>
           <p class="sale-window-note" hidden></p>
         </article>
         <article class="ticket-card table-card">
           <div><p class="micro">EARLY BIRD / HOST THE TABLE</p><h3>Table for ten</h3><div class="price-row"><p class="price">$5,000</p><p class="original-price"><span class="sr-only">Original price </span>$7,500</p></div><p class="price-note">Early-bird price</p></div>
           <p>Ten seats plus a private link to invite guests, collect details, and manage your table.</p>
-          <button class="button button-light choose" type="button" data-ticket-code="full_table" data-public-sale-open="true" data-live-label="Host a table" data-withheld-label="Opening soon" data-ticket="Table for ten" data-price="5000" data-early-price="5000" data-regular-price="7500" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Sales opening soon</button>
+          <button class="button button-light choose" type="button" data-ticket-code="full_table" data-public-sale-open="true" data-live-label="Host a table" data-withheld-label="Opening soon" data-ticket="Table for ten" data-price="5000" data-early-price="5000" data-regular-price="7500" data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Loading…</button>
           <p class="sale-window-note" hidden></p>
         </article>
       </div>
@@ -139,8 +141,8 @@
         </section>
         <div class="gift-summary"><span id="frequency-summary">One-time gift</span><strong id="amount-summary">$250</strong></div>
         <p id="donation-live-status" class="live-status" role="status" aria-live="polite" hidden></p>
-        <button class="button button-dark full" type="submit" id="donate-button" disabled aria-disabled="true">Giving opens soon</button>
-        <p class="fineprint" id="donation-preview-note">Online giving is not open yet. No donation can be submitted, charged, or receipted here.</p>
+        <button class="button button-dark full" type="submit" id="donate-button" disabled aria-disabled="true">Loading…</button>
+        <p class="fineprint" id="donation-preview-note">Giving is completed through secure checkout.</p>
         <p class="fineprint" id="donation-receipt-policy" hidden><a href="#" rel="noopener" target="_blank">Donation receipt and tax-information policy</a></p>
       </form>
     </section>
@@ -226,7 +228,7 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260908b"></script>
+<script src="./live-chain.js?v=20260909a"></script>
 <script src="./live-pricing.js?v=20260903a"></script>
 <script src="./donation-auction-live.js?v=20260831e"></script>
 </body></html>

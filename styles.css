@@ -53,3 +53,5 @@
 /* A withheld tier must read as unavailable rather than as the page's loudest
    call to action. Grayscale only, consistent with the brand. */
 .choose[data-public-sale-open="false"],.choose[data-public-sale-open="false"]:hover{background:#f4f4f4;color:#8a8a8a;border:1px solid #dcdcdc;cursor:default;box-shadow:none}
+.reveal-link{border:0;background:none;padding:0;font:600 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:#555;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.reveal-link:hover,.reveal-link:focus-visible{color:#000}

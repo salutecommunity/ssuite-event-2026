@@ -111,9 +111,14 @@
     section.id = "partner-verification";
     section.className = "member-verification";
     section.hidden = true;
-    section.innerHTML = `<p class="micro">PARTNER ORGANIZATION</p><p>Invited by one of our nonprofit partner organizations? Enter the code from your invitation and your rate is applied here, before you pay.</p><label class="field"><span>ACCESS CODE <i>OPTIONAL</i></span><input id="partner-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from the organization that invited you"></label><div class="member-note"><button type="button" class="button button-outline" id="partner-code-apply">Apply code</button></div><p class="member-note" id="partner-code-status" role="status" aria-live="polite" hidden></p>`;
+    // Community is the open, general-admission tier. An access-code field sitting
+    // in its default view made buyers ask whether a code was required at all, so
+    // the field is kept behind one quiet line and only the few people who hold a
+    // partner code ever open it. Partner links carrying ?code= open it themselves.
+    section.innerHTML = `<p class="member-note"><button type="button" class="reveal-link" id="partner-code-reveal" aria-expanded="false" aria-controls="partner-code-fields">Have a code from a partner organization?</button></p><div id="partner-code-fields" hidden><p class="micro">PARTNER ORGANIZATION</p><p>Enter the code from your invitation and your rate is applied here, before you pay.</p><label class="field"><span>ACCESS CODE</span><input id="partner-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from the organization that invited you"></label><div class="member-note"><button type="button" class="button button-outline" id="partner-code-apply">Apply code</button></div><p class="member-note" id="partner-code-status" role="status" aria-live="polite" hidden></p></div>`;
     selection.insertAdjacentElement("afterend", section);
     byId("partner-code-apply").addEventListener("click", () => { applyPartnerCode().catch(() => {}); });
+    byId("partner-code-reveal").addEventListener("click", () => { revealPartnerFields(); byId("partner-code").focus(); });
     const input = byId("partner-code");
     // An edited code must never leave a partner price on screen. The rate is
     // dropped the moment the field stops matching what the server approved.
@@ -125,6 +130,14 @@
       event.preventDefault();
       applyPartnerCode().catch(() => {});
     });
+  }
+  function revealPartnerFields() {
+    const fields = byId("partner-code-fields");
+    if (fields) fields.hidden = false;
+    const reveal = byId("partner-code-reveal");
+    if (!reveal) return;
+    reveal.setAttribute("aria-expanded", "true");
+    if (reveal.parentElement) reveal.parentElement.hidden = true;
   }
   function updatePartnerFields(code) {
     createPartnerFields();
@@ -387,9 +400,11 @@
       if (input && linkedPartnerCode && !normalizeCode(input.value)) {
         // Arrived on a partner invitation link. Fill it in and check it, so the
         // rate is settled before any details are typed.
+        revealPartnerFields();
         input.value = linkedPartnerCode;
         applyPartnerCode().catch(() => {});
       } else if (partnerRate) {
+        revealPartnerFields();
         applyPartnerDisplay();
       }
     }
@@ -402,7 +417,24 @@
     // Preview wording ships as the safe default in the HTML. Only replace it once
     // this deployment is genuinely wired for live payment, so the page never
     // promises a real charge it cannot make, or a preview it will not honour.
-    if (!liveReadiness().ok) return;
+    if (!liveReadiness().ok) {
+      // The closed state is stated here rather than shipped in the markup.
+      // It used to be the other way round, which meant a slow, blocked or
+      // failed script left a selling event reading "Ticket sales are not open
+      // yet" with every control labelled "Sales opening soon" -- and the only
+      // surviving sentence about eligibility mentioning an access code. People
+      // read that as invitation-only. The markup is now neutral, so anything
+      // that genuinely cannot take a payment has to say so from here.
+      const closedNote = byId("attend-sales-note");
+      if (closedNote) closedNote.textContent = "Ticket sales are not open yet. Pricing is shown for advance planning; registration and checkout will become available here when sales open.";
+      document.querySelectorAll(".choose").forEach((button) => {
+        const withheld = text(button.dataset.withheldLabel);
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+        if (withheld) button.textContent = withheld;
+      });
+      return;
+    }
     const note = byId("attend-sales-note");
     // No deadline is asserted here. live-pricing.js adds the early-bird sentence from
     // the event database only while that window is genuinely open, so a stale build
