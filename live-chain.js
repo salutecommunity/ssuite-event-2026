@@ -234,7 +234,12 @@
    */
   function codeSeatLimit() {
     if (!partnerRate) return 1;
-    const remaining = Number.isInteger(partnerRate.seatsRemaining) ? partnerRate.seatsRemaining : 1;
+    // A null remaining count is not an unknown — the pricing lookup returns null
+    // for a code with no overall cap, which is what the shared codes are. Reading
+    // it as "one seat left" silently narrowed an uncapped code to a single seat,
+    // so a founder's guest could not bring anybody. The per-order cap below, and
+    // the server, are what actually limit a single checkout.
+    const remaining = Number.isInteger(partnerRate.seatsRemaining) ? partnerRate.seatsRemaining : Infinity;
     // A shared organization code is one seat per checkout, so ten seats cannot
     // be taken by the first two people to open the link. A personal invitation
     // carries the seats it was issued for. The server enforces both.
@@ -329,7 +334,7 @@
     const input = byId("partner-code");
     if (!input) return;
     const code = normalizeCode(input.value);
-    if (!code) { clearPartnerRate("Enter the code from your invitation."); return; }
+    if (!code) { clearPartnerRate("Enter your code."); return; }
     const base = apiBase();
     if (!base) { partnerStatus("Codes cannot be checked right now. Please try again shortly, or write to ssuite@salute.community."); return; }
     const apply = byId("partner-code-apply");
@@ -371,7 +376,7 @@
         clearPartnerRate("This rate cannot be applied right now. Please write to ssuite@salute.community.");
         return;
       }
-      clearPartnerRate("That code is not recognized. Please check it against your invitation, or write to ssuite@salute.community. If it is your SALUTE member code, choose the SALUTE Member ticket instead.");
+      clearPartnerRate("That code is not recognized. Please check it, or write to ssuite@salute.community. If it is your SALUTE member code, choose the SALUTE Member ticket instead.");
     } catch {
       partnerStatus("Your code could not be checked just now. Please try again shortly, or write to ssuite@salute.community.");
     } finally {
