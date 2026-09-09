@@ -163,14 +163,16 @@
     if (gated) {
       if (revealWrap) revealWrap.hidden = true;
       fields.hidden = false;
-      if (eyebrow) eyebrow.textContent = "INVITATION CODE";
-      if (lede) lede.textContent = "These seats are by invitation. Enter the code from your invitation and your seat and rate are applied here, before you pay. If you do not have one, close this and choose Request an invitation.";
+      // The field label carries the words; an eyebrow saying the same thing
+      // directly above it read as repetition, so it is hidden here.
+      if (eyebrow) eyebrow.hidden = true;
+      if (lede) lede.textContent = "Your rate is applied here, before you pay. No code? Close this and choose Request an invitation.";
       if (label) label.textContent = "INVITATION CODE";
-      if (input) input.placeholder = "Code from your invitation";
+      if (input) input.placeholder = "Enter your code";
       return;
     }
     if (revealWrap) revealWrap.hidden = false;
-    if (eyebrow) eyebrow.textContent = "PARTNER ORGANIZATION";
+    if (eyebrow) { eyebrow.hidden = false; eyebrow.textContent = "PARTNER ORGANIZATION"; }
     if (lede) lede.textContent = "Enter the code from your invitation and your rate is applied here, before you pay.";
     if (label) label.textContent = "ACCESS CODE";
     if (input) input.placeholder = "Code from the organization that invited you";
