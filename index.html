@@ -79,7 +79,7 @@
         </article>
         <article class="ticket-card featured">
           <div class="flag">INDIVIDUAL</div>
-          <div><p class="micro">EARLY BIRD</p><h3>Community Ticket</h3><div class="price-row"><p class="price">$350</p><p class="original-price"><span class="sr-only">Original price </span>$400</p></div><p class="price-note">Early-bird price</p></div>
+          <div><p class="micro">EARLY BIRD / RESERVED SEAT</p><h3>Community Ticket</h3><div class="price-row"><p class="price">$350</p><p class="original-price"><span class="sr-only">Original price </span>$400</p></div><p class="price-note">Early-bird price</p></div>
           <p>One reserved seat, event communications, and access to the full evening.</p>
           <!-- The gated state deliberately carries no eligibility sentence: the two
                controls below already name the only two ways in, and saying it a third
@@ -235,7 +235,7 @@ document.querySelector('#copy-matching-details').addEventListener('click',async(
 const dialog=document.querySelector('#form-dialog');document.querySelectorAll('[data-modal="submission"]').forEach(b=>b.addEventListener('click',()=>dialog.showModal()));document.querySelector('.dialog-close').addEventListener('click',()=>dialog.close());dialog.querySelector('form').addEventListener('submit',e=>{if(window.SSuiteAuction?.enabled()){e.preventDefault();window.SSuiteAuction.submit(e.currentTarget);return}setTimeout(()=>notify('Preview only — no auction submission was sent or saved.'),50)});
 addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
 </script>
-<script src="./live-chain.js?v=20260909e"></script>
+<script src="./live-chain.js?v=20260909f"></script>
 <script src="./live-pricing.js?v=20260909a"></script>
 <script src="./donation-auction-live.js?v=20260831e"></script>
 <script src="./invitation-request.js?v=20260909d"></script>
