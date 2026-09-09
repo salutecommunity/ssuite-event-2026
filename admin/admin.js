@@ -8,6 +8,7 @@ let session = null;
 let activeTab = "overview";
 let currentPage = 1;
 let lastSearch = "";
+let invitationStatus = "pending";
 
 function configured() {
   try {
@@ -146,7 +147,7 @@ async function verifyCode(event) {
 }
 
 function tabMeta(tab) {
-  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
+  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
 async function loadTab(tab, page = 1, search = "") {
   activeTab = tab; currentPage = page; lastSearch = search;
@@ -154,7 +155,8 @@ async function loadTab(tab, page = 1, search = "") {
   const [kicker, title] = tabMeta(tab); $("section-kicker").textContent = kicker; $("section-title").textContent = title;
   clear($("dashboard-content")); status("Loading private data…");
   try {
-    const body = { action: tab, page, limit: 50, search };
+    const body = { action: tab === "invitations" ? "invitation_requests" : tab, page, limit: 50, search };
+    if (tab === "invitations") body.status = invitationStatus;
     const payload = await call(body);
     render(tab, payload); status("");
   } catch (error) { status(error.message || "Unable to load this private view.", "error"); }
@@ -163,6 +165,7 @@ async function loadTab(tab, page = 1, search = "") {
 function render(tab, payload) {
   const host = $("dashboard-content"); clear(host);
   if (tab === "overview") return renderOverview(host, payload.overview);
+  if (tab === "invitations") return renderInvitationRequests(host, payload);
   if (tab === "tables") return renderTables(host, payload);
   if (tab === "audit") return renderAudit(host, payload);
   if (tab === "attendees") host.append(adminAttendeeButton());
@@ -178,6 +181,89 @@ function render(tab, payload) {
   };
   renderDataTable(host, payload, configByTab[tab] || [], tab === "attendees");
   if (["orders", "attendees", "donations"].includes(tab)) host.append(exportButton(tab));
+}
+
+function renderInvitationRequests(host, payload) {
+  const counts = payload.counts || {};
+  const filters = element("div", "toolbar");
+  for (const [value, label] of [["pending", "Pending"], ["approved", "Approved"], ["declined", "Declined"], ["all", "All"]]) {
+    const button = element("button", value === invitationStatus ? "button dark" : "button outline", `${label} (${value === "all" ? (Number(counts.pending) || 0) + (Number(counts.approved) || 0) + (Number(counts.declined) || 0) : Number(counts[value]) || 0})`);
+    button.type = "button";
+    button.addEventListener("click", () => { invitationStatus = value; loadTab("invitations"); });
+    filters.append(button);
+  }
+  host.append(filters);
+  if (!payload.data?.length) {
+    host.append(element("p", "empty", invitationStatus === "pending" ? "No invitation requests are waiting." : "No invitation requests match this filter."));
+    return;
+  }
+
+  const wrap = element("div", "table-wrap"); const table = document.createElement("table");
+  const thead = document.createElement("thead"); const headRow = document.createElement("tr");
+  for (const label of ["Name", "Email", "Job title", "Company", "Heard via", "Status", "Requested", "Action"]) headRow.append(element("th", "", label));
+  thead.append(headRow); table.append(thead); const tbody = document.createElement("tbody");
+  for (const request of payload.data) {
+    const tr = document.createElement("tr");
+    for (const value of [`${text(request.first_name)} ${text(request.last_name)}`, text(request.email), text(request.job_title), text(request.company), text(request.referral_source)]) tr.append(element("td", "", value));
+    const statusCell = document.createElement("td"); statusCell.append(chip(request.status));
+    if (request.status === "approved") {
+      const detail = element("div", "invitation-code"); detail.append(element("strong", "", `Code: ${text(request.display_code)}`));
+      if (request.seats_approved !== null && request.seats_approved !== undefined) detail.append(element("small", "", `Seats used: ${Number(request.seats_used) || 0} of ${text(request.seats_approved)}`));
+      statusCell.append(detail);
+    }
+    tr.append(statusCell, element("td", "", date(request.created_at)));
+    const action = document.createElement("td");
+    if (request.status === "pending") {
+      const approve = element("button", "button dark compact", "Approve"); approve.type = "button"; approve.addEventListener("click", () => invitationDecisionForm(request, "approved"));
+      const decline = element("button", "quiet compact", "Decline"); decline.type = "button"; decline.addEventListener("click", () => invitationDecisionForm(request, "declined"));
+      action.append(approve, decline);
+    } else action.textContent = "—";
+    tr.append(action); tbody.append(tr);
+  }
+  table.append(tbody); wrap.append(table); host.append(wrap, pagination(payload));
+}
+
+function invitationDecisionForm(request, decision) {
+  const approving = decision === "approved";
+  const form = element("form", "attendee-edit");
+  form.append(element("p", "fineprint", approving
+    ? `Approve ${text(request.first_name)} ${text(request.last_name)} for a Community invitation code. The code is not emailed or otherwise sent.`
+    : `Decline ${text(request.first_name)} ${text(request.last_name)}'s Community invitation request. Nothing will be sent.`));
+  if (approving) {
+    const seatField = formField("Seat cap (how many Community seats this code may buy)", "seats", "1", { required: true, type: "number", max: 2 });
+    const seatInput = seatField.querySelector("input"); seatInput.min = "1"; seatInput.max = "10"; seatInput.step = "1";
+    form.append(seatField);
+  }
+  form.append(formField("Internal note (optional — never shown to the requester)", "note", "", { multiline: true, max: 2000 }));
+  const resultBox = element("section", "invitation-code-result"); resultBox.hidden = true; form.append(resultBox);
+  operationActions(form, approving ? "Approve and create code" : "Decline request", async (data) => {
+    const seats = approving ? Number(data.get("seats")) : undefined;
+    if (approving && (!Number.isInteger(seats) || seats < 1 || seats > 10)) throw new Error("Seat cap must be a whole number from 1 to 10.");
+    return await call({ action: "invitation_request_decide", request_id: request.id, decision, seats, note: data.get("note") || undefined });
+  }, {
+    reassurance: approving
+      ? "Nothing will be sent. Approval creates a Community invitation code; staff must convey the code themselves."
+      : "Nothing will be sent. Declining records an internal decision only.",
+    confirmation: approving
+      ? "Approve this request and create its Community invitation code? Nothing will be sent; staff must convey the code themselves."
+      : "Decline this request? Nothing will be sent.",
+    success: approving ? "Approved. Nothing was sent; staff must convey the code themselves." : "Declined. Nothing was sent.",
+    onSuccess: (result) => {
+      if (!approving || !result?.display_code) return;
+      const code = String(result.display_code);
+      const codeInput = document.createElement("input"); codeInput.type = "text"; codeInput.readOnly = true; codeInput.value = code; codeInput.setAttribute("aria-label", "Community invitation code");
+      const copy = element("button", "button dark compact", "Copy code"); copy.type = "button";
+      copy.addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(code); status("Invitation code copied. Nothing was sent.", "success"); }
+        catch { codeInput.focus(); codeInput.select(); status("Select and copy the invitation code. Nothing was sent."); }
+      });
+      resultBox.replaceChildren(element("h3", "", "Community invitation code"), element("p", "notice success", "Nothing has been sent. Staff must convey this code themselves."), codeInput, copy);
+      resultBox.hidden = false; codeInput.focus(); codeInput.select();
+    },
+  });
+  openOperation(approving ? "Approve invitation request" : "Decline invitation request", approving
+    ? "Approval records the decision and mints a code only. It does not email the requester or queue a message."
+    : "Declining records the decision only. It does not contact the requester.", () => form);
 }
 
 function renderOverview(host, overview) {
@@ -200,7 +286,7 @@ function renderOverview(host, overview) {
     host.append(moneyGrid);
     host.append(element("p", "band-note", "Figures are net of refunds reconciled from Stripe. Isolated validation transactions are excluded."));
   }
-  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Auction pending", counts.auction_pending]];
+  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Auction pending", counts.auction_pending]];
   if (!revenue) fields.push(["Donations received", money(counts.donations_paid_cents)]);
   host.append(element("h2", "band-title", "Operations"));
   const grid = element("div", "summary"); for (const [label, value] of fields) { const card = element("article", "metric"); card.append(element("span", "", label), element("strong", "", String(value ?? 0))); grid.append(card); } host.append(grid);
@@ -323,10 +409,12 @@ function openOperation(title, intro, build) {
   const host = $("attendee-detail"); clear(host); host.append(element("p", "eyebrow", "Protected operation"), element("h2", "", title), element("p", "fineprint", intro));
   const form = build(); host.append(form); if (!$("attendee-dialog").open) $("attendee-dialog").showModal();
 }
-function operationActions(form, submitLabel, handler) {
-  const note = element("p", "notice", "Nothing will be sent and no consent, payment, Stripe record, credential, or secure link will be created."); note.setAttribute("role", "status");
+function operationActions(form, submitLabel, handler, options = {}) {
+  const reassurance = options.reassurance || "Nothing will be sent and no consent, payment, Stripe record, credential, or secure link will be created.";
+  const confirmation = options.confirmation || "Confirm this protected change. Nothing will be sent and no payment, consent, access credential, or secure link will be created.";
+  const note = element("p", "notice", reassurance); note.setAttribute("role", "status");
   const actions = element("div", "dialog-actions"); const cancel = element("button", "button outline", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => $("attendee-dialog").close()); const save = element("button", "button dark", submitLabel); save.type = "submit"; actions.append(cancel, save); form.append(note, actions);
-  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; if (!confirm("Confirm this protected change. Nothing will be sent and no payment, consent, access credential, or secure link will be created.")) return; setBusy(save, true); note.textContent = "Saving protected operation…"; note.className = "notice"; try { await handler(new FormData(form)); note.textContent = "Saved. Nothing was sent."; note.className = "notice success"; await loadTab(activeTab, currentPage, lastSearch); } catch (error) { note.textContent = error.message || "The operation could not be saved."; note.className = "notice error"; } finally { setBusy(save, false); } });
+  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; if (!confirm(confirmation)) return; setBusy(save, true); note.textContent = "Saving protected operation…"; note.className = "notice"; try { const result = await handler(new FormData(form)); if (options.onSuccess) await options.onSuccess(result); note.textContent = options.success || "Saved. Nothing was sent."; note.className = "notice success"; if (options.reload !== false) await loadTab(activeTab, currentPage, lastSearch); } catch (error) { note.textContent = error.message || "The operation could not be saved."; note.className = "notice error"; } finally { setBusy(save, false); } });
   return form;
 }
 function recordTypeFields(form, locked = "") {
