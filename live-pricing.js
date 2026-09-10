@@ -143,6 +143,20 @@
     if (!community) return;
     const rate = document.getElementById("member-guest-rate");
     if (rate) rate.textContent = usd(community.amount_cents);
+    /* The drawer's running total belongs to whoever owns the chosen tier.
+     *
+     * Priming it with the Community rate was only ever meant to fill the figure
+     * before anything is chosen. This pass runs twice -- once from the shipped
+     * prices and again when the lookup answers -- so somebody who opened the
+     * drawer in between had their total overwritten: a member choosing the $275
+     * ticket was shown $350 as their total while Stripe would charge $275.
+     * Once a tier is chosen the figure is set by the drawer (or by the verified
+     * code rate), and this pass must leave it alone.
+     */
+    const name = document.getElementById("ticket-name");
+    const chosen = (!!name && text(name.textContent) !== "Event ticket")
+      || document.querySelector(".checkout-drawer")?.getAttribute("aria-hidden") === "false";
+    if (chosen) return;
     const total = document.getElementById("ticket-total");
     if (total) total.textContent = usd(community.amount_cents);
   }
