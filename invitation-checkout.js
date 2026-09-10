@@ -34,8 +34,31 @@
 
   // The invitation this page carries. Baked into the markup at build time, so
   // the page needs no query string and the code never reaches the address bar,
-  // the browser history, or a referrer header.
-  const invitation = String(document.body.dataset.invitationCode || "").trim();
+  // the browser history, or a referrer header. Read on use rather than captured
+  // once, because the staff preview switches host in place.
+  const invitationCode = () => String(document.body.dataset.invitationCode || "").trim();
+  const hostName = () => String(document.body.dataset.hostName || "").trim();
+
+  /* The group enquiry, addressed by host.
+   *
+   * An invitation covers up to four seats. Beyond that the answer is a table of
+   * ten, which is not sold from this page -- so the one honest action is to
+   * write to us, and the message should arrive already saying whose invitation
+   * it came from. Built here rather than baked in so the subject cannot drift
+   * from the name in the hero, and the plain address in the sentence still
+   * works for anyone whose browser has no mail client.
+   */
+  function syncEnquiry() {
+    const link = document.getElementById("table-enquiry");
+    if (!link) return;
+    const who = hostName();
+    const subject = who ? `A table of ten at S.Suite — invitation from ${who}` : "A table of ten at S.Suite";
+    const body = "I would like to bring a group to S.Suite on Friday, November 20. Please tell me about a table of ten.";
+    link.href = `mailto:ssuite@salute.community?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+  syncEnquiry();
+  // The staff preview changes host without reloading; production never calls this.
+  window.SSuiteInvitation = { refresh: syncEnquiry };
 
   const toast = document.querySelector(".toast");
   let toastTimer = 0;
@@ -131,8 +154,9 @@
     if (!live || typeof live.applyPartnerCode !== "function") return;
     if (live.partnerState()) return;
     const input = document.getElementById("partner-code");
-    if (!input || !invitation) return;
-    input.value = invitation;
+    const code = invitationCode();
+    if (!input || !code) return;
+    input.value = code;
     live.applyPartnerCode().catch(() => {});
   }
 

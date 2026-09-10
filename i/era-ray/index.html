@@ -22,7 +22,7 @@
 <meta name="twitter:description" content="Era Ray invites you to S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · Prince George Ballroom · New York City.">
 <meta name="twitter:image" content="https://event.ssuite.org/assets/share-card.png?v=20260902b">
 <link rel="icon" href="/assets/favicon.png" sizes="any">
-<link rel="stylesheet" href="/i/invitation.css">
+<link rel="stylesheet" href="/i/invitation.css?v=20260910c">
 <style>
   html{scroll-behavior:smooth}
 
@@ -339,7 +339,7 @@
   .seat-card .sale-window-note{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:#4a4a4a;text-align:left}
 </style>
 </head>
-<body data-invitation-code="SSUITE-ERA-2026" data-invitation-label="Your invitation">
+<body data-invitation-code="SSUITE-ERA-2026" data-invitation-label="Your invitation" data-host-name="Era Ray">
 
 
 <header class="invite-header">
@@ -382,8 +382,8 @@
       </div>
       <p class="price-note">Early-bird price</p>
       <ul>
-        <li>One seat at the S.Suite dinner and ceremony</li>
-        <li>Up to four seats on one registration</li>
+        <li>Your seat at the S.Suite dinner and honors ceremony</li>
+        <li>Up to four seats on one registration — your invitation covers your guests</li>
         <li>Arrival details and event communications</li>
       </ul>
       <button class="button button-dark choose" type="button"
@@ -398,6 +398,7 @@
       <p class="fineprint" id="attend-sales-note">Registration is completed through secure checkout.</p>
       <noscript><p class="fineprint">Accepting needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p></noscript>
       <p class="member-line">Already a SALUTE member? Current and former members attend at $275 — choose the member ticket at checkout, and we will recognise your membership by email.</p>
+      <p class="member-line">Bringing more than four? A table of ten seats your party together<span data-live-price-wrap hidden> — <strong data-live-price="full_table"></strong></span>. Write to <a id="table-enquiry" href="mailto:ssuite@salute.community?subject=A%20table%20of%20ten%20at%20S.Suite">ssuite@salute.community</a> and we will arrange it.</p>
       <p class="card-from">Invitation extended by <strong>Era Ray</strong></p>
     </aside>
   </section>
@@ -717,6 +718,7 @@
   <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p id="drawer-intro">Secure checkout is unavailable on this page right now. No registration or payment is created.</p></div>
   <form id="registration-form">
     <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">QUANTITY<select id="ticket-quantity" aria-label="Ticket quantity"><option>1</option><option>2</option><option>3</option><option>4</option></select></label></div>
+    <p class="seat-allowance" id="seat-allowance" hidden></p>
     <div class="member-guest-add" id="member-guest-note" hidden><label class="quantity-wrap" id="member-guest-wrap">BRINGING GUESTS<select id="member-guest-quantity" aria-label="Guest seats at the Community rate"><option value="0">No guests</option><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option><option value="4">4 guests</option></select></label><p class="member-guest-note" id="member-guest-open-note">The member rate covers one seat, your own. Guests join at the Community rate of <span id="member-guest-rate">$350</span> each, on this same payment.</p><p class="member-guest-note" id="member-guest-closed" hidden>Guest seats at the Community rate are not available right now.</p></div>
     <div id="guest-fields"></div>
     <section class="table-options" hidden>
@@ -736,9 +738,9 @@
 </aside>
 <div class="toast" role="status" aria-live="polite"></div>
 <script src="/config.js?v=20260910a"></script>
-<script src="/guest-card.js?v=20260910b"></script>
-<script src="/invitation-checkout.js?v=20260910a"></script>
-<script src="/live-chain.js?v=20260910b"></script>
-<script src="/live-pricing.js?v=20260910b"></script>
+<script src="/guest-card.js?v=20260910c"></script>
+<script src="/invitation-checkout.js?v=20260910c"></script>
+<script src="/live-chain.js?v=20260910c"></script>
+<script src="/live-pricing.js?v=20260910c"></script>
 </body>
 </html>

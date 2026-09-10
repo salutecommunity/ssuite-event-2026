@@ -88,11 +88,33 @@
     if (note) note.textContent = ticket.early_bird_active === true ? "Early-bird price" : "Regular price";
 
     // "EARLY BIRD / INDIVIDUAL" becomes plain "INDIVIDUAL" once the window closes.
+    // (Prices quoted in running text are handled separately, by applyQuotedPrices.)
     const eyebrow = card.querySelector(".micro");
     if (eyebrow) {
       const base = text(eyebrow.textContent).replace(/^EARLY BIRD\s*\/\s*/i, "");
       if (base) eyebrow.textContent = ticket.early_bird_active === true ? `EARLY BIRD / ${base}` : base;
     }
+  }
+
+  /* A price quoted inside a sentence.
+   *
+   * The invitation pages mention the price of a table of ten in prose, on a page
+   * that sells no table and therefore has no tile for the lookup above to fill.
+   * A figure typed into that sentence would be honest today and wrong on
+   * 1 October, so the sentence ships without one: the wrapper is hidden, and it
+   * is revealed only once a live price has actually been written into it. An
+   * unreachable lookup leaves the sentence priced by nobody rather than priced
+   * wrongly, and the address beside it still works.
+   */
+  function applyQuotedPrices(tickets) {
+    document.querySelectorAll("[data-live-price]").forEach((slot) => {
+      const wanted = text(slot.dataset.livePrice);
+      const ticket = tickets.find((candidate) => candidate.code === wanted);
+      if (!ticket) return;
+      slot.textContent = usd(ticket.amount_cents);
+      const wrap = slot.closest("[data-live-price-wrap]");
+      if (wrap) wrap.hidden = false;
+    });
   }
 
   function applySalesNote(data) {
@@ -238,6 +260,7 @@
     if (tickets.length === 0) return false;
     tickets.forEach(applyTicket);
     applyGuestRate(tickets);
+    applyQuotedPrices(tickets);
     applySalesNote(data);
     applySaleWindows(data);
     applyAccessGate(data);
@@ -283,6 +306,7 @@
     if (tickets.length === 0) return;
     tickets.forEach(applyTicket);
     applyGuestRate(tickets);
+    applyQuotedPrices(tickets);
   }
 
   async function load() {

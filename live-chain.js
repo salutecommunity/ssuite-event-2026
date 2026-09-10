@@ -302,6 +302,26 @@
       if (wrap) wrap.hidden = limit <= 1;
     }
     const chosen = codeSeatsChosen();
+    /* What the invitation actually covers, said once, in words.
+     *
+     * "QUANTITY" over a select is a shop's control: it offers a number without
+     * saying whether the invitation stretches to cover it, and an invited
+     * person reasonably assumes an invitation is for one. So state the
+     * allowance from the verified code itself -- the same number the selector
+     * offers and the server will accept -- and say that guests are included.
+     * Hidden when a code covers a single seat, because then there is nothing
+     * to choose and nothing to explain.
+     */
+    const allowance = byId("seat-allowance");
+    if (allowance) {
+      if (limit > 1) {
+        allowance.textContent = `Your invitation covers up to ${limit} seats at ${money(partnerRate.amountCents)} each — yourself and your guests, on this one registration and one payment. Guests do not need an invitation of their own.`;
+        allowance.hidden = false;
+      } else {
+        allowance.textContent = "";
+        allowance.hidden = true;
+      }
+    }
     const note = byId("selection-note");
     if (note) {
       const seatWord = chosen === 1 ? "one seat" : `${chosen} seats`;
@@ -328,6 +348,10 @@
     partnerRate = null;
     const drawer = document.querySelector(".checkout-drawer");
     if (drawer) delete drawer.dataset.partnerCode;
+    // The allowance describes a verified invitation. With no invitation applied
+    // it would be an unbacked claim about how many seats are available.
+    const allowance = byId("seat-allowance");
+    if (allowance) { allowance.textContent = ""; allowance.hidden = true; }
     const quantity = byId("ticket-quantity");
     if (quantity) {
       // Restore the tile's own range: dropping a code must not leave the
