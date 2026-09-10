@@ -245,6 +245,32 @@
     if (applies) setCodeMode(tierIsGated(code));
     syncGateState();
   }
+  /* Seats, named as the reader thinks of them.
+   *
+   * "QUANTITY: 4" asks somebody to work out whether they are one of the four.
+   * A host was told they may bring three guests, so the control says exactly
+   * that, and the value stays a seat count because that is what the server
+   * reserves and what Stripe charges.
+   */
+  const NUMBER_WORDS = ["zero", "one", "two", "three", "four"];
+  const numberWord = (n) => NUMBER_WORDS[n] || String(n);
+  function seatOption(seat) {
+    const option = document.createElement("option");
+    option.value = String(seat);
+    option.textContent = seat === 1 ? "Just me" : `Me and ${seat - 1} ${seat === 2 ? "guest" : "guests"}`;
+    return option;
+  }
+  function guestPhrase(limit) {
+    const guests = Math.max(0, limit - 1);
+    if (guests === 0) return "one seat, your own";
+    if (guests === 1) return "you and one guest";
+    return `you and up to ${numberWord(guests)} guests`;
+  }
+  // A member's own seat plus guest seats at the Community rate. Three guests,
+  // the same allowance an invitation carries, so no self-service registration
+  // seats more than four people. Raise here and in the drawer's options to undo.
+  const MEMBER_GUEST_MAX = 3;
+
   /* How many seats this code may still take, in one place.
    *
    * The cap on a code counts seats, not orders, and the server enforces that.
@@ -292,11 +318,7 @@
       // Offer exactly the seats the code still covers, no more.
       const previous = Number(quantity.value || 1);
       quantity.innerHTML = "";
-      for (let seat = 1; seat <= limit; seat += 1) {
-        const option = document.createElement("option");
-        option.textContent = String(seat);
-        quantity.append(option);
-      }
+      for (let seat = 1; seat <= limit; seat += 1) quantity.append(seatOption(seat));
       quantity.value = String(Math.min(Math.max(previous, 1), limit));
       const wrap = quantity.closest(".quantity-wrap");
       if (wrap) wrap.hidden = limit <= 1;
@@ -315,7 +337,7 @@
     const allowance = byId("seat-allowance");
     if (allowance) {
       if (limit > 1) {
-        allowance.textContent = `Your invitation covers up to ${limit} seats at ${money(partnerRate.amountCents)} each — yourself and your guests, on this one registration and one payment. Guests do not need an invitation of their own.`;
+        allowance.textContent = `Your invitation covers ${guestPhrase(limit)} — ${numberWord(limit)} seats at ${money(partnerRate.amountCents)} each, on one registration and one payment. Your guests do not need an invitation of their own.`;
         allowance.hidden = false;
       } else {
         allowance.textContent = "";
@@ -358,11 +380,7 @@
       // narrower list the code allowed.
       const previous = Number(quantity.value || 1);
       quantity.innerHTML = "";
-      for (let seat = 1; seat <= 4; seat += 1) {
-        const option = document.createElement("option");
-        option.textContent = String(seat);
-        quantity.append(option);
-      }
+      for (let seat = 1; seat <= 4; seat += 1) quantity.append(seatOption(seat));
       quantity.value = String(Math.min(Math.max(previous, 1), 4));
     }
     const wrap = quantity ? quantity.closest(".quantity-wrap") : null;
@@ -515,7 +533,7 @@
     // billed at the open Community rate on the same payment.
     const guestSelect = byId("member-guest-quantity");
     const guestSeats = member && guestSelect && !guestSelect.disabled ? Number(guestSelect.value || 0) : 0;
-    if (!Number.isInteger(guestSeats) || guestSeats < 0 || guestSeats > 4) throw new Error("Choose a valid number of guest seats.");
+    if (!Number.isInteger(guestSeats) || guestSeats < 0 || guestSeats > MEMBER_GUEST_MAX) throw new Error("Choose a valid number of guest seats.");
     // A gated tier cannot be bought without a verified code. The server refuses
     // it either way; stopping here means nobody fills in a form to be told no.
     if (tierIsGated(code) && !partner) {
