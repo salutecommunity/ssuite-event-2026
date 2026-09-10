@@ -43,10 +43,21 @@
       && (ticket.compare_at_cents === null || isPositiveInteger(ticket.compare_at_cents));
   }
 
+  /* Where this tier's price is displayed.
+   *
+   * The event site shows it on a .ticket-card. The personal invitation pages
+   * show it on their own card, which deliberately does not carry that class --
+   * it has its own design and picking up the grid's styling would wreck it. So
+   * the container is identified by intent rather than by appearance, and any
+   * page that marks one gets live prices, a live early-bird state and the
+   * October rollover for free.
+   */
+  function priceCard(button) { return button.closest(".ticket-card, [data-price-display]"); }
+
   function applyTicket(ticket) {
     const button = document.querySelector(`.choose[data-ticket-code="${ticket.code}"]`);
     if (!button) return;
-    const card = button.closest(".ticket-card");
+    const card = priceCard(button);
 
     // The drawer computes its running total from this attribute, so updating it
     // keeps the itemised total and the Stripe charge in step automatically.
@@ -129,7 +140,7 @@
       if (typeof ticket.code !== "string" || !/^[a-z0-9_]{1,64}$/.test(ticket.code)) return;
       const button = document.querySelector(`.choose[data-ticket-code="${ticket.code}"]`);
       if (!button) return;
-      const card = button.closest(".ticket-card");
+      const card = priceCard(button);
       const note = card ? card.querySelector(".sale-window-note") : null;
       const isOpen = ticket.public_sale_open !== false;
       button.dataset.publicSaleOpen = isOpen ? "true" : "false";

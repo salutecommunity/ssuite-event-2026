@@ -48,7 +48,12 @@
   function policyLinks() {
     // The public agreement always points to the event-specific, same-origin legal pages.
     // Server configuration still supplies the versions recorded with a live registration.
-    const pages = { terms: "./event-terms.html", privacy: "./event-privacy.html", media: "./media-release.html" };
+    //
+    // Root-absolute, not relative: this drawer is also mounted on the personal
+    // invitation pages at /i/{slug}/, where "./event-terms.html" resolved inside
+    // the invitation's own folder and returned a 404. Someone would have been
+    // asked to agree to three documents they could not open.
+    const pages = { terms: "/event-terms.html", privacy: "/event-privacy.html", media: "/media-release.html" };
     document.querySelectorAll("[data-policy-link]").forEach((link) => {
       const value = pages[link.dataset.policyLink];
       if (!value) return;
@@ -225,7 +230,9 @@
     submit.dataset.gateHeld = "true";
     submit.disabled = true;
     submit.setAttribute("aria-disabled", "true");
-    submit.textContent = "Enter your invitation code to continue";
+    // A page that applies the invitation for the visitor says so instead of
+    // asking them for a code they were never given.
+    submit.textContent = text(submit.dataset.gatedPrompt) || "Enter your invitation code to continue";
   }
 
   function updatePartnerFields(code) {
@@ -298,7 +305,10 @@
     const note = byId("selection-note");
     if (note) {
       const seatWord = chosen === 1 ? "one seat" : `${chosen} seats`;
-      note.textContent = partnerRate.organization ? `${partnerRate.organization} · ${seatWord}` : `Invitation code · ${seatWord}`;
+      // On a page that carries the invitation for the reader, "Invitation code"
+      // names a thing they were never shown and never typed.
+      const label = text(document.body.dataset.invitationLabel) || "Invitation code";
+      note.textContent = partnerRate.organization ? `${partnerRate.organization} · ${seatWord}` : `${label} · ${seatWord}`;
     }
     // Rebuild the attendee list only when the number of people has changed, so
     // applying a code cannot discard details somebody has already typed.
@@ -734,12 +744,12 @@
       // authoritative order record proves. Never confirm anything here.
       const session = text(params.get("session_id"));
       if (/^cs_(live|test)_[A-Za-z0-9]{8,320}$/.test(session)) {
-        location.replace(`./registration.html?session_id=${encodeURIComponent(session)}`);
+        location.replace(`/registration.html?session_id=${encodeURIComponent(session)}`);
         return;
       }
       // The address bar lost the reference. The receipt page can still recover it from
       // this tab, and if it cannot, it tells the buyer exactly how to reach their record.
-      location.replace("./registration.html");
+      location.replace("/registration.html");
       return;
     }
   }
