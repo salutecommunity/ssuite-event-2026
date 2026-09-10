@@ -212,6 +212,9 @@ function renderInvitationRequests(host, payload) {
     if (request.status === "approved") {
       const detail = element("div", "invitation-code"); detail.append(element("strong", "", `Code: ${text(request.display_code)}`));
       if (request.seats_approved !== null && request.seats_approved !== undefined) detail.append(element("small", "", `Seats used: ${Number(request.seats_used) || 0} of ${text(request.seats_approved)}`));
+      // Whether the person who asked has actually been told is the thing staff need to
+      // see at a glance, so it sits beside the code rather than behind a click.
+      detail.append(element("small", "", request.invitation_sent_at ? `Invitation emailed ${date(request.invitation_sent_at)}` : "Not yet emailed"));
       statusCell.append(detail);
     }
     tr.append(statusCell, element("td", "", date(request.created_at)));
@@ -220,52 +223,107 @@ function renderInvitationRequests(host, payload) {
       const approve = element("button", "button dark compact", "Approve"); approve.type = "button"; approve.addEventListener("click", () => invitationDecisionForm(request, "approved"));
       const decline = element("button", "quiet compact", "Decline"); decline.type = "button"; decline.addEventListener("click", () => invitationDecisionForm(request, "declined"));
       action.append(approve, decline);
+    } else if (request.status === "approved") {
+      action.append(invitationSendButton(request));
     } else action.textContent = "—";
     tr.append(action); tbody.append(tr);
   }
   table.append(tbody); wrap.append(table); host.append(wrap, pagination(payload));
 }
 
+/* The control that actually puts the invitation in someone's inbox. Separate from
+   approval on purpose: an approval can be recorded without telling anyone yet, and a
+   person who lost the email can be sent it again without a second code being minted.
+   Says "queued" rather than "sent" — the outbox worker hands the message to the
+   provider, not this button. */
+function invitationSendButton(request) {
+  const sent = Boolean(request.invitation_sent_at);
+  const button = element("button", sent ? "quiet compact" : "button dark compact", sent ? "Resend invitation" : "Send invitation");
+  button.type = "button";
+  button.addEventListener("click", async () => {
+    const who = `${text(request.first_name)} ${text(request.last_name)}`.trim() || "this person";
+    if (!confirm(`Email the invitation code to ${who}?\n\nThis puts a real S.Suite message in their inbox. The same code is sent again; no new code is created.`)) return;
+    setBusy(button, true);
+    try {
+      const result = await call({ action: "invitation_send", request_id: request.id });
+      const held = result.held_until && Date.parse(result.held_until) > Date.now();
+      status(
+        held
+          ? `Queued for ${text(result.email)}. It is waiting on Klaviyo's review of this new template and will leave on its own the moment that clears — nothing has been delivered yet.`
+          : `Queued for ${text(result.email)}. The mail worker picks it up within a minute.`,
+        "success",
+      );
+      await loadTab("invitations", currentPage, lastSearch);
+    } catch (error) { status(error.message || "The invitation could not be queued.", "error"); }
+    finally { setBusy(button, false); }
+  });
+  return button;
+}
+
 function invitationDecisionForm(request, decision) {
   const approving = decision === "approved";
   const form = element("form", "attendee-edit");
   form.append(element("p", "fineprint", approving
-    ? `Approve ${text(request.first_name)} ${text(request.last_name)} for a Community invitation code. The code is not emailed or otherwise sent.`
+    ? `Approve ${text(request.first_name)} ${text(request.last_name)} for a Community invitation code.`
     : `Decline ${text(request.first_name)} ${text(request.last_name)}'s Community invitation request. Nothing will be sent.`));
   if (approving) {
     const seatField = formField("Seat cap (how many Community seats this code may buy)", "seats", "1", { required: true, type: "number", max: 2 });
     const seatInput = seatField.querySelector("input"); seatInput.min = "1"; seatInput.max = "10"; seatInput.step = "1";
     form.append(seatField);
+    /* This person asked to be invited, so answering them is the expected outcome and the
+       box starts ticked. Untick it to record the approval and tell them some other way;
+       the row keeps a Send invitation button either way. */
+    const sendBox = element("fieldset", "need-field");
+    const sendLabel = document.createElement("label");
+    const sendCheck = document.createElement("input"); sendCheck.type = "checkbox"; sendCheck.name = "send_email"; sendCheck.checked = true;
+    sendLabel.append(sendCheck, document.createTextNode("Email this person their invitation code now"));
+    sendBox.append(sendLabel, element("p", "fineprint", "Sends the S.Suite invitation email with the code and a link that carries it. Untick to approve quietly and send it yourself later."));
+    form.append(sendBox);
   }
   form.append(formField("Internal note (optional — never shown to the requester)", "note", "", { multiline: true, max: 2000 }));
   const resultBox = element("section", "invitation-code-result"); resultBox.hidden = true; form.append(resultBox);
   operationActions(form, approving ? "Approve and create code" : "Decline request", async (data) => {
     const seats = approving ? Number(data.get("seats")) : undefined;
     if (approving && (!Number.isInteger(seats) || seats < 1 || seats > 10)) throw new Error("Seat cap must be a whole number from 1 to 10.");
-    return await call({ action: "invitation_request_decide", request_id: request.id, decision, seats, note: data.get("note") || undefined });
+    return await call({ action: "invitation_request_decide", request_id: request.id, decision, seats, note: data.get("note") || undefined, send_email: approving ? data.has("send_email") : undefined });
   }, {
     reassurance: approving
-      ? "Nothing will be sent. Approval creates a Community invitation code; staff must convey the code themselves."
+      ? "Approval creates a Community invitation code. With the box ticked, the invitation email goes to the requester; untick it and nothing is sent."
       : "Nothing will be sent. Declining records an internal decision only.",
     confirmation: approving
-      ? "Approve this request and create its Community invitation code? Nothing will be sent; staff must convey the code themselves."
+      ? (data) => (data.has("send_email")
+        ? "Approve this request, create its Community invitation code, and email it to the requester?\n\nThis puts a real S.Suite message in their inbox."
+        : "Approve this request and create its Community invitation code? Nothing will be sent; you can send the invitation from the row afterwards.")
       : "Decline this request? Nothing will be sent.",
-    success: approving ? "Approved. Nothing was sent; staff must convey the code themselves." : "Declined. Nothing was sent.",
+    success: approving
+      ? (result) => {
+        if (!result?.sent) return result?.send_error || "Approved. Nothing was sent; use Send invitation on the row when you are ready.";
+        const held = result.held_until && Date.parse(result.held_until) > Date.now();
+        return held
+          ? "Approved and queued. It is waiting on Klaviyo's review of this new template and will leave on its own the moment that clears — nothing has been delivered yet."
+          : "Approved and queued. The mail worker picks it up within a minute.";
+      }
+      : "Declined. Nothing was sent.",
     onSuccess: (result) => {
       if (!approving || !result?.display_code) return;
       const code = String(result.display_code);
       const codeInput = document.createElement("input"); codeInput.type = "text"; codeInput.readOnly = true; codeInput.value = code; codeInput.setAttribute("aria-label", "Community invitation code");
       const copy = element("button", "button dark compact", "Copy code"); copy.type = "button";
       copy.addEventListener("click", async () => {
-        try { await navigator.clipboard.writeText(code); status("Invitation code copied. Nothing was sent.", "success"); }
-        catch { codeInput.focus(); codeInput.select(); status("Select and copy the invitation code. Nothing was sent."); }
+        try { await navigator.clipboard.writeText(code); status("Invitation code copied.", "success"); }
+        catch { codeInput.focus(); codeInput.select(); status("Select and copy the invitation code."); }
       });
-      resultBox.replaceChildren(element("h3", "", "Community invitation code"), element("p", "notice success", "Nothing has been sent. Staff must convey this code themselves."), codeInput, copy);
+      resultBox.replaceChildren(
+        element("h3", "", "Community invitation code"),
+        element("p", "notice success", result.sent
+          ? "This code has been queued to the requester. Keep it to hand if you would rather also pass it on directly."
+          : "Nothing has been sent. Staff must convey this code themselves, or use Send invitation on the row."),
+        codeInput, copy);
       resultBox.hidden = false; codeInput.focus(); codeInput.select();
     },
   });
   openOperation(approving ? "Approve invitation request" : "Decline invitation request", approving
-    ? "Approval records the decision and mints a code only. It does not email the requester or queue a message."
+    ? "Approval records the decision and mints a seat-capped code. Emailing it to the requester is a separate choice below."
     : "Declining records the decision only. It does not contact the requester.", () => form);
 }
 
@@ -302,6 +360,8 @@ function renderMemberCodeRequests(host, payload) {
       action.append(approve, decline);
     } else if (request.status === "sent" || request.status === "approved") {
       const resend = element("button", "quiet compact", "Resend code"); resend.type = "button"; resend.addEventListener("click", () => resendMemberCode(request, resend)); action.append(resend);
+    } else if (request.status === "approved") {
+      action.append(invitationSendButton(request));
     } else action.textContent = "—";
     tr.append(action); tbody.append(tr);
   }
@@ -492,7 +552,7 @@ function operationActions(form, submitLabel, handler, options = {}) {
   const confirmation = options.confirmation || "Confirm this protected change. Nothing will be sent and no payment, consent, access credential, or secure link will be created.";
   const note = element("p", "notice", reassurance); note.setAttribute("role", "status");
   const actions = element("div", "dialog-actions"); const cancel = element("button", "button outline", "Cancel"); cancel.type = "button"; cancel.addEventListener("click", () => $("attendee-dialog").close()); const save = element("button", "button dark", submitLabel); save.type = "submit"; actions.append(cancel, save); form.append(note, actions);
-  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; if (!confirm(confirmation)) return; setBusy(save, true); note.textContent = "Saving protected operation…"; note.className = "notice"; try { const result = await handler(new FormData(form)); if (options.onSuccess) await options.onSuccess(result); note.textContent = options.success || "Saved. Nothing was sent."; note.className = "notice success"; if (options.reload !== false) await loadTab(activeTab, currentPage, lastSearch); } catch (error) { note.textContent = error.message || "The operation could not be saved."; note.className = "notice error"; } finally { setBusy(save, false); } });
+  form.addEventListener("submit", async (event) => { event.preventDefault(); if (!form.reportValidity()) return; if (!confirm(typeof confirmation === "function" ? confirmation(new FormData(form)) : confirmation)) return; setBusy(save, true); note.textContent = "Saving protected operation…"; note.className = "notice"; try { const result = await handler(new FormData(form)); if (options.onSuccess) await options.onSuccess(result); note.textContent = (typeof options.success === "function" ? options.success(result) : options.success) || "Saved. Nothing was sent."; note.className = "notice success"; if (options.reload !== false) await loadTab(activeTab, currentPage, lastSearch); } catch (error) { note.textContent = error.message || "The operation could not be saved."; note.className = "notice error"; } finally { setBusy(save, false); } });
   return form;
 }
 function recordTypeFields(form, locked = "") {
