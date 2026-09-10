@@ -70,7 +70,7 @@
     // alternate email are the fallbacks for anyone it cannot match. Neither
     // field is required here: the server is the authority and refuses before any
     // payment is taken, so a wrong guess costs nothing.
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. If your membership is under the email you register with, there is nothing else to do. If it is not, add your member code or the email your membership is under.</p><label class="field"><span>MEMBER ACCESS CODE <span class="field-optional">— optional</span></span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="If you have it to hand"></label><label class="field"><span>MEMBERSHIP EMAIL <span class="field-optional">— optional</span></span><input id="membership-email" type="email" maxlength="320" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="If your membership is under a different address"></label><p class="member-note">Neither to hand? Continue anyway — if we cannot match your membership we will tell you before any payment is taken. Or <button type="button" class="reveal-link" data-request-member-code>have your code emailed to you</button>.</p>`;
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. If your membership is under the email you register with, there is nothing else to do. If it is not, add your member code or the email your membership is under.</p><label class="field"><span>MEMBER ACCESS CODE <span class="field-optional">— optional</span></span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="If you have it to hand"></label><label class="field"><span>MEMBERSHIP EMAIL <span class="field-optional">— optional</span></span><input id="membership-email" type="email" maxlength="320" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="If your membership is under a different address"></label><p class="member-note">Neither to hand? Continue anyway — if we cannot match your membership we will tell you before any payment is taken. ${memberCodeRequestOpen() ? `Or <button type="button" class="reveal-link" data-request-member-code>have your code emailed to you</button>.` : ""}</p>`;
     selection.insertAdjacentElement("afterend", section);
   }
   function updateMemberFields(code) {
@@ -97,6 +97,13 @@
    */
   const PARTNER_HOST_TIER = "community";
   const INVITED_LABEL = "Continue with your invitation";
+  // The request-a-code door is only offered while the email behind it can
+  // actually go out. Offering it otherwise would promise a message the site
+  // cannot send.
+  const memberCodeRequestOpen = () => {
+    const cfg = window.SSUITE_CONFIG || {};
+    return !!(cfg.memberCode && cfg.memberCode.enabled === true);
+  };
   let partnerRate = null;
   let linkedPartnerCode = "";
 
