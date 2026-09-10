@@ -9,6 +9,7 @@ let activeTab = "overview";
 let currentPage = 1;
 let lastSearch = "";
 let invitationStatus = "pending";
+let memberCodeStatus = "pending";
 
 function configured() {
   try {
@@ -147,7 +148,7 @@ async function verifyCode(event) {
 }
 
 function tabMeta(tab) {
-  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
+  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
 async function loadTab(tab, page = 1, search = "") {
   activeTab = tab; currentPage = page; lastSearch = search;
@@ -155,8 +156,9 @@ async function loadTab(tab, page = 1, search = "") {
   const [kicker, title] = tabMeta(tab); $("section-kicker").textContent = kicker; $("section-title").textContent = title;
   clear($("dashboard-content")); status("Loading private data…");
   try {
-    const body = { action: tab === "invitations" ? "invitation_requests" : tab, page, limit: 50, search };
+    const body = { action: tab === "invitations" ? "invitation_requests" : tab === "membercodes" ? "member_code_requests" : tab, page, limit: 50, search };
     if (tab === "invitations") body.status = invitationStatus;
+    if (tab === "membercodes") body.status = memberCodeStatus;
     const payload = await call(body);
     render(tab, payload); status("");
   } catch (error) { status(error.message || "Unable to load this private view.", "error"); }
@@ -166,6 +168,7 @@ function render(tab, payload) {
   const host = $("dashboard-content"); clear(host);
   if (tab === "overview") return renderOverview(host, payload.overview);
   if (tab === "invitations") return renderInvitationRequests(host, payload);
+  if (tab === "membercodes") return renderMemberCodeRequests(host, payload);
   if (tab === "tables") return renderTables(host, payload);
   if (tab === "audit") return renderAudit(host, payload);
   if (tab === "attendees") host.append(adminAttendeeButton());
@@ -266,6 +269,81 @@ function invitationDecisionForm(request, decision) {
     : "Declining records the decision only. It does not contact the requester.", () => form);
 }
 
+function renderMemberCodeRequests(host, payload) {
+  const counts = payload.counts || {};
+  const filters = element("div", "toolbar");
+  for (const [value, label] of [["pending", "Pending"], ["sent", "Sent"], ["approved", "Approved"], ["declined", "Declined"], ["all", "All"]]) {
+    const button = element("button", value === memberCodeStatus ? "button dark" : "button outline", `${label} (${value === "all" ? (Number(counts.pending) || 0) + (Number(counts.sent) || 0) + (Number(counts.approved) || 0) + (Number(counts.declined) || 0) : Number(counts[value]) || 0})`);
+    button.type = "button";
+    button.addEventListener("click", () => { memberCodeStatus = value; loadTab("membercodes"); });
+    filters.append(button);
+  }
+  host.append(filters);
+  if (!payload.data?.length) {
+    host.append(element("p", "empty", memberCodeStatus === "pending" ? "No member code requests are waiting." : "No member code requests match this filter."));
+    return;
+  }
+
+  const wrap = element("div", "table-wrap"); const table = document.createElement("table");
+  const thead = document.createElement("thead"); const headRow = document.createElement("tr");
+  for (const label of ["Name", "Email", "Membership email", "Status", "Match", "Code sent", "Submissions", "Decision", "Requested", "Action"]) headRow.append(element("th", "", label));
+  thead.append(headRow); table.append(thead); const tbody = document.createElement("tbody");
+  for (const request of payload.data) {
+    const tr = document.createElement("tr");
+    for (const value of [`${text(request.first_name)} ${text(request.last_name)}`, text(request.email), text(request.membership_email)]) tr.append(element("td", "", value));
+    const statusCell = document.createElement("td"); statusCell.append(chip(request.status)); tr.append(statusCell);
+    tr.append(element("td", "", request.auto_matched ? "Matched automatically" : "Not matched automatically"), element("td", "", date(request.code_sent_at)), element("td", "", text(request.submission_count)));
+    const decision = [request.decided_by, request.decided_at ? date(request.decided_at) : "", request.decision_note].filter(Boolean).join(" · ");
+    tr.append(element("td", "", decision || "—"), element("td", "", date(request.created_at)));
+    const action = document.createElement("td");
+    if (request.status === "pending") {
+      const approve = element("button", "button dark compact", "Approve"); approve.type = "button"; approve.addEventListener("click", () => memberCodeDecisionForm(request, "approved"));
+      const decline = element("button", "quiet compact", "Decline"); decline.type = "button"; decline.addEventListener("click", () => memberCodeDecisionForm(request, "declined"));
+      action.append(approve, decline);
+    } else if (request.status === "sent" || request.status === "approved") {
+      const resend = element("button", "quiet compact", "Resend code"); resend.type = "button"; resend.addEventListener("click", () => resendMemberCode(request, resend)); action.append(resend);
+    } else action.textContent = "—";
+    tr.append(action); tbody.append(tr);
+  }
+  table.append(tbody); wrap.append(table); host.append(wrap, pagination(payload));
+}
+
+function memberCodeDecisionForm(request, decision) {
+  const approving = decision === "approved";
+  const name = `${text(request.first_name)} ${text(request.last_name)}`;
+  const form = element("form", "attendee-edit");
+  form.append(element("p", "fineprint", approving
+    ? `Approve ${name}? This adds them to the SALUTE member roster and emails them the member access code.`
+    : `Decline ${name}'s member code request. Nothing will be sent.`));
+  form.append(formField("Internal note (optional — never shown to the requester)", "note", "", { multiline: true, max: 2000 }));
+  operationActions(form, approving ? "Approve and email code" : "Decline request", async (data) => {
+    return await call({ action: "member_code_request_decide", request_id: request.id, decision, note: data.get("note") || undefined });
+  }, {
+    reassurance: approving
+      ? "Approval adds them to the SALUTE member roster and emails them the member access code."
+      : "Nothing will be sent. Declining records an internal decision only.",
+    confirmation: approving
+      ? `Approve ${name}? This adds them to the SALUTE member roster and emails them the member access code.`
+      : `Decline ${name}'s member code request? Nothing will be sent.`,
+    success: approving ? "Approved. They were added to the SALUTE member roster and emailed the member access code." : "Declined. Nothing was sent.",
+  });
+  openOperation(approving ? "Approve member code request" : "Decline member code request", approving
+    ? "Approval adds this person to the SALUTE member roster and emails them their member access code."
+    : "Declining records the decision only. It does not contact the requester.", () => form);
+}
+
+async function resendMemberCode(request, button) {
+  const name = `${text(request.first_name)} ${text(request.last_name)}`;
+  if (!confirm(`Resend the member access code to ${name}? This emails them the member access code.`)) return;
+  setBusy(button, true);
+  try {
+    await call({ action: "member_code_resend", request_id: request.id });
+    status("The member access code was emailed.", "success");
+    await loadTab("membercodes", currentPage, lastSearch);
+  } catch (error) { status(error.message || "The member access code could not be resent.", "error"); }
+  finally { setBusy(button, false); }
+}
+
 function renderOverview(host, overview) {
   const event = overview.event || {}; const counts = overview.counts || {};
   if (overview.notice) host.append(element("p", "notice", overview.notice));
@@ -286,7 +364,7 @@ function renderOverview(host, overview) {
     host.append(moneyGrid);
     host.append(element("p", "band-note", "Figures are net of refunds reconciled from Stripe. Isolated validation transactions are excluded."));
   }
-  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Auction pending", counts.auction_pending]];
+  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Member code requests pending", counts.member_code_requests_pending], ["Auction pending", counts.auction_pending]];
   if (!revenue) fields.push(["Donations received", money(counts.donations_paid_cents)]);
   host.append(element("h2", "band-title", "Operations"));
   const grid = element("div", "summary"); for (const [label, value] of fields) { const card = element("article", "metric"); card.append(element("span", "", label), element("strong", "", String(value ?? 0))); grid.append(card); } host.append(grid);

@@ -66,3 +66,6 @@ dialog select,dialog textarea{display:block;width:100%;margin-top:8px;border:1px
 dialog select{height:54px;padding:0 15px}
 dialog textarea{padding:15px;min-height:92px;resize:vertical}
 dialog label i{font-style:normal;font-weight:600;color:#8a8a8a}
+
+.member-verification .field+.field{margin-top:14px}
+.field-optional{color:#8a8a8a;letter-spacing:.04em}

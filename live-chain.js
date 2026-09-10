@@ -64,7 +64,13 @@
     section.id = "member-verification";
     section.className = "member-verification";
     section.hidden = true;
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. Enter the access code from your SALUTE email to unlock it.</p><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" required maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Code from your SALUTE email"></label><p class="member-note">Don’t have your code? Email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we’ll send it to you.</p>`;
+    // Two ways to prove membership, because most members will not have a code
+    // in front of them. The server checks the purchaser email against the member
+    // list first, so a member on the list needs nothing at all; the code and the
+    // alternate email are the fallbacks for anyone it cannot match. Neither
+    // field is required here: the server is the authority and refuses before any
+    // payment is taken, so a wrong guess costs nothing.
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. If your membership is under the email you register with, there is nothing else to do. If it is not, add your member code or the email your membership is under.</p><label class="field"><span>MEMBER ACCESS CODE <span class="field-optional">— optional</span></span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="If you have it to hand"></label><label class="field"><span>MEMBERSHIP EMAIL <span class="field-optional">— optional</span></span><input id="membership-email" type="email" maxlength="320" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="If your membership is under a different address"></label><p class="member-note">Neither to hand? Continue anyway — if we cannot match your membership we will tell you before any payment is taken. Or <button type="button" class="reveal-link" data-request-member-code>have your code emailed to you</button>.</p>`;
     selection.insertAdjacentElement("afterend", section);
   }
   function updateMemberFields(code) {
@@ -90,6 +96,7 @@
    * page shows is the rate checkout bills.
    */
   const PARTNER_HOST_TIER = "community";
+  const INVITED_LABEL = "Continue with your invitation";
   let partnerRate = null;
   let linkedPartnerCode = "";
 
@@ -481,14 +488,23 @@
     const howHeard = value(form, "referral-source");
     if (!code || !howHeard) throw new Error("Complete the registration details before checkout.");
     const memberCode = String(byId("member-code")?.value || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-    if (code === "salute_member" && !memberCode) throw new Error("Enter your member access code to use the member rate. It is in your SALUTE email — or write to ssuite@salute.community and we will send it.");
+    // No client-side wall here on purpose. The member list is the primary proof
+    // and the browser cannot see it, so demanding a code in front of the server
+    // turned every member without one away at the door.
+    const membershipEmail = String(byId("membership-email")?.value || "").trim().toLowerCase();
+    if (code === "salute_member" && membershipEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(membershipEmail)) {
+      throw new Error("Check the membership email address, or leave it blank if your membership is under the email above.");
+    }
     return {
       ticket_type_code: partner ? partner.tier : code,
       order_type: table ? "table" : "ticket",
       quantity: table || member ? 1 : count,
       guest_quantity: partner ? 0 : guestSeats,
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
-      member_code: partner ? partner.code : (code === "salute_member" ? memberCode : undefined),
+      member_code: partner ? partner.code : (code === "salute_member" && memberCode ? memberCode : undefined),
+      membership_email: code === "salute_member" && membershipEmail ? membershipEmail : undefined,
+      // Self-declared membership stays off: it would price a seat at $275 on an
+      // unchecked claim and leave staff to unpick it after the money moved.
       member_attestation: false,
       how_heard: howHeard, attendees, combined_agreement: agreedToPolicies(form),
       terms_version: p.termsVersion, privacy_version: p.privacyVersion, media_release_version: p.mediaReleaseVersion,
@@ -677,6 +693,19 @@
   }
   function init() {
     policyLinks();
+    const params = new URLSearchParams(location.search);
+    // A partner or circle invitation link carries the code. Remember it for the
+    // moment the drawer opens; nothing is checked or shown until then.
+    linkedPartnerCode = normalizeCode(params.get("code")).slice(0, 64);
+    if (linkedPartnerCode) {
+      // Someone who followed an invitation link has already been invited. Meeting
+      // them with "Enter your invitation code" reads as a refusal of the thing
+      // they just accepted, so the control names the next step instead. It makes
+      // no claim about the code itself -- that is settled by the server when the
+      // drawer opens, and an unusable code is still told so there.
+      const invited = document.querySelector(`.choose[data-ticket-code="${PARTNER_HOST_TIER}"]`);
+      if (invited) invited.dataset.gatedLabel = INVITED_LABEL;
+    }
     applyLiveLabels();
     createMemberFields();
     createPartnerFields();
@@ -691,10 +720,6 @@
         if (partnerActive()) applyPartnerDisplay();
       });
     }
-    const params = new URLSearchParams(location.search);
-    // A partner invitation link carries the organization's code. Remember it for
-    // the moment the drawer opens; nothing is checked or shown until then.
-    linkedPartnerCode = normalizeCode(params.get("code")).slice(0, 64);
     const result = params.get("checkout");
     if (result === "cancel") { forgetPendingCheckout(); setStatus("Checkout was cancelled. No payment was completed.", "error"); }
     if (result === "success") {

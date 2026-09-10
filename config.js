@@ -37,5 +37,10 @@ window.SSUITE_CONFIG = Object.freeze({
   // is provisioned for this endpoint, so this string is a label for
   // observability rather than something the server matches. Origin and
   // Turnstile hostname checks still apply, and the token is still verified.
-  invitation: Object.freeze({ enabled: true, turnstileAction: "invitation-request" })
+  invitation: Object.freeze({ enabled: true, turnstileAction: "invitation-request" }),
+  // Member code requests. Same situation as invitation requests: no
+  // expected-action secret is provisioned, so this string is a label for
+  // observability rather than something the server matches. Origin and
+  // Turnstile hostname checks still apply, and the token is still verified.
+  memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" })
 });
