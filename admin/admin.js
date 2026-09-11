@@ -773,7 +773,28 @@ function renderAttendeeDetail(payload, message = "") {
   if (a.linkedin_url) { const link = document.createElement("a"); link.href = a.linkedin_url; link.target = "_blank"; link.rel = "noopener noreferrer"; link.textContent = "View LinkedIn profile"; profile.append(link); }
   profile.append(element("p", "", a.bio ? `Bio: ${a.bio}` : "No bio added."), element("p", "", a.pronunciation ? `Pronunciation: ${a.pronunciation}` : ""), element("p", "", a.relationship_notes ? `Relationship notes: ${a.relationship_notes}` : "")); host.append(profile);
   const needs = element("section", "detail-section sensitive"); needs.append(element("h3", "", "Meal & access needs"), element("small", "", "Sensitive operational information — visible only after approved-admin server authorization."), element("p", "", n ? `Meal: ${text(n.meal_preference)}\nDietary/allergy: ${n.has_dietary_or_allergy_needs ? text(n.dietary_or_allergy_details) : "None reported"}\nAccessibility: ${n.has_accessibility_needs ? text(n.accessibility_details) : "None reported"}` : "No needs record.")); host.append(needs);
-  const consent = element("section", "detail-section"); consent.append(element("h3", "", "Recorded consent"), element("p", "", payload.consents?.length ? payload.consents.map((c) => `${text(c.scope)} · accepted ${date(c.accepted_at)} · terms ${text(c.terms_version)}`).join("\n") : "No attendee-specific consent record.")); host.append(consent);
+  /* Recorded consent.
+   *
+   * Nobody reaches payment without accepting the terms, privacy notice and
+   * media release, so "No attendee-specific consent record" was a true
+   * sentence about the wrong question: the acceptance is stored against the
+   * order, in the name of whoever ticked it. This resolves it through the
+   * order and describes it precisely -- accepted in person, or accepted by
+   * the purchaser on this registration -- rather than writing a row in a
+   * guest's name for a box she never saw.
+   */
+  const consent = element("section", "detail-section");
+  consent.append(element("h3", "", "Recorded consent"));
+  const versions = (c) => `terms ${text(c.terms_version)} · privacy ${text(c.privacy_version)} · media release ${text(c.media_release_version)}`;
+  const ownConsent = payload.consents ?? [];
+  const orderConsent = payload.order_consents ?? [];
+  const orderRow = payload.attendee?.orders || null;
+  const purchaser = orderRow ? `${text(orderRow.purchaser_first_name)} ${text(orderRow.purchaser_last_name)}`.trim() : "";
+  const consentLines = ownConsent.length
+    ? ownConsent.map((c) => `Accepted in person · ${date(c.accepted_at)} · ${versions(c)}`)
+    : orderConsent.map((c) => `${payload.attendee?.is_purchaser ? "Accepted at checkout by this attendee" : `Accepted at checkout by ${purchaser || "the purchaser"}, for the guests on this registration`} · ${date(c.accepted_at)} · ${versions(c)}`);
+  consent.append(element("p", "", consentLines.length ? consentLines.join("\n") : "Nothing on record yet. Staff cannot accept the terms, privacy notice or media release for anyone — this is recorded when the attendee completes their own registration."));
+  host.append(consent);
   if (a.registration_status !== "complete") {
     const section = element("section", "detail-section");
     section.append(element("h3", "", "Finish their registration"));
