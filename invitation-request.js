@@ -75,6 +75,7 @@
     if (widgetId !== undefined) return widgetId;
     widgetId = api.render(slot, {
       sitekey: text(cfg.turnstileSiteKey),
+      appearance: "interaction-only",
       action: text(invitationConfig().turnstileAction),
       "error-callback": () => status("The security check failed. Please retry.", "error"),
       "expired-callback": () => status("The security check expired. Please retry.", "error"),
@@ -97,6 +98,56 @@
   }
   function resetTurnstile() {
     if (widgetId !== undefined && window.turnstile) window.turnstile.reset(widgetId);
+  }
+
+
+  /* ---- A finished request ------------------------------------------------- */
+  // The dialog's own heading and lede carry the outcome, so it is typeset like
+  // everything else the reader has just read rather than like a system notice.
+  let invitationOriginal = null;
+  function invitationParts() {
+    const dialog = byId("invitation-dialog");
+    const form = byId("invitation-request-form");
+    if (!dialog || !form) return null;
+    const heading = dialog.querySelector("h2");
+    const lede = dialog.querySelector(".dialog-lede");
+    return heading && lede ? { dialog, form, heading, lede } : null;
+  }
+  function done(headline, body) {
+    const p = invitationParts();
+    if (!p) return;
+    if (!invitationOriginal) invitationOriginal = { heading: p.heading.textContent, lede: p.lede.textContent };
+    status("", "");
+    p.heading.textContent = headline;
+    p.lede.textContent = body;
+    // Removed from the layout, not merely marked hidden: these carry classes
+    // whose own display rules would overrule the attribute.
+    p.form.hidden = true;
+    p.form.style.display = "none";
+    let close = byId("invitation-done-close");
+    if (!close) {
+      close = document.createElement("button");
+      close.id = "invitation-done-close";
+      close.type = "button";
+      close.className = "button button-dark full";
+      close.textContent = "Close";
+      close.addEventListener("click", () => p.dialog.close());
+      p.form.parentNode.insertBefore(close, p.form.nextSibling);
+    }
+    close.hidden = false;
+    close.style.display = "";
+    close.focus();
+  }
+  // Reopening starts over: the same person may ask again for somebody else.
+  function restore() {
+    const p = invitationParts();
+    if (!p || !invitationOriginal) return;
+    p.heading.textContent = invitationOriginal.heading;
+    p.lede.textContent = invitationOriginal.lede;
+    p.form.hidden = false;
+    p.form.style.display = "";
+    const close = byId("invitation-done-close");
+    if (close) { close.hidden = true; close.style.display = "none"; }
   }
 
   /* ---- Submission --------------------------------------------------------- */
@@ -143,14 +194,15 @@
       if (!response.ok || payload.accepted !== true) {
         throw new Error(text(payload.error) || "We could not record your request. Please try again shortly, or write to ssuite@salute.community.");
       }
-      if (payload.status === "already_invited") {
-        status("You have already been invited. Your invitation code is in your email from S.Suite — search for “S.Suite” or write to ssuite@salute.community and we will resend it.", "success");
-        resetTurnstile();
-        return;
-      }
-      status("Thank you. Your request has been recorded and we will be in touch by email. No seat is reserved and nothing has been charged.", "success");
       form.reset();
       resetTurnstile();
+      if (payload.status === "already_invited") {
+        done("You have already been invited.",
+          "Your invitation code is in your email from S.Suite — search for “S.Suite”, or write to ssuite@salute.community and we will send it again.");
+        return;
+      }
+      done("Your request has been sent.",
+        "We read every request and reply by email. No seat is reserved and nothing has been charged.");
     } catch (error) {
       status(error instanceof Error ? error.message : "We could not record your request. Please try again shortly, or write to ssuite@salute.community.", "error");
       resetTurnstile();
@@ -171,6 +223,7 @@
     document.querySelectorAll("[data-request-invitation]").forEach((button) => {
       button.addEventListener("click", () => {
         status("", "");
+        restore();
         if (typeof dialog.showModal === "function") dialog.showModal();
         warm().catch(() => {});
       });

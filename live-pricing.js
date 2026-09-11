@@ -122,8 +122,9 @@
     if (!note || data.sales_open !== true) return;
     const deadline = text(data.early_bird_last_moment_display);
     note.textContent = data.early_bird_active === true && deadline
-      ? `Early-bird pricing is available through ${deadline}. Registration is completed through secure checkout.`
-      : "Registration is completed through secure checkout.";
+      ? `Early-bird pricing through ${deadline}.`
+      : "";
+    note.hidden = !note.textContent;
   }
 
   // Checkout is refused server-side when sales are closed. Mirror that here rather

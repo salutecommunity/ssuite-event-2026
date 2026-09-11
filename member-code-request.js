@@ -80,6 +80,7 @@
     if (widgetId !== undefined) return widgetId;
     widgetId = api.render(slot, {
       sitekey: text(cfg.turnstileSiteKey),
+      appearance: "interaction-only",
       action: text(memberConfig().turnstileAction),
       "error-callback": () => status("The security check failed. Please retry.", "error"),
       "expired-callback": () => status("The security check expired. Please retry.", "error"),
@@ -102,6 +103,56 @@
   }
   function resetTurnstile() {
     if (widgetId !== undefined && window.turnstile) window.turnstile.reset(widgetId);
+  }
+
+
+  /* ---- A finished request ------------------------------------------------- */
+  // The dialog's own heading and lede carry the outcome, so it is typeset like
+  // everything else the reader has just read rather than like a system notice.
+  let memberCodeOriginal = null;
+  function memberCodeParts() {
+    const dialog = byId("member-code-dialog");
+    const form = byId("member-code-request-form");
+    if (!dialog || !form) return null;
+    const heading = dialog.querySelector("h2");
+    const lede = dialog.querySelector(".dialog-lede");
+    return heading && lede ? { dialog, form, heading, lede } : null;
+  }
+  function done(headline, body) {
+    const p = memberCodeParts();
+    if (!p) return;
+    if (!memberCodeOriginal) memberCodeOriginal = { heading: p.heading.textContent, lede: p.lede.textContent };
+    status("", "");
+    p.heading.textContent = headline;
+    p.lede.textContent = body;
+    // Removed from the layout, not merely marked hidden: these carry classes
+    // whose own display rules would overrule the attribute.
+    p.form.hidden = true;
+    p.form.style.display = "none";
+    let close = byId("memberCode-done-close");
+    if (!close) {
+      close = document.createElement("button");
+      close.id = "memberCode-done-close";
+      close.type = "button";
+      close.className = "button button-dark full";
+      close.textContent = "Close";
+      close.addEventListener("click", () => p.dialog.close());
+      p.form.parentNode.insertBefore(close, p.form.nextSibling);
+    }
+    close.hidden = false;
+    close.style.display = "";
+    close.focus();
+  }
+  // Reopening starts over: the same person may ask again for somebody else.
+  function restore() {
+    const p = memberCodeParts();
+    if (!p || !memberCodeOriginal) return;
+    p.heading.textContent = memberCodeOriginal.heading;
+    p.lede.textContent = memberCodeOriginal.lede;
+    p.form.hidden = false;
+    p.form.style.display = "";
+    const close = byId("memberCode-done-close");
+    if (close) { close.hidden = true; close.style.display = "none"; }
   }
 
   /* ---- Submission --------------------------------------------------------- */
@@ -142,13 +193,15 @@
       if (!response.ok || payload.accepted !== true) {
         throw new Error(text(payload.error) || "We could not send your code just now. Please try again shortly, or write to ssuite@salute.community.");
       }
-      if (payload.status === "sent") {
-        status("Your code is on its way. We send it to the address your membership is recorded under, so check that inbox — it usually arrives within a minute.", "success");
-      } else {
-        status("Thank you. We could not match your membership automatically, so someone from S.Suite will check and email you. Nothing has been reserved and nothing has been charged.", "success");
-      }
       form.reset();
       resetTurnstile();
+      if (payload.status === "sent") {
+        done("Your request has been sent.",
+          "Your member code is on its way to the address your membership is recorded under. It usually arrives within a minute.");
+      } else {
+        done("Your request has been sent.",
+          "We could not match your membership automatically, so someone from S.Suite will check it and email you. Nothing has been reserved and nothing has been charged.");
+      }
     } catch (error) {
       status(error instanceof Error ? error.message : "We could not send your code just now. Please try again shortly, or write to ssuite@salute.community.", "error");
       resetTurnstile();
@@ -171,6 +224,7 @@
       if (!opener) return;
       event.preventDefault();
       status("", "");
+      restore();
       // Whatever they have already typed into the checkout is almost certainly
       // the answer here too. Carrying it across saves retyping and makes a
       // roster match more likely.
