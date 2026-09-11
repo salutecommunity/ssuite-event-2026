@@ -33,18 +33,24 @@ function element(tag, className, value) { const node = document.createElement(ta
 
 async function initialize() {
   if (!configured()) {
-    $("send-link").disabled = true;
-    $("request-code").disabled = true;
-    $("verify-code").disabled = true;
+    for (const id of ["sign-in", "request-code", "verify-code"]) { const node = $(id); if (node) node.disabled = true; }
     authStatus("Private sign-in is unavailable until the deployment supplies the public Supabase URL, anon key, and API base URL.", "error");
     return;
   }
-  // Keep the administrator session in memory only; never write auth material to browser storage.
-  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: true } });
-  supabase.auth.onAuthStateChange((_event, nextSession) => { if (nextSession) openDashboard(nextSession); });
+  // The session is kept on this device so an administrator is not re-authenticating on every
+  // page load. It is scoped to this browser, refreshed automatically, and cleared by Sign out.
+  supabase = createClient(String(config.supabaseUrl), String(config.supabaseAnonKey), {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, storageKey: "ssuite-admin-auth", flowType: "implicit" },
+  });
+  supabase.auth.onAuthStateChange((event, nextSession) => {
+    if (event === "SIGNED_OUT") { session = null; return; }
+    // A refreshed or updated token must replace the held one without rebuilding the dashboard.
+    if (nextSession && session) { session = nextSession; return; }
+    if (nextSession) openDashboard(nextSession);
+  });
   const { data } = await supabase.auth.getSession();
   if (data.session) await openDashboard(data.session);
-  else authStatus("Use the locked email address to request a private passwordless sign-in.");
+  else authStatus("Enter the S.Suite administrator password to open the private dashboard.");
 }
 
 async function openDashboard(nextSession) {
@@ -52,7 +58,8 @@ async function openDashboard(nextSession) {
   session = nextSession; cleanAuthUrl();
   try {
     await call({ action: "overview" });
-    $("auth-shell").hidden = true; $("workspace").hidden = false; $("sign-out").hidden = false;
+    $("auth-shell").hidden = true; $("workspace").hidden = false; $("sign-out").hidden = false; $("change-password").hidden = false;
+    $("admin-password").value = "";
     await loadTab("overview");
   } catch (error) {
     session = null;
@@ -61,11 +68,22 @@ async function openDashboard(nextSession) {
   }
 }
 
+// Reads the live token rather than a copy captured at sign-in, so a tab left open past the
+// one-hour token lifetime refreshes instead of failing with "session expired".
+async function accessToken() {
+  if (supabase) {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session?.access_token) { session = data.session; return data.session.access_token; }
+  }
+  if (session?.access_token) return session.access_token;
+  throw new Error("Your private session has expired. Sign in again.");
+}
+
 async function call(body, expectCsv = false) {
-  if (!session?.access_token) throw new Error("Your private session has expired. Sign in again.");
+  const token = await accessToken();
   const response = await fetch(`${apiBase()}/functions/v1/admin-api`, {
     method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
-    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${session.access_token}` },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
     body: JSON.stringify(body),
   });
   if (expectCsv) {
@@ -114,6 +132,60 @@ function signInFailure(error, thing) {
     : `The ${thing} could not be requested. Try again, and contact S.Suite Admin if it continues.`;
 }
 
+async function signInWithPassword(event) {
+  event.preventDefault();
+  if (!supabase || !configured()) return;
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const button = $("sign-in"); setBusy(button, true); authStatus("Signing in…");
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: APPROVED_EMAIL, password: $("admin-password").value,
+    });
+    if (error) throw error;
+    if (!data?.session) throw new Error("Sign-in did not create a session.");
+    await openDashboard(data.session);
+  } catch (error) {
+    const message = String(error?.message ?? "");
+    if (/invalid login credentials/i.test(message)) {
+      authStatus("That password was not recognised. Check it and try again, or use an emailed code below.", "error");
+    } else if (Number(error?.status) === 429 || /rate limit|too many/i.test(message)) {
+      authStatus("Too many sign-in attempts. Wait a few minutes and try again.", "error");
+    } else if (/failed to fetch|networkerror|load failed/i.test(message)) {
+      authStatus("The server could not be reached. Check the connection and try again.", "error");
+    } else {
+      authStatus(message ? `Sign-in failed: ${message}` : "Sign-in failed. Try again.", "error");
+    }
+  } finally { setBusy(button, false); }
+}
+
+function openPasswordDialog() {
+  const status = $("password-change-status"); status.textContent = ""; status.className = "notice";
+  $("new-password").value = ""; $("new-password-confirm").value = "";
+  if (!$("password-dialog").open) $("password-dialog").showModal();
+}
+
+async function changePassword(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const status = $("password-change-status"); const save = $("password-save");
+  const next = $("new-password").value;
+  if (next !== $("new-password-confirm").value) {
+    status.textContent = "The two passwords do not match."; status.className = "notice error"; return;
+  }
+  setBusy(save, true); status.textContent = "Saving the new password…"; status.className = "notice";
+  try {
+    const { error } = await supabase.auth.updateUser({ password: next });
+    if (error) throw error;
+    status.textContent = "Password changed. Use it the next time you sign in."; status.className = "notice success";
+    $("new-password").value = ""; $("new-password-confirm").value = "";
+  } catch (error) {
+    status.textContent = error?.message || "The password could not be changed.";
+    status.className = "notice error";
+  } finally { setBusy(save, false); }
+}
+
 async function requestCode() {
   if (!supabase || !configured()) return;
   const button = $("request-code"); setBusy(button, true); authStatus("Sending a sign-in code…");
@@ -137,13 +209,14 @@ async function requestCode() {
 async function verifyCode(event) {
   event.preventDefault(); if (!supabase || !configured()) return;
   const form = event.currentTarget; if (!form.reportValidity()) return;
+  if (!/^[0-9]{6,8}$/.test($("admin-otp").value.trim())) { authStatus("Enter the code from the most recent sign-in email.", "error"); return; }
   const button = $("verify-code"); setBusy(button, true); authStatus("Verifying the one-time email code…");
   try {
     const { data, error } = await supabase.auth.verifyOtp({ email: APPROVED_EMAIL, token: $("admin-otp").value.trim(), type: "email" });
     if (error) throw error;
     if (!data?.session) throw new Error("The one-time code did not create a session.");
     await openDashboard(data.session);
-  } catch { authStatus("The one-time email code could not be verified. Request a fresh code and try again.", "error"); }
+  } catch { authStatus("That code is expired or already used. Each request cancels the previous code — open the newest sign-in email and use the code in it.", "error"); }
   finally { setBusy(button, false); }
 }
 
@@ -728,5 +801,5 @@ function renderAttendeeEdit(payload) {
 
 async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); renderAttendeeDetail(payload); if (!$("attendee-dialog").open) $("attendee-dialog").showModal(); status(""); } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); } }
 
-$("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
+$("password-form").addEventListener("submit", signInWithPassword); $("change-password").addEventListener("click", openPasswordDialog); $("password-change-form").addEventListener("submit", changePassword); $("password-cancel").addEventListener("click", () => $("password-dialog").close()); $("password-dialog").querySelector(".close").addEventListener("click", () => $("password-dialog").close()); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; $("change-password").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
 initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));

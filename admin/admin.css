@@ -15,3 +15,4 @@ select{display:block;width:100%;height:50px;margin-top:8px;padding:0 13px;border
 .otp-fallback #otp-form label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #4a4a4a; }
 .otp-fallback #otp-form input { width: 140px; padding: 10px; border: 1px solid #c9c9c9; background: #fff; color: #000; font: inherit; letter-spacing: .3em; }
 .otp-fallback .fineprint { margin-top: 8px; }
+.masthead-actions{display:flex;gap:10px;align-items:center}#password-change-form{max-width:430px}#password-dialog{width:min(560px,calc(100% - 30px))}#password-dialog h2{margin-bottom:10px}@media(max-width:550px){.masthead-actions{gap:6px}.masthead-actions .quiet{padding:8px 9px;font-size:9px}}
