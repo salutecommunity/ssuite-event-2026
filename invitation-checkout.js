@@ -218,7 +218,7 @@
     }
     const note = document.getElementById("member-invite-note");
     if (note) {
-      note.textContent = "Your own seat is billed at " + usd(cents / 100) + ". Anyone you bring stays at the rate on your invitation.";
+      note.textContent = "Members attend at " + usd(cents / 100) + ". Anyone you bring stays at the rate on your invitation.";
     }
     box.hidden = false;
   }

@@ -62,6 +62,79 @@
       link.rel = "noopener noreferrer";
     });
   }
+  function memberCodeStatus(message) {
+    const el = byId("member-code-status");
+    if (!el) return;
+    el.textContent = message;
+    el.hidden = !message;
+  }
+
+  /* Checking the SALUTE member access code.
+   *
+   * The server answers with "member_code" and nothing else -- no price, no
+   * organization, no seat count -- so this can only ever learn whether the code
+   * is the one. The figure charged comes from the published member rate, which
+   * is public already, and checkout re-checks the code before taking payment.
+   */
+  async function verifyMemberCode() {
+    const input = byId("member-code");
+    if (!input || !memberOnInvitation) return;
+    const code = normalizeCode(input.value);
+    if (code && code === memberCodeVerified) return;
+    memberCodeVerified = null;
+    if (!code) { memberCodeStatus(""); applyPartnerDisplay(); return; }
+    const base = apiBase();
+    if (!base) {
+      memberCodeStatus("Your code cannot be checked right now. Please try again shortly, or write to ssuite@salute.community.");
+      applyPartnerDisplay();
+      return;
+    }
+    memberCodeStatus("Checking your code\u2026");
+    try {
+      const response = await fetch(`${base}/functions/v1/event-pricing?code=${encodeURIComponent(code)}`, {
+        method: "GET", mode: "cors", credentials: "omit", cache: "no-store",
+      });
+      const payload = response.ok ? await response.json().catch(() => null) : null;
+      const state = payload && typeof payload === "object" ? payload.access_code : null;
+      if (state && state.result === "member_code") {
+        memberCodeVerified = code;
+        memberCodeStatus("");
+      } else if (state && state.result === "rate_limited") {
+        memberCodeStatus("Too many code checks from this connection. Please wait a few minutes and try again.");
+      } else if (state && state.result === "ok") {
+        memberCodeStatus("That is an invitation code, not a SALUTE member access code.");
+      } else if (state) {
+        memberCodeStatus("That member access code is not recognized. Please check it, or ask for it below.");
+      } else {
+        memberCodeStatus("Your code cannot be checked just now. Please try again shortly, or write to ssuite@salute.community.");
+      }
+    } catch {
+      memberCodeStatus("Your code cannot be checked just now. Please try again shortly, or write to ssuite@salute.community.");
+    }
+    applyPartnerDisplay();
+  }
+
+  /* The agreement speaks for whoever it covers.
+   *
+   * One person buying one seat accepts for herself, and a sentence about
+   * guests she does not have is noise she is being asked to agree to. The
+   * clause appears only when the registration actually includes someone else.
+   */
+  function syncAgreementText() {
+    const clause = byId("agree-guests");
+    if (!clause) return;
+    const quantity = byId("ticket-quantity");
+    const chosen = Number(quantity && quantity.value);
+    const cards = document.querySelectorAll("#guest-fields .guest-card").length;
+    const seats = Number.isFinite(chosen) && chosen > 0 ? chosen : (cards || 1);
+    clause.hidden = seats < 2;
+  }
+  document.addEventListener("change", (event) => {
+    const target = event.target;
+    if (target && target.id === "ticket-quantity") syncAgreementText();
+  });
+  document.addEventListener("DOMContentLoaded", syncAgreementText);
+
   function createMemberFields() {
     const selection = document.querySelector(".selection");
     if (!selection || byId("member-verification")) return;
@@ -75,8 +148,22 @@
     // server checks the purchaser email against the member list first, so a
     // member registering under her own address still passes with this blank --
     // and anyone who cannot find their code can ask for it on the same line.
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Enter your member access code"></label><p class="member-note">${memberCodeRequestOpen() ? `Can\u2019t find your code? <button type="button" class="reveal-link" data-request-member-code>Request your code be emailed to you</button>.` : `Can\u2019t find your code? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.`}</p>`;
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Enter your member access code"></label><p class="live-status" id="member-code-status" role="status" aria-live="polite" hidden></p><p class="member-note">${memberCodeRequestOpen() ? `Can\u2019t find your code? <button type="button" class="reveal-link" data-request-member-code>Request your code be emailed to you</button>` : `Can\u2019t find your code? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.`}</p>`;
     selection.insertAdjacentElement("afterend", section);
+    const codeInput = byId("member-code");
+    if (codeInput) {
+      // Editing the code withdraws the proof at once, so the price on screen
+      // can never outlive the code that justified it.
+      codeInput.addEventListener("input", () => {
+        if (memberCodeVerified !== null && normalizeCode(codeInput.value) !== memberCodeVerified) {
+          memberCodeVerified = null;
+          memberCodeStatus("");
+          applyPartnerDisplay();
+        }
+      });
+      codeInput.addEventListener("change", verifyMemberCode);
+      codeInput.addEventListener("blur", verifyMemberCode);
+    }
   }
   function updateMemberFields(code) {
     createMemberFields();
@@ -170,16 +257,21 @@
    * the server against the member list, exactly as it is everywhere else.
    */
   let memberOnInvitation = false;
+  // The code the server has confirmed is the SALUTE member access code. A tick
+  // states a claim; only this proves it, and the member rate is neither shown
+  // nor charged until it is set.
+  let memberCodeVerified = null;
   function memberRateCents() {
     const rates = window.SSuiteRates;
     const cents = rates && typeof rates === "object" ? Number(rates.salute_member) : NaN;
     return Number.isFinite(cents) && cents > 0 ? cents : null;
   }
-  function memberInviteActive() { return memberOnInvitation && partnerActive() && memberRateCents() !== null; }
+  function memberInviteActive() { return memberOnInvitation && memberCodeVerified !== null && partnerActive() && memberRateCents() !== null; }
   function setMemberOnInvitation(on) {
     // Without a published member rate there is no figure to show and no total to
     // compute, so the offer is simply not made rather than made and mispriced.
     memberOnInvitation = !!on && memberRateCents() !== null;
+    if (!memberOnInvitation) { memberCodeVerified = null; memberCodeStatus(""); }
     createMemberFields();
     const section = byId("member-verification");
     if (section) {
@@ -428,6 +520,7 @@
       window.renderGuests();
     }
     applyCodedTotal();
+    syncAgreementText();
     const seats = Number.isInteger(partnerRate.seatsRemaining)
       ? ` ${partnerRate.seatsRemaining} ${partnerRate.seatsRemaining === 1 ? "seat remains" : "seats remain"} on this code.`
       : "";
@@ -446,6 +539,8 @@
     // gone there is nothing to attach it to, and leaving it set would price a
     // seat the server would refuse.
     memberOnInvitation = false;
+    memberCodeVerified = null;
+    memberCodeStatus("");
     const memberSection = byId("member-verification");
     if (memberSection && ticketCode() !== "salute_member") {
       memberSection.hidden = true;
@@ -523,6 +618,10 @@
       }
       if (state.result === "unavailable") {
         clearPartnerRate("This rate cannot be applied right now. Please write to ssuite@salute.community.");
+        return;
+      }
+      if (state.result === "member_code") {
+        clearPartnerRate("That is your SALUTE member access code, not an invitation code. Choose the SALUTE Member ticket instead.");
         return;
       }
       clearPartnerRate("That code is not recognized. Please check it, or write to ssuite@salute.community. If it is your SALUTE member code, choose the SALUTE Member ticket instead.");

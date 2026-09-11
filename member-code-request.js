@@ -120,11 +120,6 @@
       status("Please enter a valid email address.", "error");
       return;
     }
-    const membership = read(form, "membership_email").toLowerCase();
-    if (membership && !emailPattern.test(membership)) {
-      status("Check the membership email address, or leave it blank if your membership is under the address above.", "error");
-      return;
-    }
     const button = byId("member-code-submit-button");
     if (button) button.disabled = true;
     status("Sending…", "working");
@@ -133,7 +128,6 @@
         first_name: read(form, "first_name"),
         last_name: read(form, "last_name"),
         email: address,
-        membership_email: membership || undefined,
         turnstile_token: await token(),
       };
       const response = await fetch(`${apiBase()}/functions/v1/member-code-request`, {
