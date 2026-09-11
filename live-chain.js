@@ -78,7 +78,11 @@
    */
   async function verifyMemberCode() {
     const input = byId("member-code");
-    if (!input || !memberOnInvitation) return;
+    // On an invitation page the tick is the claim and this is its proof. On the
+    // main site the member tile is the claim -- but the code still has to be the
+    // real one, so it is checked there too. Without this, a mistyped or stale
+    // code from a shared link said nothing at all and failed at checkout.
+    if (!input || !(memberOnInvitation || ticketCode() === "salute_member")) return;
     const code = normalizeCode(input.value);
     if (code && code === memberCodeVerified) return;
     memberCodeVerified = null;
@@ -98,7 +102,10 @@
       const state = payload && typeof payload === "object" ? payload.access_code : null;
       if (state && state.result === "member_code") {
         memberCodeVerified = code;
-        memberCodeStatus("");
+        // An invitation page answers in the price line, which moves in the same
+        // breath. The main site's tile already reads the member rate, so nothing
+        // there would otherwise acknowledge the code at all.
+        memberCodeStatus(memberOnInvitation ? "" : "Your member access code is recognized.");
       } else if (state && state.result === "rate_limited") {
         memberCodeStatus("Too many code checks from this connection. Please wait a few minutes and try again.");
       } else if (state && state.result === "ok") {
@@ -204,6 +211,10 @@
   };
   let partnerRate = null;
   let linkedPartnerCode = "";
+  // A member access code carried in the address bar, so a link handed to SALUTE
+  // members fills it in for them. It is a convenience, never an entitlement:
+  // checkout re-checks the code against the member list before taking payment.
+  let memberLinkCode = "";
 
   /* A table of ten, bought from a personal invitation.
    *
@@ -980,6 +991,7 @@
     // A partner or circle invitation link carries the code. Remember it for the
     // moment the drawer opens; nothing is checked or shown until then.
     linkedPartnerCode = normalizeCode(params.get("code")).slice(0, 64);
+    memberLinkCode = normalizeCode(params.get("member")).slice(0, 64);
     if (linkedPartnerCode) {
       // Someone who followed an invitation link has already been invited. Meeting
       // them with "Enter your invitation code" reads as a refusal of the thing
@@ -1001,6 +1013,21 @@
     if (params.get("table") === "1") {
       const table = document.querySelector('.choose[data-ticket-code="full_table"]');
       if (table && !table.disabled) table.click();
+    }
+    // A member following a member link: open the member ticket, fill the code in
+    // and check it, so her rate is settled before she types a single field. The
+    // link proves nothing on its own -- the server checks the code again, and
+    // checks it once more before any payment is taken.
+    if (memberLinkCode && !params.get("checkout")) {
+      const memberTile = document.querySelector('.choose[data-ticket-code="salute_member"]');
+      if (memberTile && !memberTile.disabled) {
+        memberTile.click();
+        const memberInput = byId("member-code");
+        if (memberInput && !normalizeCode(memberInput.value)) {
+          memberInput.value = memberLinkCode;
+          verifyMemberCode().catch(() => {});
+        }
+      }
     }
     // The drawer's own total is computed from the tile price. When a code
     // carries a different rate, that total is wrong the instant the quantity
