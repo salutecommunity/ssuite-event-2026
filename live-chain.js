@@ -467,7 +467,7 @@
     const guestsHere = chosen - 1;
     partnerStatus(statusMember === null
       ? `${who} applied — ${money(partnerRate.amountCents)} per seat, ${covers}.${seats}`
-      : `${who} applied with the SALUTE member rate — your seat at ${money(statusMember)}${guestsHere > 0 ? `, ${guestsHere === 1 ? "one guest" : `${guestsHere} guests`} at ${money(partnerRate.amountCents)} each` : ""}. Your membership is checked before any payment is taken.${seats}`);
+      : `${who} applied with the SALUTE member rate — your seat at ${money(statusMember)}${guestsHere > 0 ? `, ${guestsHere === 1 ? `one guest at ${money(partnerRate.amountCents)}` : `${guestsHere} guests at ${money(partnerRate.amountCents)} each`}` : ""}.${seats}`);
     syncGateState();
   }
   function clearPartnerRate(message) {
