@@ -41,28 +41,39 @@
 
   /* A table of ten, from this invitation.
    *
-   * An invitation covers four seats. Beyond that the answer is a table, which
-   * is sold on the main site at its own price -- so the line hands the reader
-   * straight into that checkout instead of an email address that answers in
-   * the morning. The host rides across in session storage: same origin, same
-   * tab, so the private code never reaches the address bar, browser history
-   * or a referrer header. It buys nothing and discounts nothing; it records
-   * who brought the party. If storage is refused the table is still bought,
-   * uncredited, which is the honest failure.
+   * An invitation covers four seats. Beyond that the answer is a table -- its
+   * own tier, at its own price, with its own rules. That used to be a link to
+   * the event site, which answered a personal invitation by throwing the
+   * reader onto a general marketing page headed "Join the room": the host's
+   * name, the invitation and the whole reason they were there vanished at the
+   * click. The table checkout is opened here instead, on the invitation, in
+   * the same drawer that accepts it.
+   *
+   * The address stays on the control as a no-JavaScript fallback and is never
+   * followed while this file is running.
    */
+  const tableChoose = document.querySelector('.choose[data-ticket-code="full_table"]');
+  const tableOptions = document.querySelector(".table-options");
+  // "invitation" (seats at the host's rate) or "table" (ten seats, one tier).
+  let mode = "invitation";
+  const activeChoose = () => (mode === "table" && tableChoose ? tableChoose : choose);
+
   function syncTableLink() {
     const link = document.getElementById("table-invitation");
     if (!link || link.dataset.wired === "true") return;
     link.dataset.wired = "true";
-    link.addEventListener("click", () => {
-      // Read at the moment of the click: the staff preview switches host in
-      // place, and a value captured at load would credit the wrong one.
-      const code = invitationCode();
-      const host = hostName();
-      if (!code || !host) return;
-      try {
-        sessionStorage.setItem("ssuite.table.invitation", JSON.stringify({ code, host, at: Date.now() }));
-      } catch (error) { /* storage refused: the table is still buyable, just uncredited */ }
+    link.addEventListener("click", (event) => {
+      if (!tableChoose || !tableOptions) return;       // fall through to the address
+      // A tier that is not open for sale must not be opened as though it were.
+      // The shared chain settles that on this same control, so the reader is
+      // told nothing this page cannot honour.
+      if (tableChoose.disabled) {
+        event.preventDefault();
+        notify("Tables are not available for purchase right now.");
+        return;
+      }
+      event.preventDefault();
+      openTable();
     });
   }
   syncTableLink();
@@ -99,9 +110,10 @@
    */
   window.updateTotal = function updateTotal() {
     const total = document.getElementById("ticket-total");
-    const unit = Number(choose.dataset.price);
+    const unit = Number(activeChoose().dataset.price);
     if (!total || !Number.isFinite(unit)) return;
-    total.textContent = usd(unit * seatsChosen());
+    // A table is one price for ten seats, not a price per head.
+    total.textContent = usd(mode === "table" ? unit : unit * seatsChosen());
   };
 
   function bindConditionalFields() {
@@ -118,9 +130,14 @@
   // Called by live-chain.js as well, whenever a verified invitation changes how
   // many people this order covers.
   window.renderGuests = function renderGuests() {
-    const count = seatsChosen();
+    // A table takes the host's details only. The other nine seats are filled in
+    // afterwards, by her, on the private table page.
+    const count = mode === "table" ? 1 : seatsChosen();
     guestFields.innerHTML = Array.from({ length: count }, (_, i) => window.ssuiteGuestCard(i, { isMember: false })).join("");
     bindConditionalFields();
+    if (tableOptions) tableOptions.hidden = mode !== "table";
+    const live = window.SSuiteLive;
+    if (live && typeof live.syncAgreementText === "function") live.syncAgreementText();
   };
 
   /* The code entry, removed from view.
@@ -224,16 +241,7 @@
   }
   document.addEventListener("ssuite:rates", mountMemberOption);
 
-  function openDrawer() {
-    const name = document.getElementById("ticket-name");
-    if (name) name.textContent = String(choose.dataset.ticket || "Community Ticket");
-    const note = document.getElementById("selection-note");
-    if (note && !(window.SSuiteLive && window.SSuiteLive.partnerState())) note.textContent = "Your invitation";
-    // Seats are not offered until the invitation says how many it covers.
-    const wrap = qty.closest(".quantity-wrap");
-    if (wrap && !(window.SSuiteLive && window.SSuiteLive.partnerState())) wrap.hidden = true;
-    if (!guestFields.children.length) window.renderGuests();
-    window.updateTotal();
+  function showDrawer() {
     backdrop.hidden = false;
     drawer.setAttribute("aria-hidden", "false");
     drawer.scrollTop = 0;
@@ -241,6 +249,65 @@
       const first = guestFields.querySelector("input");
       if (first) first.focus();
     }, 320);
+  }
+
+  function openDrawer() {
+    const returning = mode !== "invitation";
+    mode = "invitation";
+    if (tableOptions) tableOptions.hidden = true;
+    const name = document.getElementById("ticket-name");
+    if (name) name.textContent = String(choose.dataset.ticket || "Community Ticket");
+    const note = document.getElementById("selection-note");
+    if (note && !(window.SSuiteLive && window.SSuiteLive.partnerState())) note.textContent = "Your invitation";
+    // Seats are not offered until the invitation says how many it covers.
+    const wrap = qty.closest(".quantity-wrap");
+    if (wrap && !(window.SSuiteLive && window.SSuiteLive.partnerState())) wrap.hidden = true;
+    if (returning || !guestFields.children.length) window.renderGuests();
+    window.updateTotal();
+    showDrawer();
+  }
+
+  /* The table checkout, opened on the invitation.
+   *
+   * Everything that decides anything is the shared chain's, on the shared
+   * control: the tier the order is billed on, the ten-seat rules, the price
+   * from the database and the October rollover. This only makes the drawer
+   * describe a table rather than a set of seats -- and makes sure nothing from
+   * the invitation path follows it across.
+   */
+  function openTable() {
+    if (!tableChoose || !tableOptions) return;
+    mode = "table";
+    const live = window.SSuiteLive;
+    // The member rate prices one seat at a member price. A table is one price
+    // for ten, so the claim has nothing to attach to and is withdrawn here
+    // rather than carried into a tier that would refuse it.
+    const toggle = document.getElementById("member-invite-toggle");
+    if (toggle) toggle.checked = false;
+    if (live && typeof live.setMemberOnInvitation === "function") live.setMemberOnInvitation(false);
+    const memberBox = document.getElementById("member-invite");
+    if (memberBox) memberBox.hidden = true;
+    // Who this table is credited to. Set before the shared handler runs, because
+    // that is what writes the line saying so. It changes no price.
+    if (live && typeof live.setTableInvitation === "function") {
+      live.setTableInvitation({
+        code: invitationCode(), host: hostName(),
+        note: "Your table is recorded to " + hostName() + "’s invitation. The price is unchanged.",
+      });
+    }
+    // Ten seats, fixed. The selector is not offered and must not leave a stale
+    // answer behind it for anything else to read.
+    const wrap = qty.closest(".quantity-wrap");
+    if (wrap) wrap.hidden = true;
+    qty.value = "1";
+    tableChoose.click();
+    const name = document.getElementById("ticket-name");
+    if (name) name.textContent = String(tableChoose.dataset.ticket || "Table for ten");
+    const note = document.getElementById("selection-note");
+    if (note) note.textContent = "Full table registration";
+    window.renderGuests();
+    window.updateTotal();
+    showDrawer();
   }
 
   function closeDrawer() {

@@ -124,7 +124,13 @@
     const clause = byId("agree-guests");
     if (!clause) return;
     const quantity = byId("ticket-quantity");
-    const chosen = Number(quantity && quantity.value);
+    // A selector that is not on screen is not an answer. A table and a member
+    // ticket both hide it, and a value left behind by an earlier choice would
+    // put a sentence about guests in front of somebody registering only
+    // herself. When it is hidden, the attendee cards are the truth.
+    const wrap = quantity ? quantity.closest(".quantity-wrap") : null;
+    const offered = Boolean(quantity) && !(wrap && wrap.hidden);
+    const chosen = offered ? Number(quantity.value) : NaN;
     const cards = document.querySelectorAll("#guest-fields .guest-card").length;
     const seats = Number.isFinite(chosen) && chosen > 0 ? chosen : (cards || 1);
     clause.hidden = seats < 2;
@@ -227,6 +233,10 @@
       return { code, host };
     } catch (error) { return null; }
   }
+  // The sentence that says who the table is credited to. Written by whichever
+  // page set the invitation, because "you came from" is true of a reader who
+  // arrived here from an invitation page and false of one still standing on it.
+  let tableInvitationNote = "";
   function syncTableInvitationNote(code) {
     const selection = document.querySelector(".selection");
     if (!selection) return;
@@ -241,8 +251,26 @@
     }
     note.hidden = !show;
     note.textContent = show
-      ? "You came from " + tableInvitation.host + "’s invitation. It is recorded with your table, and the price is unchanged."
+      ? (tableInvitationNote || "You came from " + tableInvitation.host + "’s invitation. It is recorded with your table, and the price is unchanged.")
       : "";
+  }
+
+  /* Credit a table to a host, from the page the reader is standing on.
+   *
+   * An invitation page now opens the table checkout in place rather than
+   * handing the reader to the event site, so there is no journey for the
+   * session-storage handoff above to survive -- the page simply says who its
+   * host is. It prices nothing and discounts nothing. A missing or unusable
+   * value clears the credit rather than guessing at one, and the table is
+   * still bought.
+   */
+  function setTableInvitation(info) {
+    const code = normalizeCode(info && info.code).slice(0, 64);
+    const host = text(info && info.host).slice(0, 120);
+    if (!code || !host) { tableInvitation = null; tableInvitationNote = ""; return false; }
+    tableInvitation = { code, host };
+    tableInvitationNote = text(info && info.note).slice(0, 300);
+    return true;
   }
 
   /* A SALUTE member accepting a personal invitation.
@@ -1004,6 +1032,7 @@
     checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern,
     applyPartnerCode, partnerState: () => (partnerRate ? { ...partnerRate } : null),
     setMemberOnInvitation, memberInviteActive, memberRateCents,
+    setTableInvitation, syncAgreementText,
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
 })();
