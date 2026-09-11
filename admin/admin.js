@@ -220,6 +220,16 @@ async function verifyCode(event) {
   finally { setBusy(button, false); }
 }
 
+// Sign-out must leave no live attendee record behind in the page.
+function clearWorkspace() {
+  clear($("dashboard-content"));
+  status("");
+  const dialog = $("attendee-dialog");
+  if (dialog.open) dialog.close();
+  clear($("attendee-detail"));
+  activeTab = "overview"; currentPage = 1; lastSearch = "";
+}
+
 function tabMeta(tab) {
   return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
@@ -801,5 +811,5 @@ function renderAttendeeEdit(payload) {
 
 async function showAttendee(id) { status("Loading attendee detail…"); try { const payload = await call({ action: "attendee_detail", attendee_id: id }); renderAttendeeDetail(payload); if (!$("attendee-dialog").open) $("attendee-dialog").showModal(); status(""); } catch (error) { status(error.message || "Attendee detail is unavailable.", "error"); } }
 
-$("password-form").addEventListener("submit", signInWithPassword); $("change-password").addEventListener("click", openPasswordDialog); $("password-change-form").addEventListener("submit", changePassword); $("password-cancel").addEventListener("click", () => $("password-dialog").close()); $("password-dialog").querySelector(".close").addEventListener("click", () => $("password-dialog").close()); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; $("change-password").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
+$("password-form").addEventListener("submit", signInWithPassword); $("change-password").addEventListener("click", openPasswordDialog); $("password-change-form").addEventListener("submit", changePassword); $("password-cancel").addEventListener("click", () => $("password-dialog").close()); $("password-dialog").querySelector(".close").addEventListener("click", () => $("password-dialog").close()); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; clearWorkspace(); $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; $("change-password").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
 initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));
