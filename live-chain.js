@@ -279,6 +279,10 @@
       section.querySelectorAll("input").forEach((input) => { input.disabled = section.hidden; });
     }
     applyPartnerDisplay();
+    // Ticking the box again with a code already in the field re-proves it,
+    // rather than leaving a filled-in code beside the rate it should have
+    // bought and no way to see why.
+    if (memberOnInvitation && memberCodeVerified === null) verifyMemberCode();
     return memberOnInvitation;
   }
 
