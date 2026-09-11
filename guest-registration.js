@@ -57,7 +57,12 @@
     $("invite-lede").textContent = lede;
 
     const date = text(event.display_date), venue = [text(event.venue_name), text(event.city)].filter(Boolean).join(", ");
-    const seat = Number.isInteger(context.seat_number) ? `Seat ${context.seat_number}` : "Assigned by your host";
+    /* A seat bought inside somebody else's order belongs to no table yet, so there is no
+       host to assign it. Say what is true of that seat rather than pointing the guest at
+       a person who has no such role. */
+    const seat = Number.isInteger(context.seat_number)
+      ? `Seat ${context.seat_number}`
+      : (context.seating === "unassigned" && !tableName ? "Assigned closer to the event" : "Assigned by your host");
     if (date || venue) {
       $("meta-date").textContent = date || "To be confirmed";
       $("meta-venue").textContent = venue || "To be confirmed";
