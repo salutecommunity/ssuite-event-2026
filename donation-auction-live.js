@@ -46,7 +46,7 @@
     id = widgets.get(slotId);
     if (id !== undefined) return id;
     id = api.render(slot, {
-      sitekey: text(cfg.turnstileSiteKey), action: text(action), appearance: "interaction-only",
+      sitekey: text(cfg.turnstileSiteKey), action: text(action),
       "error-callback": () => status(slotStatusId(slotId), "The security check failed. Please retry.", "error"),
       "expired-callback": () => status(slotStatusId(slotId), "The security check expired. Please retry.", "error"),
     });

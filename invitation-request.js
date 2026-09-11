@@ -75,7 +75,6 @@
     if (widgetId !== undefined) return widgetId;
     widgetId = api.render(slot, {
       sitekey: text(cfg.turnstileSiteKey),
-      appearance: "interaction-only",
       action: text(invitationConfig().turnstileAction),
       "error-callback": () => status("The security check failed. Please retry.", "error"),
       "expired-callback": () => status("The security check expired. Please retry.", "error"),

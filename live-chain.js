@@ -663,7 +663,6 @@
     if (turnstileWidget === null) {
       turnstileWidget = api.render(container, {
         sitekey: text(cfg.turnstileSiteKey),
-        appearance: "interaction-only",
         action: "ssuite_checkout",
         // Clear a stale "complete the check" notice as soon as it is actually complete.
         "callback": () => { const el = byId("live-checkout-status"); if (el && /security check/i.test(el.textContent)) setStatus("", ""); },
