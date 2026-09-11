@@ -22,7 +22,7 @@
   function reveal(el) { const box = el.getBoundingClientRect(); if (box.top < 0 || box.bottom > window.innerHeight) el.scrollIntoView({ block: "center", behavior: "smooth" }); }
   function status(message, type = "") { const el = $("status"); el.textContent = message; el.className = `notice ${type}`; el.hidden = !message; if (message) reveal(el); }
 
-  function agreement() { const p = policy(), slot = $("policy-agreement"); if (!p) return false; const label = document.createElement("label"), check = document.createElement("input"), span = document.createElement("span"); const documents = [["Event Terms & Conditions", "./event-terms.html"], ["Event Privacy Notice", "./event-privacy.html"], ["Media, Photo & Video Release", "./media-release.html"]]; label.className = "check"; check.type = "checkbox"; check.name = "combined_agreement"; check.required = true; span.append("I agree to the "); for (const [name, href] of documents) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = name; span.append(a, document.createTextNode(name === "Media, Photo & Video Release" ? "." : ", ")); } label.append(check, span); slot.replaceChildren(label); return true; }
+  function agreement() { const p = policy(), slot = $("policy-agreement"); if (!p) return false; const label = document.createElement("label"), check = document.createElement("input"), span = document.createElement("span"); const documents = [["Event Terms & Conditions", "./event-terms.html"], ["Event Privacy Notice", "./event-privacy.html"], ["Media, Photo & Video Release", "./media-release.html"]]; label.className = "check"; check.type = "checkbox"; check.name = "combined_agreement"; check.required = true; span.append("I agree to the "); for (const [name, href] of documents) { const a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer"; a.textContent = name; span.append(a, document.createTextNode(name === "Media, Photo & Video Release" ? ", and to event texts to the mobile number I give here. Message and data rates may apply; reply STOP to stop." : ", ")); } label.append(check, span); slot.replaceChildren(label); return true; }
 
   /* Everything about the act of finishing is reported directly above the button that was pressed.
      The page-level notice lives in the first card, well off screen once someone has scrolled down
@@ -136,11 +136,7 @@
       why.textContent = "Your email is where this link was sent, so our team updates it for you. Write to ssuite@salute.community.";
       held.append(shown, why);
       addRow(container, "Email", held);
-      const phoneHeld = document.createElement("div"); phoneHeld.className = "field-control";
-      const phoneNote = document.createElement("small"); phoneNote.className = "row-note";
-      phoneNote.textContent = "We may text you about the event — arrival details, or a change on the night. Message and data rates may apply. Reply STOP at any time to stop messages.";
-      phoneHeld.append(control({ key: "phone", label: "Mobile phone", type: "tel", required: true, max: 100 }, g.phone), phoneNote);
-      addRow(container, "Mobile phone", phoneHeld);
+      addRow(container, "Mobile phone", control({ key: "phone", label: "Mobile phone", type: "tel", required: true, max: 100 }, g.phone));
       addRow(container, "Secondary email", control({ key: "secondary_email", label: "Secondary email", type: "email", max: 254, placeholder: "Optional — assistant or alternate email" }, g.secondary_email));
       addRow(container, "Job title", control({ key: "job_title", label: "Job title", required: true, max: 160 }, g.job_title));
       addRow(container, "Company", control({ key: "company", label: "Company", required: true, max: 160 }, g.company));

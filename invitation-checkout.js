@@ -157,8 +157,63 @@
     const code = invitationCode();
     if (!input || !code) return;
     input.value = code;
-    live.applyPartnerCode().catch(() => {});
+    live.applyPartnerCode().then(mountMemberOption).catch(() => {});
   }
+
+  /* The member rate, offered on an invitation.
+   *
+   * An invitation prices every seat at the Community rate its code carries. A
+   * SALUTE member or alumna who accepts one is still entitled to the member rate
+   * on her own seat, and until now this page gave her no way to say so: her
+   * choice was to overpay, or to abandon the invitation for the main site, which
+   * left her host credited with nothing. One line, ticked by her, applies the
+   * member rate to her own seat and leaves her guests on the invitation rate.
+   *
+   * Nothing here decides whether she is a member. The box states a claim; the
+   * server checks it against the member list and refuses before any payment is
+   * taken if it cannot be matched.
+   */
+  function memberRateCents() {
+    const live = window.SSuiteLive;
+    return live && typeof live.memberRateCents === "function" ? live.memberRateCents() : null;
+  }
+  function mountMemberOption() {
+    const live = window.SSuiteLive;
+    if (!live || typeof live.setMemberOnInvitation !== "function") return;
+    const cents = memberRateCents();
+    let box = document.getElementById("member-invite");
+    // No published member rate, or no verified invitation yet: no offer. An
+    // offer without a figure behind it could only quote a price of its own.
+    if (!cents || !live.partnerState()) { if (box) box.hidden = true; return; }
+    const fields = document.getElementById("member-verification");
+    if (!box) {
+      box = document.createElement("section");
+      box.id = "member-invite";
+      box.className = "member-verification";
+      box.innerHTML = '<label class="check"><input type="checkbox" id="member-invite-toggle"><span>I am a current or former SALUTE member — apply the member rate to my own seat.</span></label><p class="member-note" id="member-invite-note"></p>';
+      // Directly above the membership fields, so ticking the box reveals the
+      // code and alternate-email boxes immediately beneath it.
+      if (fields && fields.parentNode) fields.parentNode.insertBefore(box, fields);
+      else {
+        const selection = document.querySelector(".selection");
+        if (!selection) return;
+        selection.insertAdjacentElement("afterend", box);
+      }
+      document.getElementById("member-invite-toggle").addEventListener("change", (event) => {
+        const applied = live.setMemberOnInvitation(event.currentTarget.checked);
+        if (event.currentTarget.checked && !applied) {
+          event.currentTarget.checked = false;
+          notify("The member rate cannot be applied right now. Please write to ssuite@salute.community.");
+        }
+      });
+    }
+    const note = document.getElementById("member-invite-note");
+    if (note) {
+      note.textContent = "The member rate is " + usd(cents / 100) + " and covers your own seat — anyone you bring is billed at the rate on your invitation. If your membership is under the email you register with, there is nothing else to do. We check it before any payment is taken.";
+    }
+    box.hidden = false;
+  }
+  document.addEventListener("ssuite:rates", mountMemberOption);
 
   function openDrawer() {
     const name = document.getElementById("ticket-name");

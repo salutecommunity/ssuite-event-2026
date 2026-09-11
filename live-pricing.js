@@ -268,11 +268,29 @@
     note.append(link, document.createTextNode(" and we will register you."));
   }
 
+  /* The rates, where another script can read them.
+   *
+   * An invitation page shows one tier, so it has no buy control carrying the
+   * member rate -- and offering a member rate needs the figure. Publishing what
+   * the server already returned keeps that number in one place: no second
+   * lookup, and nothing on the page quoting a price of its own.
+   */
+  function publish(tickets) {
+    const rates = {};
+    tickets.forEach((ticket) => {
+      const cents = Number(ticket.amount_cents);
+      if (typeof ticket.code === "string" && Number.isFinite(cents) && cents > 0) rates[ticket.code] = cents;
+    });
+    window.SSuiteRates = rates;
+    document.dispatchEvent(new CustomEvent("ssuite:rates"));
+  }
+
   function apply(data) {
     if (!data || typeof data !== "object" || !Array.isArray(data.tickets)) return false;
     const tickets = data.tickets.filter(usableTicket);
     if (tickets.length === 0) return false;
     tickets.forEach(applyTicket);
+    publish(tickets);
     applyGuestRate(tickets);
     applyQuotedPrices(tickets);
     applySalesNote(data);

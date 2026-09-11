@@ -112,6 +112,38 @@
   let partnerRate = null;
   let linkedPartnerCode = "";
 
+  /* A SALUTE member accepting a personal invitation.
+   *
+   * An invitation page prices every seat at the Community rate its code carries.
+   * A member or alumna who accepts one is still entitled to the member rate on
+   * her own seat -- and before this, her only way to it was to abandon the
+   * invitation and buy from the main site, which credited her host with nothing.
+   * Ticking the box sets this flag: her seat is billed at the member rate, her
+   * guests stay at the Community rate the invitation carries, and the invitation
+   * still credits the host with the whole party. Membership itself is decided by
+   * the server against the member list, exactly as it is everywhere else.
+   */
+  let memberOnInvitation = false;
+  function memberRateCents() {
+    const rates = window.SSuiteRates;
+    const cents = rates && typeof rates === "object" ? Number(rates.salute_member) : NaN;
+    return Number.isFinite(cents) && cents > 0 ? cents : null;
+  }
+  function memberInviteActive() { return memberOnInvitation && partnerActive() && memberRateCents() !== null; }
+  function setMemberOnInvitation(on) {
+    // Without a published member rate there is no figure to show and no total to
+    // compute, so the offer is simply not made rather than made and mispriced.
+    memberOnInvitation = !!on && memberRateCents() !== null;
+    createMemberFields();
+    const section = byId("member-verification");
+    if (section) {
+      section.hidden = !memberOnInvitation;
+      section.querySelectorAll("input").forEach((input) => { input.disabled = section.hidden; });
+    }
+    applyPartnerDisplay();
+    return memberOnInvitation;
+  }
+
   function normalizeCode(value) { return String(value ?? "").replace(/[^A-Za-z0-9]/g, "").toUpperCase(); }
   function partnerActive() { return partnerRate !== null && ticketCode() === PARTNER_HOST_TIER; }
   function money(cents) {
@@ -306,7 +338,14 @@
   function applyCodedTotal() {
     if (!partnerRate) return;
     const total = byId("ticket-total");
-    if (total) total.textContent = money(partnerRate.amountCents * codeSeatsChosen());
+    if (!total) return;
+    const seats = codeSeatsChosen();
+    // One member seat, the rest at the invitation rate. The member rate covers
+    // the member only; a guest is never billed at it.
+    const memberCents = memberInviteActive() ? memberRateCents() : null;
+    total.textContent = memberCents === null
+      ? money(partnerRate.amountCents * seats)
+      : money(memberCents + partnerRate.amountCents * (seats - 1));
   }
   function applyPartnerDisplay() {
     if (!partnerRate) return;
@@ -337,7 +376,10 @@
     const allowance = byId("seat-allowance");
     if (allowance) {
       if (limit > 1) {
-        allowance.textContent = `Your invitation covers ${guestPhrase(limit)} — ${numberWord(limit)} seats at ${money(partnerRate.amountCents)} each, on one registration and one payment. Your guests do not need an invitation of their own.`;
+        const allowanceMember = memberInviteActive() ? memberRateCents() : null;
+        allowance.textContent = allowanceMember === null
+          ? `Your invitation covers ${guestPhrase(limit)} — ${numberWord(limit)} seats at ${money(partnerRate.amountCents)} each, on one registration and one payment. Your guests do not need an invitation of their own.`
+          : `Your invitation covers ${guestPhrase(limit)}, on one registration and one payment — your own seat at the SALUTE member rate of ${money(allowanceMember)}, and each guest at ${money(partnerRate.amountCents)}. Your guests do not need an invitation of their own.`;
         allowance.hidden = false;
       } else {
         allowance.textContent = "";
@@ -363,11 +405,24 @@
       : "";
     const who = partnerRate.organization ? `${partnerRate.organization} rate` : "Invitation";
     const covers = chosen === 1 ? "one seat" : `${chosen} seats`;
-    partnerStatus(`${who} applied — ${money(partnerRate.amountCents)} per seat, ${covers}.${seats}`);
+    const statusMember = memberInviteActive() ? memberRateCents() : null;
+    const guestsHere = chosen - 1;
+    partnerStatus(statusMember === null
+      ? `${who} applied — ${money(partnerRate.amountCents)} per seat, ${covers}.${seats}`
+      : `${who} applied with the SALUTE member rate — your seat at ${money(statusMember)}${guestsHere > 0 ? `, ${guestsHere === 1 ? "one guest" : `${guestsHere} guests`} at ${money(partnerRate.amountCents)} each` : ""}. Your membership is checked before any payment is taken.${seats}`);
     syncGateState();
   }
   function clearPartnerRate(message) {
     partnerRate = null;
+    // The member rate here rides on a verified invitation. With the invitation
+    // gone there is nothing to attach it to, and leaving it set would price a
+    // seat the server would refuse.
+    memberOnInvitation = false;
+    const memberSection = byId("member-verification");
+    if (memberSection && ticketCode() !== "salute_member") {
+      memberSection.hidden = true;
+      memberSection.querySelectorAll("input").forEach((input) => { input.disabled = true; });
+    }
     const drawer = document.querySelector(".checkout-drawer");
     if (drawer) delete drawer.dataset.partnerCode;
     // The allowance describes a verified invitation. With no invitation applied
@@ -527,12 +582,18 @@
     // per use, no guest seats: the cap counts uses, so a code that could carry
     // extra seats would seat more people than the organization was given.
     const partner = partnerActive() ? partnerRate : null;
+    // A member accepting a personal invitation: priced on the member tier for her
+    // own seat, Community for her guests, with the invitation carried alongside
+    // so the host is still credited for the party she brought.
+    const memberInvite = memberInviteActive();
     const table = code === "full_table";
     const member = code === "salute_member";
     // The member rate covers exactly one seat. Any guests a member brings are
     // billed at the open Community rate on the same payment.
     const guestSelect = byId("member-guest-quantity");
-    const guestSeats = member && guestSelect && !guestSelect.disabled ? Number(guestSelect.value || 0) : 0;
+    const guestSeats = memberInvite
+      ? codeSeatsChosen() - 1
+      : (member && guestSelect && !guestSelect.disabled ? Number(guestSelect.value || 0) : 0);
     if (!Number.isInteger(guestSeats) || guestSeats < 0 || guestSeats > MEMBER_GUEST_MAX) throw new Error("Choose a valid number of guest seats.");
     // A gated tier cannot be bought without a verified code. The server refuses
     // it either way; stopping here means nobody fills in a form to be told no.
@@ -555,13 +616,14 @@
       throw new Error("Check the membership email address, or leave it blank if your membership is under the email above.");
     }
     return {
-      ticket_type_code: partner ? partner.tier : code,
+      ticket_type_code: memberInvite ? "salute_member" : (partner ? partner.tier : code),
       order_type: table ? "table" : "ticket",
-      quantity: table || member ? 1 : count,
-      guest_quantity: partner ? 0 : guestSeats,
+      quantity: table || member || memberInvite ? 1 : count,
+      guest_quantity: memberInvite ? guestSeats : (partner ? 0 : guestSeats),
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
-      member_code: partner ? partner.code : (code === "salute_member" && memberCode ? memberCode : undefined),
-      membership_email: code === "salute_member" && membershipEmail ? membershipEmail : undefined,
+      member_code: memberInvite ? (memberCode || undefined) : (partner ? partner.code : (code === "salute_member" && memberCode ? memberCode : undefined)),
+      attribution_code: memberInvite ? partner.code : undefined,
+      membership_email: (code === "salute_member" || memberInvite) && membershipEmail ? membershipEmail : undefined,
       // Self-declared membership stays off: it would price a seat at $275 on an
       // unchecked claim and leave staff to unpick it after the money moved.
       member_attestation: false,
@@ -798,6 +860,7 @@
   window.SSuiteLive = {
     checkoutEnabled: () => liveReadiness().ok, submitCheckout, startForTicket, apiBase, policy, tokenPattern,
     applyPartnerCode, partnerState: () => (partnerRate ? { ...partnerRate } : null),
+    setMemberOnInvitation, memberInviteActive, memberRateCents,
   };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true }); else init();
 })();
