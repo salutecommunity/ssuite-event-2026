@@ -47,6 +47,9 @@
 .member-guest-add .member-guest-note{display:block;margin:0;padding:0;background:none;border-left:0;font-size:13px;line-height:1.55;color:#555}
 
 .member-verification>p.member-note{font-size:11px;line-height:1.45;color:#777;margin:14px 0 0}
+/* The request link is its own sentence and sits on its own line, so no amount
+   of wrapping can run it into the question above it. */
+.member-note .reveal-link{display:block;margin-top:7px}
 
 /* Shown in place of a buy control while a tier is withheld from public sale. */
 .sale-window-note{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:#4a4a4a}
