@@ -76,7 +76,7 @@
     // members think a code was required. The server is the authority either
     // way and refuses before any payment is taken, so a wrong guess costs
     // nothing.
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p id="member-lede">We check your membership against the email you register with, before any payment is taken. If it is under that address, there is nothing else to do.</p><p class="member-note" id="member-fallback-wrap"><button type="button" class="reveal-link" id="member-fallback-reveal" aria-expanded="false" aria-controls="member-fallback">Membership under a different email, or have a member code?</button></p><div id="member-fallback" hidden><label class="field"><span>MEMBERSHIP EMAIL</span><input id="membership-email" type="email" maxlength="320" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="The address your membership is under"></label><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="If you have it to hand"></label><p class="member-note">Either one is enough. ${memberCodeRequestOpen() ? `<button type="button" class="reveal-link" data-request-member-code>Have your code emailed to you</button>.` : ""}</p></div>`;    // The two fields are a fallback, not a requirement: the member list is
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p id="member-lede">We check your membership against the email you register with, before any payment is taken. If it is under that address, there is nothing else to do.</p><p class="member-note" id="member-fallback-wrap"><button type="button" class="reveal-link" id="member-fallback-reveal" aria-expanded="false" aria-controls="member-fallback">Have a member access code?</button></p><div id="member-fallback" hidden><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Use this if your membership is under another email"></label><p class="member-note">${memberCodeRequestOpen() ? `Don\u2019t have it? <button type="button" class="reveal-link" data-request-member-code>Have your code emailed to you</button>.` : `Don\u2019t have it? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.`}</p></div>`;    // The two fields are a fallback, not a requirement: the member list is
     // checked by email first, so most members need neither. Keeping them
     // collapsed stops an optional field from reading as a demand.
     const reveal = section.querySelector("#member-fallback-reveal");
@@ -85,7 +85,7 @@
       fields.hidden = false;
       reveal.setAttribute("aria-expanded", "true");
       section.querySelector("#member-fallback-wrap").hidden = true;
-      const first = section.querySelector("#membership-email");
+      const first = section.querySelector("#member-code");
       if (first) first.focus();
     });
     selection.insertAdjacentElement("afterend", section);
@@ -669,10 +669,10 @@
     // No client-side wall here on purpose. The member list is the primary proof
     // and the browser cannot see it, so demanding a code in front of the server
     // turned every member without one away at the door.
-    const membershipEmail = String(byId("membership-email")?.value || "").trim().toLowerCase();
-    if (code === "salute_member" && membershipEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(membershipEmail)) {
-      throw new Error("Check the membership email address, or leave it blank if your membership is under the email above.");
-    }
+    // Membership is proven two ways only: the email this order is registered
+    // under, which the server checks against the member list, or the member
+    // access code. A second address to type was one field too many -- it asked
+    // people to prove something the server can already look up.
     return {
       ticket_type_code: memberInvite ? "salute_member" : (partner ? partner.tier : code),
       order_type: table ? "table" : "ticket",
@@ -683,7 +683,7 @@
       // A member on an invitation credits her host; a table bought from an
       // invitation credits the same way. Neither changes what is charged.
       attribution_code: memberInvite ? partner.code : (table && tableInvitation ? tableInvitation.code : undefined),
-      membership_email: (code === "salute_member" || memberInvite) && membershipEmail ? membershipEmail : undefined,
+
       // Self-declared membership stays off: it would price a seat at $275 on an
       // unchecked claim and leave staff to unpick it after the money moved.
       member_attestation: false,
@@ -912,7 +912,7 @@
       });
     }
     const result = params.get("checkout");
-    if (result === "cancel") { forgetPendingCheckout(); setStatus("Checkout was cancelled. No payment was completed.", "error"); }
+    if (result === "cancel") { forgetPendingCheckout(); setStatus("Checkout was canceled. No payment was completed.", "error"); }
     if (result === "success") {
       // Hand the buyer to the receipt page, which reports only what the
       // authoritative order record proves. Never confirm anything here.

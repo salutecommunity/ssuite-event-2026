@@ -148,7 +148,7 @@ async function signInWithPassword(event) {
   } catch (error) {
     const message = String(error?.message ?? "");
     if (/invalid login credentials/i.test(message)) {
-      authStatus("That password was not recognised. Check it and try again, or use an emailed code below.", "error");
+      authStatus("That password was not recognized. Check it and try again, or use an emailed code below.", "error");
     } else if (Number(error?.status) === 429 || /rate limit|too many/i.test(message)) {
       authStatus("Too many sign-in attempts. Wait a few minutes and try again.", "error");
     } else if (/failed to fetch|networkerror|load failed/i.test(message)) {
@@ -661,7 +661,7 @@ function tableCreateForm() {
   openOperation("Add ten-seat table", "Manual tables reserve ten seats once. A paid table only links an existing same-event paid table order; it never creates or changes an order or Stripe ID.", () => form);
 }
 function tableEditForm(table) {
-  const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid"); grid.append(formField("Table number", "table_number", table.table_number, { required: true, type: "number", max: 4 }), formField("Table name", "name", table.name, { required: true, max: 300 }), selectField("Status", "status", ["active","locked","cancelled"].map((value) => ({ value, label: value })), table.status)); form.append(grid);
+  const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid"); grid.append(formField("Table number", "table_number", table.table_number, { required: true, type: "number", max: 4 }), formField("Table name", "name", table.name, { required: true, max: 300 }), selectField("Status", "status", [{ value: "active", label: "Active" }, { value: "locked", label: "Locked" }, { value: "cancelled", label: "Canceled" }], table.status)); form.append(grid);
   operationActions(form, "Save table", async (data) => { await call({ action: "admin_table_update", table_id: table.id, record: Object.fromEntries(data.entries()) }); status("Table updated. Nothing was sent.", "success"); }); openOperation("Edit table", "Cancelling is blocked when guests, active invitations, or a manual reserved-capacity claim exist.", () => form);
 }
 function seatAssignForm(table, seat) {
