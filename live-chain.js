@@ -69,25 +69,13 @@
     section.id = "member-verification";
     section.className = "member-verification";
     section.hidden = true;
-    // The member list is checked by email first, so a member registering under
-    // her own address needs nothing here at all. The alternate email and the
-    // code are fallbacks for the few she cannot be matched on, and they stay
-    // collapsed: two optional fields sitting open read as a demand and made
-    // members think a code was required. The server is the authority either
-    // way and refuses before any payment is taken, so a wrong guess costs
-    // nothing.
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p id="member-lede">We check your membership against the email you register with, before any payment is taken. If it is under that address, there is nothing else to do.</p><p class="member-note" id="member-fallback-wrap"><button type="button" class="reveal-link" id="member-fallback-reveal" aria-expanded="false" aria-controls="member-fallback">Have a member access code?</button></p><div id="member-fallback" hidden><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Use this if your membership is under another email"></label><p class="member-note">${memberCodeRequestOpen() ? `Don\u2019t have it? <button type="button" class="reveal-link" data-request-member-code>Have your code emailed to you</button>.` : `Don\u2019t have it? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.`}</p></div>`;    // The two fields are a fallback, not a requirement: the member list is
-    // checked by email first, so most members need neither. Keeping them
-    // collapsed stops an optional field from reading as a demand.
-    const reveal = section.querySelector("#member-fallback-reveal");
-    reveal.addEventListener("click", () => {
-      const fields = section.querySelector("#member-fallback");
-      fields.hidden = false;
-      reveal.setAttribute("aria-expanded", "true");
-      section.querySelector("#member-fallback-wrap").hidden = true;
-      const first = section.querySelector("#member-code");
-      if (first) first.focus();
-    });
+    // Claiming the member rate shows the code field in the same movement: the
+    // claim and the thing that proves it belong together, and a code hidden
+    // behind a link is a code nobody finds. Nothing is enforced here -- the
+    // server checks the purchaser email against the member list first, so a
+    // member registering under her own address still passes with this blank --
+    // and anyone who cannot find their code can ask for it on the same line.
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="Enter your member access code"></label><p class="member-note">${memberCodeRequestOpen() ? `Can\u2019t find your code? <button type="button" class="reveal-link" data-request-member-code>Request your code be emailed to you</button>.` : `Can\u2019t find your code? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.`}</p>`;
     selection.insertAdjacentElement("afterend", section);
   }
   function updateMemberFields(code) {
@@ -421,29 +409,11 @@
       if (wrap) wrap.hidden = limit <= 1;
     }
     const chosen = codeSeatsChosen();
-    /* What the invitation actually covers, said once, in words.
-     *
-     * "QUANTITY" over a select is a shop's control: it offers a number without
-     * saying whether the invitation stretches to cover it, and an invited
-     * person reasonably assumes an invitation is for one. So state the
-     * allowance from the verified code itself -- the same number the selector
-     * offers and the server will accept -- and say that guests are included.
-     * Hidden when a code covers a single seat, because then there is nothing
-     * to choose and nothing to explain.
-     */
+    // The drawer used to print a sentence here about what the invitation
+    // covers. The selector above already names the seats and the total already
+    // prices them, so a third telling read as small print.
     const allowance = byId("seat-allowance");
-    if (allowance) {
-      if (limit > 1) {
-        const allowanceMember = memberInviteActive() ? memberRateCents() : null;
-        allowance.textContent = allowanceMember === null
-          ? `Your invitation covers ${guestPhrase(limit)} — ${numberWord(limit)} seats at ${money(partnerRate.amountCents)} each, on one registration and one payment. Your guests do not need an invitation of their own.`
-          : `Your invitation covers ${guestPhrase(limit)}, on one registration and one payment — your own seat at the SALUTE member rate of ${money(allowanceMember)}, and each guest at ${money(partnerRate.amountCents)}. Your guests do not need an invitation of their own.`;
-        allowance.hidden = false;
-      } else {
-        allowance.textContent = "";
-        allowance.hidden = true;
-      }
-    }
+    if (allowance) { allowance.textContent = ""; allowance.hidden = true; }
     const note = byId("selection-note");
     if (note) {
       const seatWord = chosen === 1 ? "one seat" : `${chosen} seats`;
