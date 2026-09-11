@@ -234,7 +234,7 @@
         if (from && to && text(from.value) && !text(to.value)) to.value = text(from.value);
       }
       if (typeof dialog.showModal === "function") dialog.showModal();
-      warm().catch(() => {});
+      loadTurnstile().catch(() => {});
     });
 
     const close = dialog.querySelector(".dialog-close");
@@ -252,8 +252,7 @@
       if (note) {
         note.textContent = "We only ever send the code to an address on the SALUTE member list. If yours is not there yet, someone from S.Suite will check by hand.";
       }
-      form.addEventListener("focusin", () => { warm().catch(() => {}); }, { once: true });
-      form.addEventListener("input", () => { warm().catch(() => {}); }, { once: true });
+      form.addEventListener("focusin", () => { loadTurnstile().catch(() => {}); }, { once: true });
     } else {
       // A live page must not carry a control that cannot do what it says.
       if (button) { button.textContent = "Unavailable"; button.disabled = true; button.setAttribute("aria-disabled", "true"); }

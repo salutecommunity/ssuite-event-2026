@@ -224,7 +224,7 @@
         status("", "");
         restore();
         if (typeof dialog.showModal === "function") dialog.showModal();
-        warm().catch(() => {});
+        loadTurnstile().catch(() => {});
       });
     });
 
@@ -243,8 +243,7 @@
       if (note) {
         note.textContent = "We review every request and reply by email. Requesting an invitation does not reserve a seat and takes no payment.";
       }
-      form.addEventListener("focusin", () => { warm().catch(() => {}); }, { once: true });
-      form.addEventListener("input", () => { warm().catch(() => {}); }, { once: true });
+      form.addEventListener("focusin", () => { loadTurnstile().catch(() => {}); }, { once: true });
     } else {
       // A live page must not carry a control that cannot do what it says.
       if (button) { button.textContent = "Requests are closed"; button.disabled = true; button.setAttribute("aria-disabled", "true"); }
