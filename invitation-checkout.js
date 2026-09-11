@@ -292,7 +292,7 @@
     if (live && typeof live.setTableInvitation === "function") {
       live.setTableInvitation({
         code: invitationCode(), host: hostName(),
-        note: "Your table is recorded to " + hostName() + "’s invitation. The price is unchanged.",
+        note: "We’ve noted your table under " + hostName() + "’s invitation.",
       });
     }
     // Ten seats, fixed. The selector is not offered and must not leave a stale

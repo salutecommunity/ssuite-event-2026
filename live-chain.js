@@ -251,7 +251,7 @@
     }
     note.hidden = !show;
     note.textContent = show
-      ? (tableInvitationNote || "You came from " + tableInvitation.host + "’s invitation. It is recorded with your table, and the price is unchanged.")
+      ? (tableInvitationNote || "We’ve noted your table under " + tableInvitation.host + "’s invitation.")
       : "";
   }
 
