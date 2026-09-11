@@ -69,13 +69,25 @@
     section.id = "member-verification";
     section.className = "member-verification";
     section.hidden = true;
-    // Two ways to prove membership, because most members will not have a code
-    // in front of them. The server checks the purchaser email against the member
-    // list first, so a member on the list needs nothing at all; the code and the
-    // alternate email are the fallbacks for anyone it cannot match. Neither
-    // field is required here: the server is the authority and refuses before any
-    // payment is taken, so a wrong guess costs nothing.
-    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p>The member rate is open to current and former SALUTE members. If your membership is under the email you register with, there is nothing else to do. If it is not, add your member code or the email your membership is under.</p><label class="field"><span>MEMBER ACCESS CODE <span class="field-optional">— optional</span></span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="If you have it to hand"></label><label class="field"><span>MEMBERSHIP EMAIL <span class="field-optional">— optional</span></span><input id="membership-email" type="email" maxlength="320" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="If your membership is under a different address"></label><p class="member-note">Neither to hand? Continue anyway — if we cannot match your membership we will tell you before any payment is taken. ${memberCodeRequestOpen() ? `Or <button type="button" class="reveal-link" data-request-member-code>have your code emailed to you</button>.` : ""}</p>`;
+    // The member list is checked by email first, so a member registering under
+    // her own address needs nothing here at all. The alternate email and the
+    // code are fallbacks for the few she cannot be matched on, and they stay
+    // collapsed: two optional fields sitting open read as a demand and made
+    // members think a code was required. The server is the authority either
+    // way and refuses before any payment is taken, so a wrong guess costs
+    // nothing.
+    section.innerHTML = `<p class="micro">SALUTE MEMBERSHIP</p><p id="member-lede">We check your membership against the email you register with, before any payment is taken. If it is under that address, there is nothing else to do.</p><p class="member-note" id="member-fallback-wrap"><button type="button" class="reveal-link" id="member-fallback-reveal" aria-expanded="false" aria-controls="member-fallback">Membership under a different email, or have a member code?</button></p><div id="member-fallback" hidden><label class="field"><span>MEMBERSHIP EMAIL</span><input id="membership-email" type="email" maxlength="320" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="The address your membership is under"></label><label class="field"><span>MEMBER ACCESS CODE</span><input id="member-code" type="text" maxlength="64" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="If you have it to hand"></label><p class="member-note">Either one is enough. ${memberCodeRequestOpen() ? `<button type="button" class="reveal-link" data-request-member-code>Have your code emailed to you</button>.` : ""}</p></div>`;    // The two fields are a fallback, not a requirement: the member list is
+    // checked by email first, so most members need neither. Keeping them
+    // collapsed stops an optional field from reading as a demand.
+    const reveal = section.querySelector("#member-fallback-reveal");
+    reveal.addEventListener("click", () => {
+      const fields = section.querySelector("#member-fallback");
+      fields.hidden = false;
+      reveal.setAttribute("aria-expanded", "true");
+      section.querySelector("#member-fallback-wrap").hidden = true;
+      const first = section.querySelector("#membership-email");
+      if (first) first.focus();
+    });
     selection.insertAdjacentElement("afterend", section);
   }
   function updateMemberFields(code) {
@@ -111,6 +123,52 @@
   };
   let partnerRate = null;
   let linkedPartnerCode = "";
+
+  /* A table of ten, bought from a personal invitation.
+   *
+   * An invitation covers four seats. A larger party is a table, which is its
+   * own tier at its own price -- so the invitation page sends the reader here
+   * rather than to an email address nobody can answer at midnight. The host
+   * travels in session storage, not the address bar: same origin, same tab,
+   * and the private code never reaches browser history or a referrer header.
+   * It prices nothing. It records who brought the party, exactly as it does on
+   * a member registration. If storage is refused the table is still bought --
+   * only the credit is lost, and the staff notice then names no invitation
+   * rather than guessing at one.
+   */
+  const TABLE_HANDOFF = "ssuite.table.invitation";
+  let tableInvitation = null;
+  function readTableInvitation() {
+    try {
+      const raw = sessionStorage.getItem(TABLE_HANDOFF);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      const code = normalizeCode(parsed && parsed.code).slice(0, 64);
+      const host = text(parsed && parsed.host).slice(0, 120);
+      const at = Number(parsed && parsed.at);
+      // An hour is long enough to finish a checkout and short enough that a
+      // shared machine cannot credit a stranger table to this host tomorrow.
+      if (!code || !host || !Number.isFinite(at) || Date.now() - at > 3600000) return null;
+      return { code, host };
+    } catch (error) { return null; }
+  }
+  function syncTableInvitationNote(code) {
+    const selection = document.querySelector(".selection");
+    if (!selection) return;
+    const show = code === "full_table" && tableInvitation !== null;
+    let note = byId("table-invitation-note");
+    if (!note) {
+      if (!show) return;
+      note = document.createElement("p");
+      note.id = "table-invitation-note";
+      note.className = "member-note";
+      selection.insertAdjacentElement("afterend", note);
+    }
+    note.hidden = !show;
+    note.textContent = show
+      ? "You came from " + tableInvitation.host + "’s invitation. It is recorded with your table, and the price is unchanged."
+      : "";
+  }
 
   /* A SALUTE member accepting a personal invitation.
    *
@@ -622,7 +680,9 @@
       guest_quantity: memberInvite ? guestSeats : (partner ? 0 : guestSeats),
       purchaser: { first_name: purchaser.first_name, last_name: purchaser.last_name, email: purchaser.email, phone: purchaser.phone || undefined },
       member_code: memberInvite ? (memberCode || undefined) : (partner ? partner.code : (code === "salute_member" && memberCode ? memberCode : undefined)),
-      attribution_code: memberInvite ? partner.code : undefined,
+      // A member on an invitation credits her host; a table bought from an
+      // invitation credits the same way. Neither changes what is charged.
+      attribution_code: memberInvite ? partner.code : (table && tableInvitation ? tableInvitation.code : undefined),
       membership_email: (code === "salute_member" || memberInvite) && membershipEmail ? membershipEmail : undefined,
       // Self-declared membership stays off: it would price a seat at $275 on an
       // unchecked claim and leave staff to unpick it after the money moved.
@@ -677,6 +737,7 @@
     if (drawer) drawer.dataset.ticketCode = code;
     updateMemberFields(code);
     updatePartnerFields(code);
+    syncTableInvitationNote(code);
     if (code !== PARTNER_HOST_TIER) {
       // The partner rate lives on the Community path only. Choosing another tier
       // drops it rather than carrying a price into a tier it does not apply to.
@@ -827,10 +888,19 @@
       const invited = document.querySelector(`.choose[data-ticket-code="${PARTNER_HOST_TIER}"]`);
       if (invited) invited.dataset.gatedLabel = INVITED_LABEL;
     }
+    tableInvitation = readTableInvitation();
     applyLiveLabels();
     createMemberFields();
     createPartnerFields();
     document.querySelectorAll(".choose").forEach((button) => button.addEventListener("click", () => startForTicket(button)));
+    // Arrived from an invitation page asking for a table. The reader already
+    // pressed a control that said so, so open that checkout rather than
+    // landing them on the page to find it again. Only ever the table: this
+    // opens a tier that is public, open, and priced the same for everyone.
+    if (params.get("table") === "1") {
+      const table = document.querySelector('.choose[data-ticket-code="full_table"]');
+      if (table && !table.disabled) table.click();
+    }
     // The drawer's own total is computed from the tile price. When a code
     // carries a different rate, that total is wrong the instant the quantity
     // changes, so recompute after the drawer's handler has run. Registered

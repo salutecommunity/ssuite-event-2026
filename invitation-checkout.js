@@ -39,26 +39,35 @@
   const invitationCode = () => String(document.body.dataset.invitationCode || "").trim();
   const hostName = () => String(document.body.dataset.hostName || "").trim();
 
-  /* The group enquiry, addressed by host.
+  /* A table of ten, from this invitation.
    *
-   * An invitation covers up to four seats. Beyond that the answer is a table of
-   * ten, which is not sold from this page -- so the one honest action is to
-   * write to us, and the message should arrive already saying whose invitation
-   * it came from. Built here rather than baked in so the subject cannot drift
-   * from the name in the hero, and the plain address in the sentence still
-   * works for anyone whose browser has no mail client.
+   * An invitation covers four seats. Beyond that the answer is a table, which
+   * is sold on the main site at its own price -- so the line hands the reader
+   * straight into that checkout instead of an email address that answers in
+   * the morning. The host rides across in session storage: same origin, same
+   * tab, so the private code never reaches the address bar, browser history
+   * or a referrer header. It buys nothing and discounts nothing; it records
+   * who brought the party. If storage is refused the table is still bought,
+   * uncredited, which is the honest failure.
    */
-  function syncEnquiry() {
-    const link = document.getElementById("table-enquiry");
-    if (!link) return;
-    const who = hostName();
-    const subject = who ? `A table of ten at S.Suite — invitation from ${who}` : "A table of ten at S.Suite";
-    const body = "I would like to bring a group to S.Suite on Friday, November 20. Please tell me about a table of ten.";
-    link.href = `mailto:ssuite@salute.community?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  function syncTableLink() {
+    const link = document.getElementById("table-invitation");
+    if (!link || link.dataset.wired === "true") return;
+    link.dataset.wired = "true";
+    link.addEventListener("click", () => {
+      // Read at the moment of the click: the staff preview switches host in
+      // place, and a value captured at load would credit the wrong one.
+      const code = invitationCode();
+      const host = hostName();
+      if (!code || !host) return;
+      try {
+        sessionStorage.setItem("ssuite.table.invitation", JSON.stringify({ code, host, at: Date.now() }));
+      } catch (error) { /* storage refused: the table is still buyable, just uncredited */ }
+    });
   }
-  syncEnquiry();
+  syncTableLink();
   // The staff preview changes host without reloading; production never calls this.
-  window.SSuiteInvitation = { refresh: syncEnquiry };
+  window.SSuiteInvitation = { refresh: syncTableLink };
 
   const toast = document.querySelector(".toast");
   let toastTimer = 0;
@@ -209,7 +218,7 @@
     }
     const note = document.getElementById("member-invite-note");
     if (note) {
-      note.textContent = "The member rate is " + usd(cents / 100) + " and covers your own seat — anyone you bring is billed at the rate on your invitation. If your membership is under the email you register with, there is nothing else to do. We check it before any payment is taken.";
+      note.textContent = "Your own seat is billed at " + usd(cents / 100) + ". Anyone you bring stays at the rate on your invitation.";
     }
     box.hidden = false;
   }
