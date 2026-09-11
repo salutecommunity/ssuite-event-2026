@@ -718,7 +718,6 @@
   <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p id="drawer-intro">Secure checkout is unavailable on this page right now. No registration or payment is created.</p></div>
   <form id="registration-form">
     <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">WHO’S COMING<select id="ticket-quantity" aria-label="How many seats, including your own"><option value="1">Just me</option><option value="2">Me and 1 guest</option><option value="3">Me and 2 guests</option><option value="4">Me and 3 guests</option></select></label></div>
-    <p class="seat-allowance" id="seat-allowance" hidden></p>
     <div class="member-guest-add" id="member-guest-note" hidden><label class="quantity-wrap" id="member-guest-wrap">BRINGING GUESTS<select id="member-guest-quantity" aria-label="Guest seats at the Community rate"><option value="0">No guests</option><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option></select></label><p class="member-guest-note" id="member-guest-open-note">The member rate covers one seat, your own. You may add up to three guests at the Community rate of <span id="member-guest-rate">$350</span> each, on this same payment.</p><p class="member-guest-note" id="member-guest-closed" hidden>Guest seats at the Community rate are not available right now.</p></div>
     <div id="guest-fields"></div>
     <section class="table-options" hidden>
@@ -738,11 +737,11 @@
 </aside>
 <div class="toast" role="status" aria-live="polite"></div>
 <script src="/config.js?v=20260910a"></script>
-<script src="/guest-card.js?v=20260911g"></script>
-<script src="/invitation-checkout.js?v=20260911g"></script>
+<script src="/guest-card.js?v=20260911h"></script>
+<script src="/invitation-checkout.js?v=20260911h"></script>
 <dialog id="member-code-dialog"><button class="close dialog-close" aria-label="Close">×</button><p class="eyebrow">MEMBER RATE</p><h2>Send me my member code.</h2><p class="dialog-lede">Current and former SALUTE members attend at the member rate. Tell us who you are and we will send your code.</p><form method="dialog" id="member-code-request-form" novalidate><label>FIRST NAME<input name="first_name" type="text" autocomplete="given-name" maxlength="200" required></label><label>LAST NAME<input name="last_name" type="text" autocomplete="family-name" maxlength="200" required></label><label>EMAIL<input name="email" type="email" autocomplete="email" maxlength="320" required placeholder="you@example.com"></label><label>MEMBERSHIP EMAIL <i>OPTIONAL</i><input name="membership_email" type="email" maxlength="320" placeholder="If your membership is under a different address"></label><div id="member-code-turnstile" class="turnstile-slot" aria-live="polite"></div><p id="member-code-live-status" class="live-status" role="status" aria-live="polite" hidden></p><button class="button button-dark full" value="submit" id="member-code-submit-button" disabled aria-disabled="true">Unavailable</button><p class="fineprint" id="member-code-preview-note">This is not available yet. Nothing entered here is saved or sent.</p></form></dialog>
-<script src="/live-chain.js?v=20260911g"></script>
-<script src="/live-pricing.js?v=20260911g"></script>
-<script src="/member-code-request.js?v=20260911g"></script>
+<script src="/live-chain.js?v=20260911h"></script>
+<script src="/live-pricing.js?v=20260911h"></script>
+<script src="/member-code-request.js?v=20260911h"></script>
 </body>
 </html>
