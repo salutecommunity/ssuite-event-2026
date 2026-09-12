@@ -490,7 +490,7 @@ async function resendMemberCode(request, button) {
 function renderOverview(host, overview) {
   const event = overview.event || {}; const counts = overview.counts || {};
   if (overview.notice) host.append(element("p", "notice", overview.notice));
-  const eventCard = element("article", "event-card"); eventCard.append(element("span", "record-label", "Launch status"), element("h2", "", text(event.name)), element("p", "", `${text(event.display_date)} · ${text(event.venue_name)}, ${text(event.city)}`), chip(event.sales_status)); host.append(eventCard);
+  const eventCard = element("article", "event-card"); eventCard.append(element("span", "record-label", "Launch status"), element("h2", "", text(event.name)), element("p", "", `${[text(event.display_date), text(event.display_time)].filter(Boolean).join(" · ")} · ${text(event.venue_name)}, ${text(event.city)}`), chip(event.sales_status)); host.append(eventCard);
   const revenue = overview.revenue;
   if (revenue) {
     const unit = (count, singular, plural) => `${Number(count) || 0} ${Number(count) === 1 ? singular : plural}`;

@@ -64,14 +64,15 @@
     if (date || venue) {
       $("meta-date").textContent = date || "To be confirmed";
       $("meta-venue").textContent = venue || "To be confirmed";
+      const startTime = text(event.display_time);
+      if (startTime) { $("meta-time").textContent = startTime; $("meta-time-row").hidden = false; }
       if (table) {
         $("meta-holding-label").textContent = role === "table_host" ? "Your table" : "Your seating";
         $("meta-holding").textContent = text(table.name) || "Reserved";
         $("meta-holding-row").hidden = false;
       }
-      // Without a table there are two facts, not three: let the row sit as a pair
-      // rather than leaving an empty cell where a start time is not yet published.
-      $("context-meta").classList.toggle("two-up", !table);
+      // The published start time means this row always carries three facts, or
+      // four with a table, so it no longer falls back to a pair.
       $("context-meta").hidden = false;
     }
   }

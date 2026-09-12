@@ -67,6 +67,8 @@
       $("meta-date").textContent = date || "To be confirmed";
       $("meta-venue").textContent = venue || "To be confirmed";
       $("meta-seat").textContent = seat;
+      const startTime = text(event.display_time);
+      if (startTime) { $("meta-time").textContent = startTime; $("meta-time-row").hidden = false; }
       $("invite-meta").hidden = false;
     }
   }
