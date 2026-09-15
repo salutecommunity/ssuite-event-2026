@@ -18,6 +18,11 @@
   "use strict";
   const cfg = window.SSUITE_CONFIG || {};
   const text = (value) => (typeof value === "string" ? value.trim() : "");
+  // The one message the server uses when it will not say why. It is deliberate
+  // silence rather than something a visitor can act on, so it is dropped in
+  // favour of a sentence that tells her what to do next.
+  const SERVER_SILENCE = "Unable to accept submission";
+  const humanMessage = (value) => { const message = text(value); return message && message !== SERVER_SILENCE ? message : ""; };
   const byId = (id) => document.getElementById(id);
   const emailPattern = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -190,7 +195,11 @@
         throw new Error("Too many requests from this connection. Please wait a few minutes and try again.");
       }
       if (!response.ok || payload.accepted !== true) {
-        throw new Error(text(payload.error) || "We could not send your code just now. Please try again shortly, or write to ssuite@salute.community.");
+        // The server refuses without saying why, on purpose: a refusal that
+        // explained itself would tell someone probing the form what to change.
+        // That silence is for us, not for her, so it is never shown verbatim --
+        // only the server's own plain-English messages are passed through.
+        throw new Error(humanMessage(payload.error) || "We could not send your code just now. Please try again shortly, or write to ssuite@salute.community.");
       }
       form.reset();
       resetTurnstile();
