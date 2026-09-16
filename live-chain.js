@@ -142,11 +142,27 @@
     const seats = Number.isFinite(chosen) && chosen > 0 ? chosen : (cards || 1);
     clause.hidden = seats < 2;
   }
+  /* The sentence follows the people, not one selector.
+   *
+   * Watching the seat selector alone missed the member path, where guests are
+   * added on their own selector: a member bringing one guest was shown the
+   * single-person agreement and so accepted for herself only, while the order
+   * registered somebody else. The attendee cards are the one place every path
+   * agrees on how many people this registration covers, so the sentence is
+   * resynchronised whenever that list changes, whatever changed it.
+   */
   document.addEventListener("change", (event) => {
     const target = event.target;
-    if (target && target.id === "ticket-quantity") syncAgreementText();
+    if (target && (target.id === "ticket-quantity" || target.id === "member-guest-quantity")) syncAgreementText();
   });
-  document.addEventListener("DOMContentLoaded", syncAgreementText);
+  function watchAttendees() {
+    const fields = byId("guest-fields");
+    if (!fields || typeof MutationObserver !== "function") return;
+    new MutationObserver(syncAgreementText).observe(fields, { childList: true });
+    syncAgreementText();
+  }
+  document.addEventListener("DOMContentLoaded", () => { syncAgreementText(); watchAttendees(); });
+  if (document.readyState !== "loading") watchAttendees();
 
   function createMemberFields() {
     const selection = document.querySelector(".selection");
