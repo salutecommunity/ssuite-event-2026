@@ -52,12 +52,21 @@
    * page that marks one gets live prices, a live early-bird state and the
    * October rollover for free.
    */
-  function priceCard(button) { return button.closest(".ticket-card, [data-price-display]"); }
+  function priceCard(button) { return button.closest(".ticket-card, [data-price-display], [data-price-locked]"); }
 
   function applyTicket(ticket) {
     const button = document.querySelector(`.choose[data-ticket-code="${ticket.code}"]`);
     if (!button) return;
     const card = priceCard(button);
+    /* A card whose rate is not this tier's.
+     *
+     * A partner organization's invitation page buys on the Community control --
+     * that is the control the code gate re-prices -- but the rate it carries is
+     * the partner rate, which is deliberately absent from the public feed. So
+     * writing the Community price onto that card would quote a figure nobody on
+     * that page is charged. A locked card owns its own price entirely.
+     */
+    if (card && card.hasAttribute("data-price-locked")) return;
 
     // The drawer computes its running total from this attribute, so updating it
     // keeps the itemised total and the Stripe charge in step automatically.

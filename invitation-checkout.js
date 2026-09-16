@@ -183,7 +183,13 @@
     const code = invitationCode();
     if (!input || !code) return;
     input.value = code;
-    live.applyPartnerCode().then(mountMemberOption).catch(() => {});
+    live.applyPartnerCode().then(() => {
+      mountMemberOption();
+      // The rate is now server-verified. A page that displays a rate of its own
+      // -- a partner organization's page, whose tier the public feed withholds
+      // -- listens for this and reconciles what it shows with what was checked.
+      document.dispatchEvent(new CustomEvent("ssuite:invitation-applied"));
+    }).catch(() => {});
   }
 
   /* The member rate, offered on an invitation.
@@ -208,9 +214,19 @@
     if (!live || typeof live.setMemberOnInvitation !== "function") return;
     const cents = memberRateCents();
     let box = document.getElementById("member-invite");
+    const state = live.partnerState();
     // No published member rate, or no verified invitation yet: no offer. An
     // offer without a figure behind it could only quote a price of its own.
-    if (!cents || !live.partnerState()) { if (box) box.hidden = true; return; }
+    if (!cents || !state) { if (box) box.hidden = true; return; }
+    /* A rate the member rate cannot sit beside.
+     *
+     * The member rate prices one seat on the Community tier. An organization's
+     * partner rate is its own tier, and a member code cannot open it -- the
+     * server refuses the pairing outright. Offering the tick box there would be
+     * a control that could only fail after somebody had claimed their
+     * membership, so the offer is withheld on any tier but Community.
+     */
+    if (state.tier && state.tier !== "community") { if (box) box.hidden = true; return; }
     const fields = document.getElementById("member-verification");
     if (!box) {
       box = document.createElement("section");
