@@ -16,5 +16,5 @@ window.SSUITE_CONFIG = Object.freeze({
   auction: Object.freeze({ enabled: true, turnstileAction: "auction-submission" }),
   invitation: Object.freeze({ enabled: true, turnstileAction: "invitation-request" }),
   memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" }),
-  ambassador: Object.freeze({ enabled: true, turnstileAction: "ambassador-interest" })
+  ambassador: Object.freeze({ enabled: true, turnstileAction: "ambassador-interest", privacyUrl: "https://www.salute.community/privacy-policy" })
 });

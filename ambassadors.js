@@ -109,7 +109,7 @@
           salute_relationship: value("salute_relationship"),
           motivations,
           consent_accepted: form.elements.namedItem("consent")?.checked === true,
-          privacy_version: cfg.policy?.privacyVersion || "",
+          privacy_version: text(ambassadorCfg.privacyUrl) || cfg.policy?.privacyVersion || "",
           turnstile_token: await turnstileToken()
         })
       });
