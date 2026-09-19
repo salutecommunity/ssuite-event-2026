@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="referrer" content="no-referrer">
+  <title>Become an S.Suite Ambassador</title>
+  <meta name="description" content="Express your interest in serving as an S.Suite Ambassador on Friday, November 20, 2026 in New York City.">
+  <link rel="icon" href="./assets/favicon.png?v=20260902b" sizes="any">
+  <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png?v=20260902b">
+  <link rel="stylesheet" href="./ambassadors.css?v=20260919a">
+  <script src="./config.js?v=20260919a"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to interest form</a>
+<header class="site-header">
+  <a class="brand" href="./" aria-label="S.Suite event home"><img src="./assets/ssuite-logo-header.png" alt="S.Suite"></a>
+  <a class="back-link" href="./">Event home</a>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div>
+      <p class="eyebrow">S.SUITE / MEMBER OPPORTUNITY</p>
+      <h1>Become an<br><em>S.Suite Ambassador.</em></h1>
+    </div>
+    <p class="hero-lede">Help create the warm, connected, and inclusive guest experience at the heart of S.Suite.</p>
+  </section>
+
+  <section class="details" aria-label="Event details">
+    <div><span>Date</span><strong>Friday, November 20, 2026</strong></div>
+    <div><span>Time</span><strong>6:30 p.m.</strong></div>
+    <div><span>Place</span><strong>Prince George Ballroom</strong></div>
+    <div><span>City</span><strong>New York, NY</strong></div>
+  </section>
+
+  <section class="content-shell">
+    <article class="introduction">
+      <p class="eyebrow">THE OPPORTUNITY</p>
+      <h2>Help bring the room together.</h2>
+      <p>We are curating a select group of <strong>S.Suite Ambassadors</strong> to help shape the guest experience before and during the evening. Ambassadors will be connected with a small group of attendees in advance, then serve as liaisons during the cocktail and dessert receptions — welcoming guests, making thoughtful introductions, and helping bring the room together.</p>
+      <p>It is a special opportunity to play an active role in S.Suite while building meaningful new relationships of your own.</p>
+      <aside class="role-note">
+        <span>Ambassador experience</span>
+        <p>Advance connection with guests · Cocktail reception · Dessert reception</p>
+      </aside>
+    </article>
+
+    <section class="form-card" aria-labelledby="form-title">
+      <p class="eyebrow">EXPRESS YOUR INTEREST</p>
+      <h2 id="form-title">Tell us about you.</h2>
+      <p class="form-intro">Please submit your interest below. The S.Suite team will review responses and follow up by email.</p>
+
+      <form id="ambassador-form" novalidate>
+        <div class="field-row">
+          <label>First name<input name="first_name" type="text" autocomplete="given-name" maxlength="100" required></label>
+          <label>Last name<input name="last_name" type="text" autocomplete="family-name" maxlength="100" required></label>
+        </div>
+        <label>Email<input name="email" type="email" autocomplete="email" maxlength="320" placeholder="you@example.com" required></label>
+        <div class="field-row">
+          <label>Job title<input name="job_title" type="text" autocomplete="organization-title" maxlength="150" required></label>
+          <label>Company or organization<input name="company" type="text" autocomplete="organization" maxlength="200" required></label>
+        </div>
+        <label>Your connection to SALUTE
+          <select name="salute_relationship" required>
+            <option value="">Select one</option>
+            <option value="current_member">Current SALUTE member</option>
+            <option value="former_member">Former SALUTE member</option>
+            <option value="community_member">SALUTE community member or supporter</option>
+            <option value="other">Other</option>
+          </select>
+        </label>
+
+        <fieldset>
+          <legend>When would you be available to serve?</legend>
+          <p class="field-help">Select all that apply.</p>
+          <label class="check"><input type="checkbox" name="availability" value="cocktail"><span>Cocktail reception</span></label>
+          <label class="check"><input type="checkbox" name="availability" value="dessert"><span>Dessert reception</span></label>
+          <label class="check"><input type="checkbox" name="availability" value="both"><span>Both receptions</span></label>
+        </fieldset>
+
+        <label>What interests you about serving as an S.Suite Ambassador? <span class="optional">Optional</span>
+          <textarea name="interest_note" rows="5" maxlength="1000"></textarea>
+        </label>
+
+        <label class="check consent"><input type="checkbox" name="consent" required><span>I agree that SALUTE Foundation may use the information I submit to review my interest and contact me about the S.Suite Ambassador opportunity. I have read the <a href="./event-privacy.html" target="_blank" rel="noopener noreferrer">Event Privacy Notice</a>.</span></label>
+
+        <div id="ambassador-turnstile" class="turnstile-slot" aria-live="polite"></div>
+        <p id="ambassador-status" class="status" role="status" aria-live="polite" hidden></p>
+        <button id="ambassador-submit" class="button" type="submit" disabled aria-disabled="true">Opening soon</button>
+        <p class="fineprint">Submitting this form expresses interest and does not confirm an Ambassador role. We will follow up by email.</p>
+      </form>
+
+      <div id="ambassador-success" class="success" hidden tabindex="-1">
+        <p class="eyebrow">INTEREST RECEIVED</p>
+        <h2>Thank you for helping shape the room.</h2>
+        <p>Your interest has been recorded. The S.Suite team will review your response and follow up by email.</p>
+        <a class="button" href="./">Return to the event page</a>
+      </div>
+    </section>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-brand"><img src="./assets/salute-wordmark-white-hires.png" alt="SALUTE"><span>New York City</span></div>
+  <nav aria-label="Footer links"><a href="./">Event home</a><a href="./event-privacy.html">Privacy</a><a href="mailto:ssuite@salute.community">Contact</a></nav>
+  <p>Prince George Ballroom · New York City</p>
+</footer>
+<script src="./ambassadors.js?v=20260919a"></script>
+</body>
+</html>
