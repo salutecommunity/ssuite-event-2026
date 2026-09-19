@@ -72,8 +72,8 @@
     return field ? text(field.value) : "";
   }
 
-  function selectedAvailability() {
-    return [...form.querySelectorAll('input[name="availability"]:checked')].map((field) => field.value);
+  function selectedMotivations() {
+    return [...form.querySelectorAll('input[name="motivations"]:checked')].map((field) => field.value);
   }
 
   async function submit() {
@@ -84,10 +84,10 @@
       setStatus("Please enter a valid email address.", "error");
       return;
     }
-    const availability = selectedAvailability();
-    if (!availability.length) {
-      setStatus("Please select when you would be available to serve.", "error");
-      form.querySelector('input[name="availability"]')?.focus();
+    const motivations = selectedMotivations();
+    if (!motivations.length) {
+      setStatus("Please select at least one reason you are interested in serving.", "error");
+      form.querySelector('input[name="motivations"]')?.focus();
       return;
     }
 
@@ -107,8 +107,7 @@
           job_title: value("job_title"),
           company: value("company"),
           salute_relationship: value("salute_relationship"),
-          availability,
-          interest_note: value("interest_note") || undefined,
+          motivations,
           consent_accepted: form.elements.namedItem("consent")?.checked === true,
           privacy_version: cfg.policy?.privacyVersion || "",
           turnstile_token: await turnstileToken()
