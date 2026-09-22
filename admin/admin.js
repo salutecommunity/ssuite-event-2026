@@ -231,7 +231,7 @@ function clearWorkspace() {
 }
 
 function tabMeta(tab) {
-  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], ambassadors: ["Member participation", "S.Suite Ambassadors"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
+  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
 async function loadTab(tab, page = 1, search = "") {
   activeTab = tab; currentPage = page; lastSearch = search;
@@ -255,22 +255,18 @@ function render(tab, payload) {
   if (tab === "tables") return renderTables(host, payload);
   if (tab === "audit") return renderAudit(host, payload);
   if (tab === "attendees") host.append(adminAttendeeButton());
-  const searchable = ["orders", "attendees", "email", "auction", "donations", "ambassadors"].includes(tab);
+  const searchable = ["orders", "attendees", "email", "auction", "donations"].includes(tab);
   if (searchable) host.append(searchToolbar(tab));
   const memberStatus = (v) => ({ matched: "Verified", alternate_email_matched: "Verified · alt email", attested_review: "Needs review" })[v] || (v ? String(v) : "—");
-  const relationshipLabel = (v) => ({ current_member: "Current member", former_member: "Former member" })[v] || text(v).replaceAll("_", " ");
-  const motivationLabel = (v) => ({ thoughtful_introductions: "Thoughtful introductions", inclusive_conversations: "Inclusive conversations", new_relationships: "New relationships", supporting_mission: "Supporting SALUTE" })[v] || text(v).replaceAll("_", " ");
-  const deliveryLabel = (v, at) => v === "accepted" ? `Accepted ${date(at)}` : v === "failed" ? "Failed" : "Pending";
   const configByTab = {
     orders: [["Purchaser", (r) => `${text(r.purchaser_first_name)} ${text(r.purchaser_last_name)}`], ["Email", "purchaser_email"], ["Type", "order_type"], ["Membership", (r) => memberStatus(r.member_verification_status)], ["Total", (r) => money(r.total_cents, r.currency)], ["Status", "status"], ["Paid", (r) => date(r.paid_at)]],
     attendees: [["Name", (r) => `${text(r.first_name)} ${text(r.last_name)}`], ["Email", "email"], ["Organization", "company"], ["Registration", "registration_status"], ["Source", "source"], ["Completed", (r) => date(r.completed_at)]],
     email: [["Recipient", "recipient"], ["Message", "message_type"], ["Status", "status"], ["Attempts", "attempt_count"], ["Accepted", (r) => date(r.accepted_at)], ["Delivered", (r) => date(r.delivered_at)]],
     auction: [["Donor", "name"], ["Email", "normalized_email"], ["Company", "company"], ["Estimated value", (r) => money(r.estimated_value_cents)], ["Review", "review_status"], ["Received", (r) => date(r.created_at)]],
     donations: [["Donor", "donor_name"], ["Email", "normalized_email"], ["Amount", (r) => money(r.received_amount_cents ?? r.amount_cents, r.currency)], ["Mode", "donation_mode"], ["Status", "status"], ["Received", (r) => date(r.paid_at || r.created_at)]],
-    ambassadors: [["Name", (r) => `${text(r.first_name)} ${text(r.last_name)}`], ["Email", "email"], ["Role", (r) => `${text(r.job_title)} · ${text(r.company)}`], ["SALUTE", (r) => relationshipLabel(r.salute_relationship)], ["Interests", (r) => Array.isArray(r.motivations) ? r.motivations.map(motivationLabel).join(" · ") : "—"], ["Confirmation", (r) => deliveryLabel(r.confirmation_status, r.confirmation_triggered_at)], ["Admin notice", (r) => deliveryLabel(r.admin_notification_status, r.admin_notification_triggered_at)], ["Received", (r) => date(r.created_at)]],
   };
   renderDataTable(host, payload, configByTab[tab] || [], tab === "attendees");
-  if (["orders", "attendees", "donations", "ambassadors"].includes(tab)) host.append(exportButton(tab));
+  if (["orders", "attendees", "donations"].includes(tab)) host.append(exportButton(tab));
 }
 
 function renderInvitationRequests(host, payload) {
@@ -511,7 +507,7 @@ function renderOverview(host, overview) {
     host.append(moneyGrid);
     host.append(element("p", "band-note", "Figures are net of refunds reconciled from Stripe. Isolated validation transactions are excluded."));
   }
-  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Member code requests pending", counts.member_code_requests_pending], ["Ambassador responses", counts.ambassador_responses], ["Auction pending", counts.auction_pending]];
+  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Member code requests pending", counts.member_code_requests_pending], ["Auction pending", counts.auction_pending]];
   if (!revenue) fields.push(["Donations received", money(counts.donations_paid_cents)]);
   host.append(element("h2", "band-title", "Operations"));
   const grid = element("div", "summary"); for (const [label, value] of fields) { const card = element("article", "metric"); card.append(element("span", "", label), element("strong", "", String(value ?? 0))); grid.append(card); } host.append(grid);

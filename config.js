@@ -1,9 +1,28 @@
-/* Public, non-secret deployment configuration for https://event.ssuite.org. */
+/*
+ * Public, non-secret deployment configuration.
+ *
+ * Live production wiring for https://event.ssuite.org.
+ * Setting mode to "live" does not by itself open sales: the database remains
+ * the authority and must also have SSuite sales_status='open'. Do not put
+ * Supabase keys, Stripe keys, Turnstile secrets, management tokens, or
+ * invitation tokens in this file.
+ *
+ * Auction intake is OPEN: item submissions persist to the private S.Suite
+ * database. Bidding is not open and no lots are published.
+ *
+ * Give (donation) is OPEN. ssuite_donation_configuration holds the approved
+ * legal_entity_name, legal_entity_address, and tax_identifier, so
+ * finalize_ssuite_donation issues receipt_status='ready' and a donor receives
+ * a receipt after verified payment. Donations are benefit-free.
+ *
+ * turnstileAction values below are hash-verified against the production
+ * secrets, not copied from README placeholders, which are wrong.
+ */
 window.SSUITE_CONFIG = Object.freeze({
   mode: "live",
   apiBase: "https://iddzcbknnddkonrcwgpt.supabase.co",
   turnstileSiteKey: "0x4AAAAAAEdV18cDQPUcfZOG",
-  turnstileAction: "guest-registration",
+  turnstileAction: "guest-registration", // must match SSUITE_TURNSTILE_ACTION exactly
   policy: Object.freeze({
     termsUrl: "https://event.ssuite.org/event-terms.html",
     privacyUrl: "https://event.ssuite.org/event-privacy.html",
@@ -12,9 +31,16 @@ window.SSUITE_CONFIG = Object.freeze({
     privacyVersion: "ssuite-event-privacy-2026-08-25",
     mediaReleaseVersion: "ssuite-media-release-2026-08-25"
   }),
-  donation: Object.freeze({ enabled: true, turnstileAction: "donation", receiptPolicyUrl: "https://event.ssuite.org/donation-receipt-policy.html" }),
-  auction: Object.freeze({ enabled: true, turnstileAction: "auction-submission" }),
+  donation: Object.freeze({ enabled: true, turnstileAction: "donation", receiptPolicyUrl: "https://event.ssuite.org/donation-receipt-policy.html" }), // must match SSUITE_DONATION_TURNSTILE_ACTION exactly
+  auction: Object.freeze({ enabled: true, turnstileAction: "auction-submission" }), // must match SSUITE_AUCTION_TURNSTILE_ACTION exactly
+  // Invitation requests. Unlike the three flows above, no expected-action secret
+  // is provisioned for this endpoint, so this string is a label for
+  // observability rather than something the server matches. Origin and
+  // Turnstile hostname checks still apply, and the token is still verified.
   invitation: Object.freeze({ enabled: true, turnstileAction: "invitation-request" }),
-  memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" }),
-  ambassador: Object.freeze({ enabled: true, turnstileAction: "ambassador-interest", privacyUrl: "https://www.salute.community/privacy-policy" })
+  // Member code requests. Same situation as invitation requests: no
+  // expected-action secret is provisioned, so this string is a label for
+  // observability rather than something the server matches. Origin and
+  // Turnstile hostname checks still apply, and the token is still verified.
+  memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" })
 });
