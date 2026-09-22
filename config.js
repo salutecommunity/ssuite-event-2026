@@ -33,6 +33,7 @@ window.SSUITE_CONFIG = Object.freeze({
   }),
   donation: Object.freeze({ enabled: true, turnstileAction: "donation", receiptPolicyUrl: "https://event.ssuite.org/donation-receipt-policy.html" }), // must match SSUITE_DONATION_TURNSTILE_ACTION exactly
   auction: Object.freeze({ enabled: true, turnstileAction: "auction-submission" }), // must match SSUITE_AUCTION_TURNSTILE_ACTION exactly
+  ambassador: Object.freeze({ enabled: true, turnstileAction: "ambassador-interest" }),
   // Invitation requests. Unlike the three flows above, no expected-action secret
   // is provisioned for this endpoint, so this string is a label for
   // observability rather than something the server matches. Origin and
