@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>S.SUITE Honoree Review</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="auth-gate" id="authGate">
+    <section class="auth-card" aria-labelledby="loginTitle">
+      <div class="auth-brand">S.SUITE</div>
+      <span class="eyebrow">CONFIDENTIAL · BOARD &amp; SLC</span>
+      <h1 id="loginTitle">2026 Honoree Review</h1>
+      <p>Enter your name, email, and committee review code. Your selections will be saved securely so you can return and revise them.</p>
+      <form id="loginForm">
+        <label class="full-label"><span>Full name</span><input id="loginName" type="text" autocomplete="name" required /></label>
+        <label class="full-label"><span>Email address</span><input id="loginEmail" type="email" autocomplete="email" required /></label>
+        <label class="full-label"><span>Review code</span><input id="loginCode" type="password" autocomplete="current-password" required /></label>
+        <div class="form-error" id="loginError" hidden></div>
+        <button class="primary-button auth-submit" id="loginButton" type="submit">Enter private review</button>
+      </form>
+      <p class="auth-note">Private working material. Do not forward or distribute.</p>
+    </section>
+  </main>
+  <div class="app-shell" id="appShell" hidden>
+    <header class="utility-bar">
+      <div class="masthead">
+        <span class="wordmark">S.SUITE</span>
+        <span class="masthead-sub">2026 Honoree Review</span>
+        <span class="confidential"><span class="dot"></span> Confidential · Board &amp; SLC</span>
+      </div>
+      <div class="utility-actions">
+        <span class="reviewer-status" id="reviewerStatus">Loading saved responses…</span>
+        <button class="text-button" id="adminResultsButton" hidden>Admin dashboard</button>
+        <button class="text-button" id="rubricButton">Evaluation rubric</button>
+        <span class="signed-in-identity" id="signedInIdentity"></span>
+        <button class="text-button" id="signOutButton">Sign out</button>
+        <span class="prototype-label">Secure review portal</span>
+      </div>
+    </header>
+
+    <section class="controls" aria-label="Candidate controls">
+      <label class="category-select-wrap" for="categorySelect"><span>Browse category</span><select id="categorySelect" aria-label="Browse category"></select></label>
+      <div class="category-scroll" id="categoryTabs"></div>
+      <div class="filter-row">
+        <label class="search-wrap" aria-label="Search candidates">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.4-3.4"></path></svg>
+          <input id="searchInput" type="search" placeholder="Search name, title, organization, or impact" />
+        </label>
+        <div class="segmented" id="scopeControls" role="group" aria-label="Candidate scope">
+          <button data-scope="top5">Top 10 shortlist</button>
+          <button data-scope="all" class="active">All candidates</button>
+        </div>
+        <select id="nominationFilter" aria-label="Nomination filter">
+          <option value="all">All sources</option>
+          <option value="submitted">Submitted nominations</option>
+          <option value="research">Public research</option>
+        </select>
+        <div class="nomination-legend" aria-label="Submitted nomination legend"><span aria-hidden="true">★</span> Submitted nomination</div>
+      </div>
+    </section>
+
+    <section class="summary-strip">
+      <div><strong id="viewTitle">CEO · All candidates</strong><span id="viewDescription">Top 10 shortlist followed by the complete directory alphabetically by first name</span></div>
+      <div class="summary-counts"><span id="showingCount">Candidates shown</span><span id="reviewedCount">Your vote: Not cast</span></div>
+    </section>
+
+    <main>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="rank-col" id="rankHeader">Rank</th>
+              <th class="candidate-col">Candidate</th>
+              <th class="title-col">Title / Role</th>
+              <th class="organization-col" id="organizationHeader">Organization</th>
+              <th class="private-board-col" id="privateBoardsHeader" hidden>Private company boards</th>
+              <th class="location-col">Location</th>
+              <th class="impact-col">Impact on women / South Asians</th>
+              <th class="vote-col" id="voteHeader">Your honoree vote</th>
+            </tr>
+          </thead>
+          <tbody id="candidateRows"></tbody>
+        </table>
+        <div class="empty-state" id="emptyState" hidden>No candidates match these filters.</div>
+      </div>
+    </main>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="detailDrawer" aria-hidden="true" aria-label="Candidate detail">
+    <div class="drawer-header">
+      <div>
+        <span class="eyebrow" id="detailCategory"></span>
+        <h2 id="detailName"></h2>
+        <p id="detailRole"></p>
+      </div>
+      <button class="icon-button" id="closeDrawer" aria-label="Close candidate detail">×</button>
+    </div>
+    <div class="drawer-body">
+      <section class="vote-panel">
+        <div class="section-label">YOUR HONOREE VOTE</div>
+        <div class="vote-buttons" id="detailVotes"></div>
+        <p class="vote-help">You may select one honoree in each category. Choosing another candidate changes your vote.</p>
+      </section>
+      <section><div class="section-label">WHY CONSIDER</div><p id="detailWhy"></p></section>
+      <section><div class="section-label">PROFESSIONAL / FIELD IMPACT</div><p id="detailProfessional"></p></section>
+      <section class="community-section"><div class="section-label">WOMEN / SOUTH ASIAN / COMMUNITY IMPACT</div><p id="detailCommunity"></p></section>
+      <section><div class="section-label">RECOGNITION EVIDENCE</div><p id="detailRecognition"></p></section>
+      <div class="detail-grid">
+        <section><div class="section-label">NOMINATION SOURCE</div><p id="detailNomination"></p></section>
+        <section><div class="section-label">LINKEDIN</div><p id="detailLinkedIn"></p></section>
+        <section><div class="section-label">LOCATION</div><p id="detailLocation"></p></section>
+        <section><div class="section-label">ALSO QUALIFIES FOR</div><p id="detailAlso"></p></section>
+      </div>
+      <section id="detailNotesSection"><div class="section-label">RESEARCH NOTES</div><p id="detailNotes"></p></section>
+      <section><div class="section-label">SOURCES</div><div class="source-links" id="detailSources"></div></section>
+    </div>
+  </aside>
+
+  <div class="modal" id="rubricModal" hidden>
+    <div class="modal-card">
+      <div class="modal-header"><div><span class="eyebrow">S.SUITE EVALUATION</span><h2>Five clear questions</h2></div><button class="icon-button" id="closeRubric">×</button></div>
+      <p class="modal-intro">The committee evaluates the candidate’s record, not personal familiarity, nomination volume, or who submitted the nomination.</p>
+      <div id="rubricList" class="rubric-list"></div>
+      <div class="decision-guide"><span><b>5 Yes</b> High Priority</span><span><b>4 Yes</b> Strong Consideration</span><span><b>3 Yes</b> Discuss</span><span><b>0–2 Yes</b> Not This Year</span></div>
+    </div>
+  </div>
+
+  <div class="modal" id="voteModal" hidden>
+    <div class="modal-card vote-modal-card">
+      <div class="modal-header"><div><span class="eyebrow">HONOREE VOTE</span><h2 id="voteCandidateName"></h2></div><button class="icon-button" id="closeVoteModal">×</button></div>
+      <p class="modal-intro" id="voteCandidateRole"></p>
+      <p class="signed-vote-as">Saving as <strong id="voteReviewerIdentity"></strong></p>
+      <fieldset class="connection-fieldset">
+        <legend>Can you help SALUTE reach this candidate?</legend>
+        <label><input type="radio" name="connection" value="personal-direct" /> I know them personally and can reach out directly for SALUTE</label>
+        <label><input type="radio" name="connection" value="professional-direct" /> I know them professionally and can reach out directly for SALUTE</label>
+        <label><input type="radio" name="connection" value="warm-intro" /> I can arrange a warm introduction through someone else</label>
+        <label><input type="radio" name="connection" value="know-no-outreach" /> I know them, but I am not the right person to lead outreach</label>
+        <label><input type="radio" name="connection" value="none" /> I do not know them</label>
+      </fieldset>
+      <div class="form-error" id="voteError" hidden></div>
+      <div class="modal-actions"><button class="secondary-button" id="removeVoteButton" hidden>Remove vote</button><button class="primary-button" id="saveVoteButton">Save honoree vote</button></div>
+    </div>
+  </div>
+
+  <div class="modal" id="adminModal" hidden>
+    <div class="modal-card admin-modal-card">
+      <div class="modal-header"><div><span class="eyebrow">ADMIN VIEW</span><h2>Votes and disclosures</h2></div><button class="icon-button" id="closeAdminModal">×</button></div>
+      <p class="modal-intro">Authorized administrator view. Responses below are persistent and include reviewer identity, outreach ability, and the latest update time.</p>
+      <div class="admin-summary" id="adminSummary"></div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Category</th><th>Candidate</th><th>Reviewer</th><th>Connection to candidate</th><th>Updated</th></tr></thead>
+          <tbody id="adminVoteRows"></tbody>
+        </table>
+        <div class="empty-state" id="adminEmptyState">No votes have been entered in this session.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="portal.js"></script>
+</body>
+</html>
