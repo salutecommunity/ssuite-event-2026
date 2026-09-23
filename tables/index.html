@@ -338,7 +338,17 @@
   .seat-card .button:disabled{opacity:.42;cursor:not-allowed}
   .seat-card .sale-window-note{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:#4a4a4a;text-align:left}
 </style>
-<style>.table-choices{display:grid;gap:26px}</style>
+<style>
+  .table-choices{display:grid;gap:26px}
+  @media(min-width:901px){
+    .seat#seat{grid-template-columns:1fr;gap:clamp(34px,4vw,52px);align-items:start;max-width:1120px}
+    .seat#seat .seat-copy{max-width:none}
+    .seat#seat .seat-lead,.seat#seat .seat-copy p{max-width:74ch}
+    .table-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(26px,3vw,40px);align-items:stretch}
+    .table-choices .seat-card{display:flex;flex-direction:column}
+    .table-choices .seat-card ul{flex:1 0 auto}
+  }
+</style>
 </head>
 <body>
 
