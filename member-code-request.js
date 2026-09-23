@@ -86,7 +86,7 @@
     widgetId = api.render(slot, {
       sitekey: text(cfg.turnstileSiteKey),
       action: text(memberConfig().turnstileAction),
-      "error-callback": () => status("The security check failed. Please retry.", "error"),
+      "error-callback": () => status("The security check could not complete in this browser. This is usually a VPN, a work network, or a privacy extension blocking it. Please try your phone, or another browser — or write to ssuite@salute.community and we will send your code.", "error"),
       "expired-callback": () => status("The security check expired. Please retry.", "error"),
     });
     return widgetId;
@@ -95,12 +95,12 @@
     const api = await loadTurnstile();
     const id = await warm();
     if (id === undefined) throw new Error("The security check is unavailable. Please refresh the page and try again.");
-    const deadline = Date.now() + 15000;
+    const deadline = Date.now() + 40000;
     for (;;) {
       const value = api.getResponse(id);
       if (value) return value;
       if (Date.now() >= deadline) {
-        throw new Error("The security check has not cleared yet. This is usually a browser extension or network blocking it. Please refresh and try again, or write to ssuite@salute.community and we will send your code.");
+        throw new Error("The security check could not complete in this browser. This is usually a VPN, a work network, or a privacy extension blocking it. Please try your phone, or another browser — or write to ssuite@salute.community and we will send your code.");
       }
       await new Promise((resolve) => setTimeout(resolve, 250));
     }

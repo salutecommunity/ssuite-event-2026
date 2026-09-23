@@ -703,6 +703,9 @@
       if (apply) apply.disabled = false;
     }
   }
+  /* One wording for every way the security check can fail, said in terms a
+   * buyer can act on. It never blames them and always leaves a human route. */
+  const BLOCKED_MESSAGE = "The security check could not complete in this browser. This is usually a VPN, a work network, or a privacy extension blocking it. Please try your phone, or another browser — or write to ssuite@salute.community and we will send you a secure payment link.";
   function turnstileContainer() { return byId("checkout-turnstile"); }
   let turnstileWidget = null;
   let turnstileLoading = null;
@@ -734,19 +737,21 @@
         action: "ssuite_checkout",
         // Clear a stale "complete the check" notice as soon as it is actually complete.
         "callback": () => { const el = byId("live-checkout-status"); if (el && /security check/i.test(el.textContent)) setStatus("", ""); },
-        "error-callback": () => setStatus("The security check failed. Please retry.", "error"),
+        "error-callback": () => setStatus(BLOCKED_MESSAGE, "error"),
         "expired-callback": () => setStatus("The security check expired. Please retry.", "error"),
       });
     }
     return api;
   }
+  // A slow corporate network can take well over fifteen seconds to clear the
+  // check. Waiting longer costs a buyer nothing; giving up early costs a sale.
   async function ensureTurnstile() {
     const api = await warmTurnstile();
-    const deadline = Date.now() + 15000;
+    const deadline = Date.now() + 40000;
     for (;;) {
       const response = api.getResponse(turnstileWidget);
       if (response) return response;
-      if (Date.now() >= deadline) throw new Error("The security check has not cleared yet. This is usually a browser extension or network blocking it. Please refresh and try again, or write to ssuite@salute.community and we will take it from there.");
+      if (Date.now() >= deadline) throw new Error(BLOCKED_MESSAGE);
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
@@ -902,7 +907,9 @@
     const readiness = liveReadiness();
     const label = button.querySelector(".live-ticket-note");
     if (label) label.textContent = readiness.ok ? "Complete the details above to continue" : "Preview only — checkout is not available here";
-    if (readiness.ok) warmTurnstile().catch(() => {});
+    // Tell someone the check is blocked while the form is still empty, rather
+    // than after they have typed everything and pressed the only button.
+    if (readiness.ok) warmTurnstile().catch(() => setStatus(BLOCKED_MESSAGE, "error"));
   }
   function applyLiveLabels() {
     // Preview wording ships as the safe default in the HTML. Only replace it once
