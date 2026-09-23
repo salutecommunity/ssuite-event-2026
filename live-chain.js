@@ -202,6 +202,18 @@
     section.querySelectorAll("input").forEach((input) => { input.disabled = section.hidden; });
   }
   function ticketCode() { return text(document.querySelector(".checkout-drawer")?.dataset.ticketCode); }
+  // The seats a table tier carries. A half table is five, not ten, and the
+  // drawer used to state "10 seats" as fixed text for whichever tier was being
+  // bought -- so a half-table buyer was told she was getting a whole round
+  // while paying half. An unrecognised tier states no number at all rather
+  // than guessing one: the server settles the real count either way.
+  const TABLE_TIER_SEATS = { full_table: 10, half_table: 5 };
+  function syncTableSeatCopy(code) {
+    const note = byId("table-page-note");
+    if (!note) return;
+    const seats = TABLE_TIER_SEATS[text(code)];
+    note.textContent = seats ? `${seats} seats · Guest status · Seating controls` : "Guest status · Seating controls";
+  }
 
   /* Partner organization access code.
    *
@@ -869,6 +881,7 @@
     updateMemberFields(code);
     updatePartnerFields(code);
     syncTableInvitationNote(code);
+    syncTableSeatCopy(code);
     if (code !== PARTNER_HOST_TIER) {
       // The partner rate lives on the Community path only. Choosing another tier
       // drops it rather than carrying a price into a tier it does not apply to.
@@ -929,11 +942,10 @@
     const tableTitle = byId("table-head-title");
     if (tableTitle) tableTitle.textContent = "Set up your table.";
     const tableNote = byId("table-head-note");
-    if (tableNote) tableNote.textContent = "After your payment is verified, you will receive a private link to manage your table: name it, assign each of your ten seats, invite your guests by email, and resend or revoke a link at any time.";
+    if (tableNote) tableNote.textContent = "After your payment is verified, you will receive a private link to manage your table: name it, assign each of your seats, invite your guests by email, and resend or revoke a link at any time.";
     const tablePageEyebrow = byId("table-page-eyebrow");
     if (tablePageEyebrow) tablePageEyebrow.textContent = "YOUR PRIVATE TABLE PAGE";
-    const tablePageNote = byId("table-page-note");
-    if (tablePageNote) tablePageNote.textContent = "10 seats · Guest status · Seating controls";
+    syncTableSeatCopy(ticketCode());
     // The local sample dashboard is a design preview only; it must not be offered
     // alongside a real purchase that issues a genuine private table page.
     const previewDashboard = byId("preview-dashboard");
