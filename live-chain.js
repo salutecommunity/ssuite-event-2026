@@ -267,7 +267,8 @@
   function syncTableInvitationNote(code) {
     const selection = document.querySelector(".selection");
     if (!selection) return;
-    const show = code === "full_table" && tableInvitation !== null;
+    // A table is credited to its host whether it is a whole round or a half.
+    const show = (code === "full_table" || code === "half_table") && tableInvitation !== null;
     let note = byId("table-invitation-note");
     if (!note) {
       if (!show) return;
@@ -772,7 +773,9 @@
     // own seat, Community for her guests, with the invitation carried alongside
     // so the host is still credited for the party she brought.
     const memberInvite = memberInviteActive();
-    const table = code === "full_table";
+    // Both table tiers are bought as one whole purchase and open a table
+    // order. The seat count is the tier's own and is settled by the server.
+    const table = code === "full_table" || code === "half_table";
     const member = code === "salute_member";
     // The member rate covers exactly one seat. Any guests a member brings are
     // billed at the open Community rate on the same payment.
