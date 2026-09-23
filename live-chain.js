@@ -923,8 +923,12 @@
       // surviving sentence about eligibility mentioning an access code. People
       // read that as invitation-only. The markup is now neutral, so anything
       // that genuinely cannot take a payment has to say so from here.
-      const closedNote = byId("attend-sales-note");
-      if (closedNote) closedNote.textContent = "Ticket sales are not open yet. Pricing is shown for advance planning; registration and checkout will become available here when sales open.";
+      // The tables page carries one note per tier, so set every one of them:
+      // a closed state stated in only the first card leaves the second selling.
+      document.querySelectorAll("#attend-sales-note, .sales-note").forEach((closedNote) => {
+        closedNote.textContent = "Ticket sales are not open yet. Pricing is shown for advance planning; registration and checkout will become available here when sales open.";
+        closedNote.hidden = false;
+      });
       document.querySelectorAll(".choose").forEach((button) => {
         const withheld = text(button.dataset.withheldLabel);
         button.disabled = true;
@@ -933,11 +937,12 @@
       });
       return;
     }
-    const note = byId("attend-sales-note");
     // No deadline is asserted here. live-pricing.js adds the early-bird sentence from
     // the event database only while that window is genuinely open, so a stale build
     // can never advertise a discount that has already ended.
-    if (note) note.textContent = "Registration is completed through secure checkout.";
+    document.querySelectorAll("#attend-sales-note, .sales-note").forEach((note) => {
+      note.textContent = "Registration is completed through secure checkout.";
+    });
     const submit = byId("checkout-submit");
     if (submit) submit.textContent = "Continue to secure checkout";
     const fineprint = byId("checkout-fineprint");

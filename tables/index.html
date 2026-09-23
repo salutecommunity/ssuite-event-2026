@@ -346,7 +346,8 @@
     .seat#seat .seat-lead,.seat#seat .seat-copy p{max-width:74ch}
     .table-choices{grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(26px,3vw,40px);align-items:stretch}
     .table-choices .seat-card{display:flex;flex-direction:column}
-    .table-choices .seat-card ul{flex:1 0 auto}
+    .table-choices .seat-card ul{flex:1 1 auto}
+    .table-choices .seat-card .sales-note{margin-top:auto}
   }
 </style>
 </head>
@@ -384,7 +385,7 @@
       <p class="eyebrow">Host</p>
       <h2>Two ways to host.</h2>
       <p class="seat-lead">S.Suite is intentionally designed around who is in the room. Hosting a table gives you the opportunity to curate your own group — colleagues, clients, friends, mentors, emerging leaders, or others you believe should be part of the evening.</p>
-      <p>Hosts are recognized as partners of S.Suite. After checkout you receive a private page where you name your table and invite each guest, and you can send the logo or name you would like featured to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>. You can see who has confirmed at any time, and edit guest details until November 13, 2026.</p>
+      <p>Hosts are recognized as partners of S.Suite. After checkout you name your table and invite each guest, and you can send the logo or name you would like featured to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>. You can see who has confirmed at any time, and edit guest details until November 13, 2026.</p>
       <p>We encourage table hosts to think beyond filling seats. Bring together people who should know one another, people whose work deserves greater visibility, and people who can open doors for others.</p>
     </div>
     <div class="table-choices">
@@ -401,8 +402,9 @@
         <li>Brand visibility across event materials and touchpoints</li>
         <li>Inclusion in printed and digital partner acknowledgments</li>
         <li>Social recognition across SALUTE channels</li>
-        <li>A private page to name your table and invite each guest</li>
+        <li>Name your table and invite each guest</li>
       </ul>
+      <p class="fineprint sales-note" id="attend-sales-note">Registration is completed through secure checkout.</p>
       <button class="button button-dark choose" type="button"
         data-ticket-code="full_table" data-ticket="Become an Associate Partner" data-seat-note="Associate Partner table registration"
         data-public-sale-open="true"
@@ -423,8 +425,9 @@
         <li>Five seats, reserved together, at the S.Suite dinner and honors ceremony</li>
         <li>Recognition as an official S.Suite Supporting Partner, by company logo or name</li>
         <li>Inclusion in printed and digital partner acknowledgments</li>
-        <li>A private page to name your table and invite each guest</li>
+        <li>Name your table and invite each guest</li>
       </ul>
+      <p class="fineprint sales-note">Registration is completed through secure checkout.</p>
       <button class="button button-outline choose" type="button"
         data-ticket-code="half_table" data-ticket="Become a Supporting Partner" data-seat-note="Supporting Partner table registration"
         data-public-sale-open="true"
@@ -433,10 +436,9 @@
         data-price-cutover="2026-10-01T04:00:00Z"
         disabled aria-disabled="true">Become a Supporting Partner</button>
       <p class="sale-window-note" hidden></p>
-      <p class="fineprint" id="attend-sales-note">Registration is completed through secure checkout.</p>
-      <noscript><p class="fineprint">Hosting a table needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p></noscript>
     </aside>
   </div>
+  <noscript><p class="fineprint">Hosting a table needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p></noscript>
   </section>
 
   <section class="honored" id="evening">

@@ -127,13 +127,18 @@
   }
 
   function applySalesNote(data) {
-    const note = document.getElementById("attend-sales-note");
-    if (!note || data.sales_open !== true) return;
+    // The tables page carries one note per tier so both buttons sit level; every
+    // other page has a single note. Fill all of them.
+    const notes = document.querySelectorAll("#attend-sales-note, .sales-note");
+    if (!notes.length || data.sales_open !== true) return;
     const deadline = text(data.early_bird_last_moment_display);
-    note.textContent = data.early_bird_active === true && deadline
+    const copy = data.early_bird_active === true && deadline
       ? `Early-bird pricing through ${deadline}.`
       : "";
-    note.hidden = !note.textContent;
+    notes.forEach((note) => {
+      note.textContent = copy;
+      note.hidden = !copy;
+    });
   }
 
   // Checkout is refused server-side when sales are closed. Mirror that here rather
