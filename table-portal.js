@@ -19,6 +19,16 @@
   let tableToken = readToken();
   history.replaceState(null, "", `${location.pathname}${location.search}`);
   let table = null;
+  /* Partners reach their partnership page with the same link they already have,
+     so there is no second credential to keep. The link only appears once the
+     table has actually loaded, which means the token is known to be good. */
+  function showPartnerLink() {
+    const link = document.getElementById("partner-link");
+    if (!link || !tableToken) return;
+    link.href = `./partner/#token=${tableToken}`;
+    link.hidden = false;
+  }
+
   let editingTableName = false;
 
   function base() {
@@ -64,6 +74,7 @@
   }
   function render() {
     $("portal").hidden = false;
+    showPartnerLink();
     const currentTableName = typeof table.table_name === "string" ? table.table_name.trim() : "";
     $("table-name").textContent = currentTableName || (table.table_number ? `Table ${table.table_number}` : "Your table");
     if (!editingTableName) $("table-name-input").value = currentTableName;
