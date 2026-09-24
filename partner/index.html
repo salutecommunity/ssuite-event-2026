@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow">
+  <title>S.SUITE — Partner portal</title>
+  <link rel="stylesheet" href="../live-pages.css?v=20260924a">
+  <link rel="stylesheet" href="./partner-portal.css?v=20260924a">
+  <script src="../config.js?v=20260924a"></script>
+  <link rel="icon" href="../assets/favicon.png?v=20260902b" sizes="any">
+  <link rel="apple-touch-icon" href="../assets/apple-touch-icon.png?v=20260902b">
+  <meta name="description" content="Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
+</head>
+<body>
+<header class="masthead"><div class="shell"><img src="../assets/ssuite-logo-header.png" alt="S.SUITE"><span>Private partner portal</span></div></header>
+<main class="shell">
+  <section class="card">
+    <p class="eyebrow" id="tier-eyebrow">Private partner access</p>
+    <h1 id="headline">Your partnership.</h1>
+    <p class="lede" id="intro">This page opens from the private link in your table email. Keep that email — it is how you get back here.</p>
+    <p id="status" class="notice" role="status" aria-live="polite">Checking secure access…</p>
+  </section>
+
+  <section id="portal" hidden>
+    <section class="card">
+      <p class="eyebrow">Recognition</p>
+      <h2>How you are recognized.</h2>
+      <p class="lede">Partners are recognized across event materials. Send the logo you would like used, or tell us the name to set instead.</p>
+      <div class="choice-row">
+        <label class="choice"><input type="radio" name="recognition_preference" value="logo"><span>By company logo</span></label>
+        <label class="choice"><input type="radio" name="recognition_preference" value="name"><span>By name only</span></label>
+        <label class="choice"><input type="radio" name="recognition_preference" value="undecided"><span>Not decided yet</span></label>
+      </div>
+
+      <div id="logo-block">
+        <div class="upload-row">
+          <label class="upload-button" for="logo-file">Choose a file</label>
+          <input id="logo-file" type="file" accept=".png,.jpg,.jpeg,.svg,.pdf,.eps,.ai">
+          <span id="logo-filename" class="upload-hint">PNG, JPG, SVG, PDF, EPS, or AI · up to 10 MB</span>
+        </div>
+        <p class="field-help">For print we prefer a vector file (SVG, PDF, EPS, or AI) or a PNG at least 1000 pixels wide with a transparent background.</p>
+        <div id="logo-current" class="logo-current" hidden>
+          <img id="logo-preview" alt="Your uploaded logo">
+          <div>
+            <p id="logo-current-name"></p>
+            <button id="logo-remove" type="button" class="secondary">Remove file</button>
+          </div>
+        </div>
+        <p id="logo-status" class="notice form-notice" role="status" aria-live="polite" hidden></p>
+      </div>
+
+      <form id="partner-form" novalidate>
+        <div class="fields">
+          <label class="field full"><span>NAME TO FEATURE</span><input name="recognition_name" type="text" maxlength="200" autocomplete="organization"></label>
+          <label class="field full"><span>ORGANIZATION</span><input name="organization_name" type="text" maxlength="200" autocomplete="organization"></label>
+          <label class="field full"><span>SHORT DESCRIPTION <em>(optional)</em></span><textarea name="organization_bio" maxlength="4000" rows="5"></textarea></label>
+          <label class="field"><span>WEBSITE <em>(optional)</em></span><input name="website_url" type="url" maxlength="500" placeholder="https://"></label>
+          <label class="field"><span>LINKEDIN <em>(optional)</em></span><input name="linkedin_url" type="url" maxlength="500" placeholder="https://"></label>
+          <label class="field"><span>CONTACT NAME</span><input name="contact_name" type="text" maxlength="200" autocomplete="name"></label>
+          <label class="field"><span>CONTACT EMAIL</span><input name="contact_email" type="email" maxlength="320" autocomplete="email"></label>
+          <label class="field"><span>CONTACT PHONE <em>(optional)</em></span><input name="contact_phone" type="tel" maxlength="40" autocomplete="tel"></label>
+        </div>
+        <p id="form-status" class="notice form-notice" role="status" aria-live="polite" hidden></p>
+        <div class="actions"><button type="submit">Save details</button></div>
+      </form>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Your table</p>
+      <h2 id="table-headline">Your seats.</h2>
+      <p class="lede" id="table-summary"></p>
+      <div class="actions"><a id="table-link" class="button-link" href="#">Open your table</a></div>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Resources</p>
+      <h2>The evening.</h2>
+      <dl class="detail-list">
+        <div><dt>Date</dt><dd>Friday, November 20, 2026</dd></div>
+        <div><dt>Time</dt><dd>6:30 p.m. Eastern</dd></div>
+        <div><dt>Venue</dt><dd>Prince George Ballroom, New York City</dd></div>
+        <div><dt>Evening</dt><dd>Cocktail reception, dinner, and the S.SUITE honors program</dd></div>
+        <div><dt>Honors</dt><dd>The S.SUITE Chair, our lifetime recognition, presented to Indra Nooyi, followed by a fireside conversation moderated by Anu Aiyengar, Global Chair of Investment Banking at J.P. Morgan</dd></div>
+      </dl>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Draft notes</p>
+      <h2>Words you can borrow.</h2>
+      <p class="lede">Written for you to use as they are, or to make your own.</p>
+
+      <div class="draft">
+        <h3>Inviting someone to your table</h3>
+        <pre id="draft-invite">Dear [Name],
+
+On Friday, November 20, SALUTE holds the inaugural S.SUITE Honors Ceremony at the Prince George Ballroom in New York, celebrating South Asian women leaders and allies whose work is shaping business, capital, culture, and community. The evening includes the presentation of The S.SUITE Chair, our lifetime recognition, to Indra Nooyi, followed by a fireside conversation moderated by Anu Aiyengar of J.P. Morgan.
+
+I am hosting a table, and I would be glad for you to be at it.
+
+If you would like to join us, let me know and I will send you a private link to confirm your details.
+
+Warmly,
+[Your name]</pre>
+        <button type="button" class="secondary copy" data-copy="draft-invite">Copy</button>
+      </div>
+
+      <div class="draft">
+        <h3>Sharing that you are a partner</h3>
+        <pre id="draft-social">We are proud to support the inaugural S.SUITE Honors Ceremony on November 20 in New York, celebrating South Asian women leaders and allies across business, capital, culture, and community — and the lifetime recognition of Indra Nooyi.</pre>
+        <button type="button" class="secondary copy" data-copy="draft-social">Copy</button>
+      </div>
+
+      <div class="draft">
+        <h3>Introducing S.SUITE in a sentence</h3>
+        <pre id="draft-boiler">S.SUITE is SALUTE's inaugural honors ceremony, celebrating South Asian women leaders and allies whose leadership is shaping business, capital, culture, and community.</pre>
+        <button type="button" class="secondary copy" data-copy="draft-boiler">Copy</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <p class="eyebrow">Anything else</p>
+      <h2>We are here.</h2>
+      <p class="lede">Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will take care of it.</p>
+    </section>
+  </section>
+</main>
+<script src="./partner-portal.js?v=20260924a"></script>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <img src="../assets/salute-wordmark-white-hires.png" alt="SALUTE">
+    <div class="footer-links"><a href="../event-terms.html">Terms</a><a href="../event-privacy.html">Privacy</a></div>
+  </div>
+  <p>The S.SUITE Honors Ceremony · Prince George Ballroom · New York City</p>
+</footer>
+</body></html>
