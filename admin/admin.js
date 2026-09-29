@@ -286,11 +286,11 @@ function renderInvitationRequests(host, payload) {
 
   const wrap = element("div", "table-wrap"); const table = document.createElement("table");
   const thead = document.createElement("thead"); const headRow = document.createElement("tr");
-  for (const label of ["Name", "Email", "Job title", "Company", "Heard via", "Status", "Requested", "Action"]) headRow.append(element("th", "", label));
+  for (const label of ["Name", "Email", "Job title", "Company", "Heard via", "What they told us", "Status", "Requested", "Action"]) headRow.append(element("th", "", label));
   thead.append(headRow); table.append(thead); const tbody = document.createElement("tbody");
   for (const request of payload.data) {
     const tr = document.createElement("tr");
-    for (const value of [`${text(request.first_name)} ${text(request.last_name)}`, text(request.email), text(request.job_title), text(request.company), text(request.referral_source)]) tr.append(element("td", "", value));
+    for (const value of [`${text(request.first_name)} ${text(request.last_name)}`, text(request.email), text(request.job_title), text(request.company), text(request.referral_source) || "—", text(request.note) || "—"]) tr.append(element("td", "", value));
     const statusCell = document.createElement("td"); statusCell.append(chip(request.status));
     if (request.status === "approved") {
       const detail = element("div", "invitation-code"); detail.append(element("strong", "", `Code: ${text(request.display_code)}`));

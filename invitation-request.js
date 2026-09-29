@@ -154,6 +154,66 @@
     if (close) { close.hidden = true; close.style.display = "none"; }
   }
 
+  /* ---- Follow-up answers ------------------------------------------------ */
+  // The record has one short "heard via" column and one free-text note, so the
+  // extra answers are written into those in plain labeled sentences. Staff read
+  // them in the dashboard and in the request notice exactly as composed here.
+  const FRIEND = "Friend or colleague";
+  const WITH_SOMEONE = "Attending with someone who is going";
+  const clipTo = (value, limit) => (value.length > limit ? `${value.slice(0, limit - 1)}…` : value);
+  function checked(form) {
+    return Array.from(form.querySelectorAll('input[name="interest"]:checked')).map((box) => box.value);
+  }
+  function referral(form) {
+    const source = read(form, "referral_source");
+    const who = read(form, "referrer_name");
+    return source === FRIEND && who ? clipTo(`${FRIEND} — referred by ${who}`, 120) : source;
+  }
+  function details(form) {
+    const parts = [];
+    const interests = checked(form).map((value) => {
+      if (value === WITH_SOMEONE && read(form, "companion_name")) return `${value} (${read(form, "companion_name")})`;
+      if (value === "Other" && read(form, "interest_other")) return `Other (${read(form, "interest_other")})`;
+      return value;
+    });
+    if (interests.length) parts.push(`Drawn by: ${interests.join("; ")}.`);
+    const about = read(form, "about");
+    if (about) parts.push(`About: ${about}`);
+    const linkedin = read(form, "linkedin");
+    if (linkedin) parts.push(`LinkedIn: ${linkedin}`);
+    return clipTo(parts.join(" "), 1000);
+  }
+  function followUpProblem(form) {
+    if (read(form, "referral_source") === FRIEND && !read(form, "referrer_name")) {
+      return { field: form.elements.namedItem("referrer_name"), message: "Please tell us who referred you." };
+    }
+    if (checked(form).includes(WITH_SOMEONE) && !read(form, "companion_name")) {
+      return { field: form.elements.namedItem("companion_name"), message: "Please tell us who you are attending with." };
+    }
+    const linkedin = read(form, "linkedin");
+    if (linkedin && !/linkedin\.com\//i.test(linkedin)) {
+      return { field: form.elements.namedItem("linkedin"), message: "Please enter a LinkedIn profile link, or leave it blank." };
+    }
+    return null;
+  }
+  // A follow-up field shows only when its answer calls for it, and is required
+  // only while it shows, so a hidden field can never block a submission.
+  function syncFollowUps(form) {
+    const pairs = [
+      ["ir-referrer-field", "referrer_name", read(form, "referral_source") === FRIEND, true],
+      ["ir-companion-field", "companion_name", !!byId("ir-with-someone")?.checked, true],
+      ["ir-other-field", "interest_other", !!byId("ir-other")?.checked, false],
+    ];
+    for (const [wrapId, name, show, required] of pairs) {
+      const wrap = byId(wrapId);
+      const field = form.elements.namedItem(name);
+      if (!wrap || !field) continue;
+      wrap.hidden = !show;
+      field.required = show && required;
+      if (!show) field.value = "";
+    }
+  }
+
   /* ---- Submission --------------------------------------------------------- */
   function read(form, name) {
     const field = form.elements.namedItem(name);
@@ -170,6 +230,8 @@
       status("Please enter a valid email address.", "error");
       return;
     }
+    const problem = followUpProblem(form);
+    if (problem) { status(problem.message, "error"); problem.field.focus(); return; }
     const button = byId("invitation-submit-button");
     if (button) button.disabled = true;
     status("Sending your request…", "working");
@@ -183,7 +245,8 @@
         // Seat count and free-text note are deliberately not collected: the form
         // asks only what staff need to decide, and staff follow up by email.
         // Nothing is sent for them, so nothing is recorded for them either.
-        referral_source: read(form, "referral_source") || undefined,
+        referral_source: referral(form) || undefined,
+        note: details(form) || undefined,
         turnstile_token: await token(),
       };
       const response = await fetch(`${apiBase()}/functions/v1/invitation-request`, {
@@ -203,6 +266,7 @@
         throw new Error(humanMessage(payload.error) || "We could not record your request. Please try again shortly, or write to ssuite@salute.community.");
       }
       form.reset();
+      syncFollowUps(form);
       resetTurnstile();
       if (payload.status === "already_invited") {
         done("You have already been invited.",
@@ -259,6 +323,9 @@
       if (note) note.textContent = ready.reason;
       form.querySelectorAll("input, select, textarea").forEach((field) => { field.disabled = true; });
     }
+
+    form.addEventListener("change", () => syncFollowUps(form));
+    syncFollowUps(form);
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
