@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>S.SUITE · A private invitation</title>
+<link rel="icon" href="/assets/ssuite-mark.png">
+<style>
+@font-face{font-family:Aperitif;src:url('/honoree/assets/aperitifserif-regular.woff');font-display:swap}
+@font-face{font-family:Aperitif;src:url('/honoree/assets/aperitifserif-italic.woff');font-style:italic;font-display:swap}
+@font-face{font-family:Neue;src:url('/honoree/assets/neueswiss-regular.woff');font-display:swap}
+@font-face{font-family:Neue;src:url('/honoree/assets/neueswiss-medium.woff');font-weight:500;font-display:swap}
+
+:root{
+  --black:#090909;--white:#fff;--cream:#fff;
+  --ink2:#333;--mute:#5f5f5f;--line:rgba(9,9,9,.24);--wline:rgba(255,255,255,.26);
+  --serif:Aperitif,"Times New Roman",Times,serif;--sans:Neue,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --ease:cubic-bezier(.2,.8,.2,1);--hh:124px;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--black);color:var(--black);font:400 16px/1.55 var(--sans);font-synthesis:none;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+h1,h2,h3,h4,p,ul,ol,dl,dd,figure{margin:0}
+h1,h2,h3,h4{font-weight:400;font-family:var(--serif)}
+ul,ol{padding:0;list-style:none}
+img{display:block;max-width:100%}
+button{font:inherit;color:inherit;cursor:pointer;border-radius:0}
+a{color:inherit}
+:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{position:fixed;left:8px;top:-60px;z-index:100;background:var(--black);color:#fff;padding:12px 16px;font:500 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;text-decoration:none}
+.skip:focus{top:8px}
+
+/* ── Shared type + buttons ─────────────────────────────── */
+.eyebrow{font:500 11px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:54px;padding:0 28px;border:1px solid currentColor;background:transparent;color:inherit;font:500 11px/1.2 var(--sans);letter-spacing:.16em;text-transform:uppercase;text-decoration:none;text-align:center;transition:background-color .25s var(--ease),color .25s var(--ease),border-color .25s var(--ease)}
+.btn-fill{background:var(--black);color:#fff;border-color:var(--black)}
+.btn-line{color:var(--black);border-color:var(--black)}
+.btn-wl{color:#fff;border-color:#fff}
+.btn-wf{background:#fff;color:var(--black);border-color:#fff}
+.btn-sm{min-height:46px;padding:0 20px;font-size:10.5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+@media(hover:hover){
+  .btn-fill:hover{background:transparent;color:var(--black)}
+  .btn-line:hover{background:var(--black);color:#fff}
+  .btn-wl:hover{background:#fff;color:var(--black)}
+  .btn-wf:hover{background:transparent;color:#fff}
+}
+.textbtn{background:none;border:0;padding:0;min-height:44px;font:500 10.5px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px}
+.arrow{display:inline-block;transition:transform .3s var(--ease)}
+@media(hover:hover){.btn:hover .arrow{transform:translateX(4px)}}
+
+/* ── Preview selector (concept review only) ────────────── */
+.pv{position:fixed;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));z-index:80;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.pv{opacity:.78;transition:opacity .2s}.pv:hover,.pv:focus-within{opacity:1}
+.pv-toggle,.pv-menu button{min-height:34px;padding:0 11px;background:rgba(9,9,9,.88);color:#fff;border:1px solid rgba(255,255,255,.4);font:500 9px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;backdrop-filter:blur(8px)}
+@media(max-width:899px){
+  .pv{position:relative;left:0;top:auto;bottom:auto;margin:0;padding:calc(8px + env(safe-area-inset-top,0px)) 0 0 calc(8px + env(safe-area-inset-left,0px));background:var(--white);opacity:1}
+  .pv-toggle,.pv-menu button{min-height:44px;padding-left:12px;padding-right:12px}
+  .open-light{padding-top:22px}
+  body[data-view="portal"] .pv{display:none}
+}
+.pv-menu{display:flex;flex-direction:column;gap:4px}
+.pv-menu button{text-align:left}
+.pv-menu button[aria-pressed="true"]{background:#fff;color:var(--black)}
+
+/* ── Honoree opening ── */
+.open{background:#fff;color:var(--black)}
+.open-light{padding:calc(22px + env(safe-area-inset-top,0px)) 20px 32px;text-align:center}
+.open-in{max-width:1120px;margin:0 auto}
+.mast{font:400 clamp(44px,13.5vw,64px)/.8 var(--serif);letter-spacing:-.065em;padding-bottom:12px;border-bottom:1px solid var(--black);text-align:center}
+.headline{margin:26px auto 0;max-width:720px}
+.congrats{font:500 11px/1.4 var(--sans);letter-spacing:.22em;text-transform:uppercase}
+.name{font:400 clamp(38px,11.2vw,84px)/.96 var(--serif);letter-spacing:-.055em;margin-top:14px}
+.tsep{width:44px;height:1px;background:var(--black);margin:22px auto 18px}
+.role{display:block;font:500 11px/1.55 var(--sans);letter-spacing:.16em;text-transform:uppercase}
+.org{display:block;margin-top:7px;font:italic 400 clamp(18px,5vw,24px)/1.25 var(--serif);color:var(--ink2)}
+.open-stage{--pw:min(64vw,270px);--ph:calc(var(--pw) * 1.25);background:#fff;padding-top:2px}
+.portrait{position:relative;z-index:2;width:var(--pw);height:var(--ph);margin:0 auto calc(var(--ph) * -.5);border:6px solid #fff;background:#d7d4cd;overflow:hidden}
+.portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 25%;filter:grayscale(1) contrast(1.08)}
+.open-dark{background:var(--black);color:#fff;text-align:center;padding:calc(var(--ph) * .5 + 38px) 22px 44px}
+.cat{font:italic 400 clamp(38px,11vw,56px)/1 var(--serif);letter-spacing:-.03em;margin-bottom:16px}
+.recog{font:400 clamp(20px,5.4vw,26px)/1.28 var(--serif);max-width:420px;margin:0 auto 16px}
+.about{font-size:14px;line-height:1.6;color:rgba(255,255,255,.72);max-width:400px;margin:0 auto 26px}
+.open-cta{display:flex;flex-direction:column;align-items:center;gap:14px}
+.open-note{font-size:13px;color:rgba(255,255,255,.72);max-width:340px}
+@media(min-width:900px){
+  .open-light{padding:34px 48px 44px}
+  .open-stage{--pw:340px}
+  .mast{font-size:76px;padding-bottom:16px}
+  .open-dark{padding-bottom:64px}
+}
+
+/* ── Invitation microsite ─────────────────────────────── */
+.minibar{position:fixed;z-index:60;top:0;left:0;right:0;height:calc(56px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 8px 0 18px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--black);transform:translateY(-101%);visibility:hidden;transition:transform .45s var(--ease),visibility 0s .45s}
+.minibar.on{transform:none;visibility:visible;transition:transform .45s var(--ease)}
+.minibar .m{font:400 28px/1 var(--serif);letter-spacing:-.06em}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.sec{padding:84px 0}
+.sec-white{background:#fff;color:var(--black)}
+.sec-black{background:var(--black);color:#fff}
+.sec-cream{background:var(--cream);color:var(--black)}
+.kick{display:flex;align-items:center;gap:14px;margin-bottom:26px}
+.kick::after{content:"";flex:0 0 44px;height:1px;background:currentColor;opacity:.6}
+.h2{font:400 clamp(42px,12.4vw,104px)/.92 var(--serif);letter-spacing:-.055em}
+.h2 em{font-style:italic}
+.lede{font:400 clamp(21px,5.6vw,31px)/1.3 var(--serif);letter-spacing:-.01em;margin-top:26px;max-width:640px}
+.copy{font-size:15px;line-height:1.7;color:var(--ink2);margin-top:20px;max-width:560px}
+.sec-black .copy{color:rgba(255,255,255,.78)}
+.ruled{margin-top:34px;border-bottom:1px solid var(--line)}
+.sec-black .ruled{border-color:var(--wline)}
+.ruled li{display:grid;grid-template-columns:52px 1fr;gap:4px 8px;padding:22px 0;border-top:1px solid var(--line)}
+.sec-black .ruled li{border-color:var(--wline)}
+.ruled .n{font:500 11px/2.6 var(--sans);letter-spacing:.18em;grid-row:span 2}
+.ruled .t{font:400 clamp(26px,7vw,36px)/1.1 var(--serif);letter-spacing:-.03em}
+.ruled .d{font-size:14px;line-height:1.6;color:var(--mute);max-width:440px}
+.sec-black .ruled .d{color:rgba(255,255,255,.7)}
+.split{display:grid;gap:8px}
+.nw{white-space:nowrap}.hon{display:block;width:fit-content;max-width:100%}.hon .pre{display:block;font:400 clamp(30px,8vw,56px)/1 var(--serif);letter-spacing:-.04em}.hon .pre:last-child{text-align:right}
+.bigword{display:block;font:italic 400 clamp(76px,26vw,230px)/.82 var(--serif);letter-spacing:-.07em;margin:6px 0 4px}
+.trio{display:grid;gap:0;margin-top:44px}
+.trio div{padding:22px 0;border-top:1px solid var(--wline)}
+.trio h3{font:400 30px/1.1 var(--serif);letter-spacing:-.03em;margin-bottom:8px}
+.trio p{font-size:14px;color:rgba(255,255,255,.72);line-height:1.6;max-width:360px}
+.chair{display:grid;gap:34px;margin-top:52px}
+.chair figure{aspect-ratio:3/4;overflow:hidden;background:#cfcac0;max-width:460px;width:100%}
+.chair img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;filter:grayscale(1) contrast(1.06)}
+.chair h3{font:400 clamp(44px,12vw,84px)/.92 var(--serif);letter-spacing:-.055em;margin:14px 0 20px}
+.chair h3 em{font-style:italic}
+.cohort-intro{max-width:820px}.cohort-intro strong{font-weight:400;font-style:italic}.cohonoree{margin-top:64px;padding-top:48px;border-top:1px solid var(--line)}.cohonoree figure{max-width:280px;margin:0 auto}.co-name{font:400 clamp(46px,13vw,80px)/.92 var(--serif);letter-spacing:-.055em;margin:14px 0 0}.co-name em{font-style:italic}.cohonoree .copy strong{font-weight:500;color:var(--black)}
+.about-grid{display:grid;gap:48px}.about-columns{border-top:1px solid var(--wline)}.about-columns article{padding:24px 0;border-bottom:1px solid var(--wline)}.about-columns article>p:last-child{font-size:15px;line-height:1.7;color:rgba(255,255,255,.76);margin-top:12px;max-width:520px}
+.story-grid{display:grid;gap:48px}.story-head .lede{max-width:620px}.story-detail{border-top:1px solid var(--line)}.sec-black .story-detail{border-color:var(--wline)}.story-block{padding:25px 0;border-bottom:1px solid var(--line)}.sec-black .story-block{border-color:var(--wline)}.story-block>p:last-child,.story-block>div>p:last-child{font-size:15px;line-height:1.7;color:var(--ink2);margin-top:12px;max-width:560px}.sec-black .story-block>p:last-child,.sec-black .story-block>div>p:last-child{color:rgba(255,255,255,.76)}.story-block strong{font-weight:500}.indra-card{display:grid;grid-template-columns:112px 1fr;gap:22px;align-items:start}.indra-card figure{width:112px;aspect-ratio:3/4;overflow:hidden;background:#d2cfc8}.indra-card img{width:100%;height:100%;object-fit:cover;object-position:50% 18%;filter:grayscale(1) contrast(1.06)}.indra-name{font:400 clamp(34px,9vw,50px)/.95 var(--serif);letter-spacing:-.05em;margin:9px 0 0}.indra-name em{font-style:italic}
+.date{font:400 clamp(20px,6vw,30px)/1.1 var(--serif);font-style:italic;margin-bottom:6px}
+.datebig{font:400 clamp(58px,20vw,128px)/.86 var(--serif);letter-spacing:-.07em}
+.facts{margin-top:40px;display:grid;border-top:1px solid var(--black)}
+.facts div{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.facts dt{font:500 10.5px/1.4 var(--sans);letter-spacing:.18em;text-transform:uppercase}
+.facts dd{font:400 clamp(22px,6vw,30px)/1.15 var(--serif);letter-spacing:-.02em}
+.flow-h{font:400 clamp(30px,8vw,48px)/1 var(--serif);letter-spacing:-.04em;margin:64px 0 0}
+.pillars{display:grid;grid-template-columns:1fr 1fr;margin-top:44px;border-top:1px solid var(--wline)}
+.pillars li{padding:20px 0;border-bottom:1px solid var(--wline);font:400 clamp(24px,6.6vw,38px)/1.1 var(--serif);letter-spacing:-.03em}
+.pillars li small{display:block;font:500 10px/1 var(--sans);letter-spacing:.18em;margin-bottom:10px;color:rgba(255,255,255,.65)}
+.invite-brief{padding-top:8px}.invite-brief .datebig{font-size:clamp(38px,10vw,58px);line-height:.95;margin:14px 0 26px}.compact-facts{margin-top:0}.invite-brief .btn{margin-top:28px}.evening-simple .h2{max-width:900px}.event-line{margin-top:30px;padding:18px 0;border-top:1px solid var(--black);border-bottom:1px solid var(--black);font:500 11px/1.6 var(--sans);letter-spacing:.12em;text-transform:uppercase}.evening-simple .copy{max-width:720px;margin-top:28px}
+.learn .h2{max-width:760px}.learn-list{margin-top:46px;border-top:1px solid var(--wline)}.learn-list details{border-bottom:1px solid var(--wline)}.learn-list summary{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px 0;cursor:pointer;list-style:none;font:400 clamp(23px,6vw,32px)/1.15 var(--serif)}.learn-list summary::-webkit-details-marker{display:none}.learn-list summary span{flex:none;font:300 25px/1 var(--sans);transition:transform .2s var(--ease)}.learn-list details[open] summary span{transform:rotate(45deg)}.learn-list details>div{padding:0 0 26px;max-width:720px}.learn-list details p{font-size:15px;line-height:1.7;color:rgba(255,255,255,.76)}
+.final{text-align:center;padding:96px 0 104px}
+.final .h2{max-width:880px;margin:0 auto}
+.final .lede{margin-left:auto;margin-right:auto;text-align:center}
+.final .btn{margin-top:38px}
+.final .fine{font-size:13px;color:var(--mute);margin-top:20px}
+.foot{background:var(--black);color:rgba(255,255,255,.68);padding:34px 20px calc(84px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12px;line-height:1.6}
+.foot b{display:block;font:400 34px/1 var(--serif);color:#fff;letter-spacing:-.06em;margin-bottom:10px}
+@media(min-width:900px){
+  .wrap{padding:0 48px}
+  .sec{padding:128px 0}
+  .split{grid-template-columns:6fr 5fr;gap:96px;align-items:start}
+  .split .ruled{margin-top:6px}
+  .trio{grid-template-columns:repeat(3,1fr);gap:40px}
+  .trio div{border-top:1px solid var(--wline)}
+  .chair{grid-template-columns:5fr 6fr;gap:96px;align-items:center}
+  .cohonoree figure{max-width:330px;margin:0}
+  .about-grid{grid-template-columns:6fr 5fr;gap:96px;align-items:start}
+  .story-grid{grid-template-columns:6fr 5fr;gap:96px;align-items:start}
+  .indra-card{grid-template-columns:150px 1fr;gap:28px}.indra-card figure{width:150px}
+  .facts{grid-template-columns:repeat(3,1fr);gap:0 40px;border-bottom:1px solid var(--line)}
+  .facts div{grid-template-columns:1fr;gap:10px;padding:22px 0;border-bottom:0}
+  .flow{display:grid;grid-template-columns:5fr 7fr;gap:96px;margin-top:96px;align-items:start}
+  .flow-h{margin-top:0}
+  .flow .ruled{margin-top:0}
+  .pillars{grid-template-columns:repeat(4,1fr);gap:0}
+  .pillars li{border-right:1px solid var(--wline);padding:24px 18px 44px}
+  .pillars li:last-child{border-right:0}
+  .minibar{padding:0 32px}
+}
+/* reveal */
+.js .rv{opacity:0;transform:translateY(22px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.js .rv.in{opacity:1;transform:none}
+
+
+.sample-note{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:6px}
+
+/* ── Private portal ───────────────────────────────────── */
+#view-portal{background:#fff;color:var(--black);min-height:100vh;min-height:100svh}
+.p-top{position:sticky;top:0;z-index:50;padding-top:env(safe-area-inset-top,0px);background:var(--black);color:#fff}
+.p-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px;padding:0 16px 0 6px}
+.p-back{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 12px;background:none;border:0;color:#fff;font:500 10.5px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.p-back:hover{text-decoration:underline;text-underline-offset:5px}
+.p-mast{display:flex;align-items:baseline;gap:12px;font:400 26px/1 var(--serif);letter-spacing:-.06em}
+.p-mast small{display:none;font:500 10px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.p-steps{position:relative;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;border-top:1px solid rgba(255,255,255,.2);-webkit-overflow-scrolling:touch}
+.p-steps::-webkit-scrollbar{display:none}
+.p-steps ol{display:flex;min-width:max-content}
+.p-steps li{flex:1 0 auto}
+.p-step{width:100%;min-width:118px;min-height:66px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:6px;padding:8px 16px;background:none;border:0;border-right:1px solid rgba(255,255,255,.16);color:rgba(255,255,255,.62);text-align:left;transition:background-color .3s,color .3s}
+.p-step .n{display:none}
+.p-step .t{font:400 17px/1.05 var(--serif);letter-spacing:-.015em}
+.p-step.is-done{color:#fff}
+.p-step.is-done .t{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px}
+.p-step.is-current{background:var(--cream);color:var(--black)}
+.p-step:disabled{opacity:.32;cursor:not-allowed}
+.tick{display:inline-block;width:6px;height:10px;border:solid currentColor;border-width:0 1.6px 1.6px 0;transform:rotate(45deg) translate(-1px,-1px)}
+@media(hover:hover){.p-step:not(:disabled):not(.is-current):hover{color:#fff;background:rgba(255,255,255,.08)}}
+.p-line{height:3px;background:rgba(255,255,255,.2)}
+.p-line i{display:block;height:100%;width:0;background:var(--cream);transition:width .6s var(--ease)}
+.p-main{max-width:1120px;margin:0 auto;padding:34px 20px calc(120px + env(safe-area-inset-bottom,0px))}
+.step{display:grid;gap:30px}
+.ps-num{display:none}
+.ps-title{font:400 clamp(38px,11vw,60px)/.95 var(--serif);letter-spacing:-.055em;margin-top:0;outline:none}
+.ps-lead{font:400 clamp(19px,5vw,22px)/1.38 var(--serif);color:var(--ink2);margin-top:16px;max-width:420px}
+.ps-count{font:500 10.5px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;margin-top:22px;color:var(--mute)}
+.alert{border:1px solid var(--black);border-left-width:5px;background:#fff;padding:16px 18px;margin-bottom:30px;font-size:14px}
+.alert strong{display:block;font:500 11px/1.4 var(--sans);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
+.alert ul{list-style:disc;padding-left:18px}
+.alert:focus{outline:none}
+.grp{border:0;padding:0 0 32px;margin:0;min-width:0}
+.grp+.grp{border-top:1px solid var(--line);padding-top:30px}
+.grp>legend,.grp-t{font:500 11px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:0;margin-bottom:14px;width:100%}
+.grp>legend{float:left}.grp>legend+*{clear:both}.grp>legend:has(+.grp-d){margin-bottom:6px}.grp-t{margin-bottom:6px}
+.grp-d{font-size:14px;color:var(--mute);margin:0 0 14px;max-width:520px}
+.fld{display:block;margin-bottom:26px}
+.lbl{display:block;font:500 11px/1.4 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.lbl i{font-style:normal;color:var(--mute);letter-spacing:.1em;margin-left:6px}
+.hint{display:block;font-size:13px;line-height:1.5;color:var(--mute);margin-top:3px}
+.fld input:not([type=file]),.fld textarea,.fld select{display:block;width:100%;min-height:54px;margin-top:4px;padding:13px 0;border:0;border-bottom:1px solid var(--black);border-radius:0;background:transparent;font:400 17px/1.45 var(--sans);color:var(--black);-webkit-appearance:none;appearance:none}
+.fld textarea{resize:vertical;min-height:112px;line-height:1.55}
+.fld input::placeholder,.fld textarea::placeholder{color:#6b6860}
+.fld input:not([type=file]):focus,.fld textarea:focus{outline:none;background:rgba(255,255,255,.6);box-shadow:0 2px 0 var(--black)}
+.fld [aria-invalid="true"]{border-bottom-width:3px}
+.err{display:block;margin-top:8px;font:500 12.5px/1.4 var(--sans)}
+.err::before{content:"— "}
+.row2{display:grid;gap:0 28px}
+.choices{margin-top:8px}
+.choice{display:flex;gap:16px;align-items:flex-start;min-height:60px;padding:18px 0;border-top:1px solid var(--line);cursor:pointer}
+.choice input{flex:none;-webkit-appearance:none;appearance:none;display:grid;place-content:center;width:26px;height:26px;margin:1px 0 0;border:1px solid var(--black);background:transparent;border-radius:50%;cursor:pointer}
+.choice input[type=checkbox]{border-radius:0}
+.choice input::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--black);transform:scale(0);transition:transform .18s var(--ease)}
+.choice input[type=checkbox]::after{width:7px;height:12px;border-radius:0;background:none;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) scale(0);margin-top:-2px}
+.choice input[type=checkbox]:checked{background:var(--black)}
+.choice input:checked::after{transform:scale(1)}
+.choice input[type=checkbox]:checked::after{transform:rotate(45deg) scale(1)}
+.choice b{display:block;font:400 clamp(21px,5.6vw,25px)/1.15 var(--serif);letter-spacing:-.02em;font-weight:400}
+.choice small{display:block;font-size:14px;line-height:1.5;color:var(--mute);margin-top:5px}
+.choice:has(input:checked) b{font-style:italic}
+.choices.compact .choice{min-height:52px;padding:14px 0}
+.choices.compact .choice b{font-size:20px}
+.reveal-box{padding:22px 0 0;margin-bottom:8px}
+.note{border-left:2px solid var(--black);padding:2px 0 2px 16px;font-size:14px;line-height:1.6;color:#262626;margin:0 0 34px;max-width:560px}
+.note b{font-weight:500}
+.acts{display:flex;flex-direction:column;gap:12px;margin-top:16px;padding-top:26px;border-top:1px solid var(--black)}
+.acts .btn{width:100%}
+@media(min-width:640px){
+  .row2{grid-template-columns:1fr 1fr}
+  .acts{flex-direction:row;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+  .acts .btn{width:auto;min-width:200px}
+  .acts [data-prev],.acts [data-back-invite]{order:1;margin-right:auto}
+  .acts [data-skip]{order:2}
+  .acts [data-next],.acts #submit{order:3}
+}
+@media(min-width:900px){
+  .p-mast small{display:inline}
+  .p-bar{padding:0 32px 0 20px}
+  .p-steps{position:fixed;z-index:45;top:52px;bottom:0;left:0;width:260px;overflow-y:auto;background:#fff;border-top:0;border-right:1px solid var(--line)}
+  .p-steps ol{display:flex;flex-direction:column;min-width:0;padding:34px 25px 80px}
+  .p-steps li{flex:none}
+  .p-step{min-width:0;min-height:62px;padding:17px 0;display:block;border-right:0;border-bottom:1px solid var(--line);color:#777}
+  .p-step .t{font-size:20px}
+  .p-step.is-current{background:transparent;color:var(--black)}
+  .p-step.is-current .t{font-style:italic}
+  .p-step.is-done{color:#303030}
+  .p-step.is-done .t{text-decoration:none}
+  .p-step.is-done .t::after{content:"✓";float:right;font:500 12px/1 var(--sans);margin-top:4px}
+  .p-step:not(:disabled):not(.is-current):hover{color:var(--black);background:transparent}
+  .p-line{display:none}
+  .p-main{max-width:none;margin-left:260px;padding:68px 6vw 140px}
+  .step{display:block;max-width:760px;margin:0 auto}
+  .ps-head{position:static;margin-bottom:42px;padding-bottom:32px;border-bottom:1px solid var(--black)}
+}
+/* upload */
+.upload{display:flex;flex-wrap:wrap;gap:16px 20px;align-items:center;margin-top:12px;padding:20px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.upload .thumb{width:72px;height:90px;object-fit:cover;filter:grayscale(1);border:1px solid var(--black)}
+.upload .up-info{flex:1 1 200px;min-width:0}
+.upload .up-name{font:400 20px/1.2 var(--serif);word-break:break-word}
+.upload .up-meta{font-size:13px;color:var(--mute);margin-top:3px}
+.up-btn:focus-within{outline:2px solid var(--black);outline-offset:3px}
+.up-btn{cursor:pointer}
+/* contacts */
+.cm{margin-top:10px}
+.cm-h{font:400 26px/1.1 var(--serif);letter-spacing:-.03em;margin:34px 0 14px}
+.cm-tools{display:flex;flex-wrap:wrap;gap:12px;margin:2px 0 22px;align-items:center}
+.cm-tools .btn{flex:1 1 180px}
+@media(min-width:640px){.cm-tools .btn{flex:0 0 auto;min-width:210px}}
+.cm-msg{min-height:22px;font-size:14px;margin:4px 0 6px;font-weight:500}
+.cm-list-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:22px;border-bottom:1px solid var(--black);padding-bottom:10px}
+.cm-count{font:400 30px/1 var(--serif);letter-spacing:-.03em;margin:0}
+.cm-list li{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:64px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cm-list .c-n{font:400 21px/1.15 var(--serif);word-break:break-word}
+.cm-list .c-n em{color:var(--mute)}
+.cm-list .c-m{display:block;font-size:14px;color:var(--mute);word-break:break-all}
+.cm-empty{font-size:14px;color:var(--mute);padding:18px 0}
+.rm{flex:none;min-width:44px;min-height:44px;padding:0 4px;background:none;border:0;font:500 10.5px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;text-decoration:underline;text-underline-offset:5px}
+/* letter */
+.letter{background:#fff;border:1px solid var(--line);padding:26px 22px 18px;margin-top:16px}
+.letter-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 16px;padding-bottom:14px;border-bottom:1px solid var(--black);margin-bottom:6px}
+.letter-head .tools{display:flex;gap:16px}
+.letter .fld{margin-bottom:12px}
+.letter .fld textarea.body{font:400 clamp(17px,4.6vw,19px)/1.6 var(--serif);min-height:280px;padding:14px 0;border-bottom:0}
+.letter .fld input{font-weight:500}
+.letter-msg{font-size:13px;min-height:20px;color:var(--mute)}
+/* review */
+.figs{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--black);border-bottom:1px solid var(--black);margin-bottom:36px}
+.fig{padding:20px 0 18px 14px;border-left:1px solid var(--line)}
+.fig:first-child{border-left:0;padding-left:0}
+.fig b{display:block;font:400 clamp(44px,12vw,72px)/.9 var(--serif);letter-spacing:-.05em;font-weight:400}
+.fig span{display:block;margin-top:8px;font:500 10px/1.4 var(--sans);letter-spacing:.16em;text-transform:uppercase}
+.rsec{padding:22px 0 12px;border-top:1px solid var(--black)}
+.rsec-h{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.rsec-h h3{font:400 28px/1.1 var(--serif);letter-spacing:-.03em}
+.rrow{display:grid;gap:2px;padding:12px 0;border-top:1px solid var(--line)}
+.rsec-h+dl .rrow:first-child{margin-top:8px}
+.rrow dt{font:500 10.5px/1.5 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.rrow dd{font-size:16px;line-height:1.5;word-break:break-word}
+.none{color:var(--mute)}
+@media(min-width:640px){.rrow{grid-template-columns:200px 1fr;gap:20px}}
+.finalbox{margin-top:36px}
+.confirm{background:var(--black);color:#fff;padding:44px 24px 36px;outline:none}
+.confirm .cm-mast{font:400 34px/1 var(--serif);letter-spacing:-.06em;padding-bottom:14px;border-bottom:1px solid var(--wline);margin-bottom:34px}
+.confirm h3{font:italic 400 clamp(52px,15vw,96px)/.9 var(--serif);letter-spacing:-.06em}
+.confirm .lede{color:#fff;margin-top:22px}
+.confirm p.small{font-size:14px;line-height:1.7;color:rgba(255,255,255,.78);margin-top:20px;max-width:520px}
+.confirm .stamp{margin-top:26px;padding:16px 0;border-top:1px solid var(--wline);border-bottom:1px solid var(--wline);font:500 11px/1.7 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.confirm .cacts{display:flex;flex-direction:column;gap:12px;margin-top:32px}
+@media(min-width:640px){.confirm{padding:56px 48px 48px}.confirm .cacts{flex-direction:row;flex-wrap:wrap}}
+
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  .js .rv{opacity:1;transform:none}
+}
+
+/* live portal additions */
+.gate{min-height:100svh;display:grid;place-items:center;background:var(--black);color:#fff;text-align:center;padding:40px 24px}
+.gate .mast{font:400 clamp(34px,6vw,54px)/1 var(--serif);letter-spacing:.02em}
+.gate p{max-width:440px;margin:22px auto 0;color:rgba(255,255,255,.78);font-size:15px;line-height:1.6}
+.gate a{color:#fff}
+.gate .pulse{width:44px;height:1px;background:#fff;margin:28px auto 0;animation:gp 1.4s ease-in-out infinite}
+@keyframes gp{0%,100%{opacity:.2;transform:scaleX(.4)}50%{opacity:1;transform:scaleX(1)}}
+.savestate{font:500 10px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);min-height:12px;margin-top:6px}
+.statusbar{background:#f3f3f3;border:1px solid var(--line);padding:14px 18px;margin:0 0 26px;font-size:14px;line-height:1.55}
+.linkbox{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-top:10px}
+.linkbox input{flex:1 1 260px;min-width:0}
+.confirm .linkbox input{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);padding:12px}
+.confirm .gl{margin-top:26px;text-align:left}
+.confirm .gl .eyebrow{color:rgba(255,255,255,.7)}
+</style>
+</head>
+<body data-view="invite">
+<a class="skip" href="#main-content">Skip to content</a>
+<noscript><div class="gate"><div><div class="mast">S.SUITE</div><p>Your private invitation needs JavaScript. Please turn it on, or write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p></div></div></noscript>
+<div class="gate" id="gate" role="status" aria-live="polite"><div><div class="mast">S.SUITE</div><p id="gate-msg">Opening your private invitation…</p><div class="pulse" id="gate-pulse" aria-hidden="true"></div></div></div>
+
+ — opening sample ═══════════ -->
+
+
+<!-- ═══════════ NEELA — invitation microsite ═══════════ -->
+<div id="view-invite" hidden>
+  <div class="minibar" id="minibar">
+    <span class="m" aria-hidden="true">S.SUITE</span>
+    <button type="button" class="textbtn" data-enter tabindex="-1" id="mini-enter">Accept Your Invitation <span aria-hidden="true">→</span></button>
+  </div>
+  <main id="main-content">
+    <!-- Opening: approved Classic Split -->
+    <header class="open" id="top">
+      <div class="open-light"><div class="open-in">
+        <div class="mast" aria-label="S.SUITE">S.SUITE</div>
+        <div class="headline">
+          <p class="congrats">Congratulations</p>
+          <h1 class="name" data-b="full_name"></h1>
+          <div class="tsep" aria-hidden="true"></div>
+          <p class="honoree-title"><span class="role" data-b="headline_title"></span></p>
+        </div>
+      </div></div>
+      <div class="open-stage">
+        <figure class="portrait"><img id="portrait" alt="" style="object-position:50% 18%"></figure>
+        <div class="open-dark">
+          <p class="cat" data-b="honor_label"></p>
+          <p class="recog">You’ve been nominated and recognized as an inaugural S.SUITE Honoree.</p>
+          <p class="about">S.SUITE recognizes South Asian women leaders and allies shaping business, capital, culture, impact, and community.</p>
+          <div class="open-cta">
+            <button type="button" class="btn btn-wl" data-enter>Accept Your Invitation <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="textbtn" data-scroll="#platform" style="color:#fff">Explore S.SUITE <span aria-hidden="true">↓</span></button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- About S.SUITE, SALUTE, and the Director Honor -->
+    <section class="sec sec-black story" id="platform" aria-labelledby="h-platform">
+      <div class="wrap rv story-grid">
+        <header class="story-head">
+          <p class="eyebrow kick">About S.SUITE</p>
+          <h2 class="h2" id="h-platform" tabindex="-1">Recognition with <em>purpose.</em></h2>
+          <p class="lede">S.SUITE is SALUTE’s honors platform for South Asian women leaders and allies shaping business, capital, culture, impact, and community.</p>
+        </header>
+        <div class="story-detail">
+          <article class="story-block"><p class="eyebrow">Your Recognition</p><p id="honor-blurb"></p></article>
+          <article class="story-block"><p class="eyebrow">SALUTE</p><p>SALUTE is a 501(c)(3) private professional network for senior South Asian women and allies, expanding access, visibility, connection, and opportunity.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <!-- The inaugural S.SUITE cohort -->
+    <section class="sec sec-white story" id="honor" aria-labelledby="h-honor">
+      <div class="wrap rv story-grid">
+        <header class="story-head">
+          <p class="eyebrow kick">The Inaugural Cohort</p>
+          <h2 class="h2" id="h-honor" tabindex="-1">Honored in distinguished <em>company.</em></h2>
+          <p class="lede">The inaugural S.SUITE brings together honorees across distinct areas of leadership. Each recognition reflects a different way leaders shape institutions, industries, culture, and community.</p>
+        </header>
+        <div class="story-detail">
+          <article class="story-block indra-card">
+            <figure><img src="/assets/portrait-indra-nooyi-tall.jpg" alt="Portrait of Indra Nooyi" loading="lazy"></figure>
+            <div><p class="eyebrow">The S.SUITE Chair</p><h3 class="indra-name">Indra <em>Nooyi</em></h3><p>Indra Nooyi will receive The S.SUITE Chair, SALUTE’s lifetime achievement honor for extraordinary leadership, enduring legacy, and lasting impact. She will also join the evening for a fireside conversation.</p></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- The evening -->
+    <section class="sec sec-black story" id="evening" aria-labelledby="h-evening">
+      <div class="wrap rv story-grid">
+        <header class="story-head">
+          <p class="eyebrow kick">The Evening</p>
+          <h2 class="h2" id="h-evening">Friday, November <em>20, 2026</em></h2>
+          <p class="lede">An intentional evening of recognition and connection.</p>
+        </header>
+        <div class="story-detail">
+          <article class="story-block"><p class="eyebrow">When + Where</p><p>6:30 p.m.<br>Prince George Ballroom<br>New York City</p></article>
+          <article class="story-block"><p class="eyebrow">The Program</p><p>Introductions, dinner and S.SUITE Honors, a fireside conversation with Indra Nooyi, and time to continue the connections begun around the table.</p></article>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="foot">
+    <b aria-hidden="true">S.SUITE</b>
+    A SALUTE honors platform<br>
+    Private and confidential · Your responses are saved securely.
+  </footer>
+</div>
+
+<!-- ═══════════ NEELA — private portal ═══════════ -->
+<div id="view-portal" hidden>
+  <div class="p-top" id="p-top">
+    <div class="p-bar">
+      <button type="button" class="p-back" id="p-back"><span aria-hidden="true">←</span> Back to Invitation</button>
+      <div class="p-mast"><span aria-hidden="true">S.SUITE</span><small>Honoree Invitation · <span data-b="full_name"></span></small><span class="savestate" id="savestate" aria-live="polite"></span></div>
+    </div>
+    <nav class="p-steps" id="p-steps" aria-label="Invitation progress">
+      <ol>
+        <li><button type="button" class="p-step" data-i="0"><span class="n">01</span><span class="t">Invitation</span></button></li>
+        <li><button type="button" class="p-step" data-i="1"><span class="n">02</span><span class="t">Profile</span></button></li>
+        <li><button type="button" class="p-step" data-i="2"><span class="n">03</span><span class="t">Evening</span></button></li>
+        <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Announcement</span></button></li>
+        <li><button type="button" class="p-step" data-i="4"><span class="n">05</span><span class="t">Invite Others</span></button></li>
+        <li><button type="button" class="p-step" data-i="5"><span class="n">06</span><span class="t">Support SALUTE</span></button></li>
+        <li><button type="button" class="p-step" data-i="6"><span class="n">07</span><span class="t">Review</span></button></li>
+      </ol>
+    </nav>
+    <div class="p-line" aria-hidden="true"><i id="p-fill"></i></div>
+  </div>
+
+  <main class="p-main" id="main-portal">
+    <form id="pf" novalidate autocomplete="off">
+
+      <!-- 01 Response -->
+      <section class="step" data-step="0" aria-labelledby="t0">
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">01</p>
+          <h2 class="ps-title" id="t0" tabindex="-1">Your invitation</h2>
+          <p class="ps-lead">We would be honored to recognize you in person as an inaugural S.SUITE <span data-b="honor"></span> Honoree on Friday, November 20, 2026.<span id="deadline-line"></span></p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <p class="statusbar" id="statusbar" hidden></p>
+          <fieldset class="grp">
+            <legend>Your decision</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="response" value="accept"><span><b>I’m honored to accept</b><small>I accept the nomination and confirm that I will attend S.SUITE in person on Friday, November 20, 2026, in New York City.</small></span></label>
+              <label class="choice"><input type="radio" name="response" value="decline"><span><b>Respectfully decline</b><small>With gratitude, I’m unable to accept the invitation at this time.</small></span></label>
+            </div>
+          </fieldset>
+          <p class="note"><b>In-person attendance on November 20 is required to accept the nomination.</b> Acceptance is not contingent on purchasing tickets, sponsorship, donations, or fundraising.</p>
+          <div id="decline-box" hidden>
+            <label class="fld"><span class="lbl">A note to the SALUTE team <i>Optional</i></span>
+              <textarea name="declineNote" rows="4" placeholder="Share anything you’d like the team to know."></textarea></label>
+            <p class="note">We understand, and we’re grateful you took the time to consider it. Declining will take you straight to review.</p>
+          </div>
+          <fieldset class="grp" id="handoff-grp">
+            <legend>Prefer to delegate?</legend>
+            <p class="grp-d">A member of your team can complete the remaining steps on your behalf.</p>
+            <div class="choices"><label class="choice"><input type="checkbox" name="handoff"><span><b>Hand off completion to a team member</b><small>You’ll stay in control of your decision above.</small></span></label></div>
+            <div class="reveal-box" id="handoff-box" hidden>
+              <div class="row2">
+                <label class="fld"><span class="lbl">Team member name</span><input type="text" name="hoName" autocomplete="off" placeholder="Full name"></label>
+                <label class="fld"><span class="lbl">Team member email</span><input type="email" name="hoEmail" inputmode="email" autocomplete="off" placeholder="name@company.com"></label>
+              </div>
+              <p class="note">SALUTE will share your private link with them and keep you copied. You remain in control of your decision.</p>
+            </div>
+          </fieldset>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-back-invite>Back to Invitation</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 Profile -->
+      <section class="step" data-step="1" aria-labelledby="t1" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">02</p>
+          <h2 class="ps-title" id="t1" tabindex="-1">Your profile</h2>
+          <p class="ps-lead">How you’d like to be presented, in your words.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <fieldset class="grp">
+            <legend>Public listing</legend>
+            <label class="fld"><span class="lbl">Preferred public name</span><input type="text" name="pubName" autocomplete="off"></label>
+            <label class="fld"><span class="lbl">Professional title</span><input type="text" name="pubTitle" autocomplete="off"></label>
+            <label class="fld"><span class="lbl">Organization(s)</span><input type="text" name="pubOrg" autocomplete="off"></label>
+            <label class="fld"><span class="lbl">Short bio <i>Optional</i></span>
+              <span class="hint">Around 75 words is ideal; 120 is the maximum. <span id="bio-count">0 words</span></span>
+              <textarea name="bio" rows="6" placeholder="Write in the third person, as it would appear in print."></textarea></label>
+            <label class="fld"><span class="lbl">Name pronunciation <i>Optional</i></span>
+              <span class="hint">A phonetic spelling helps the host say your name as you do.</span>
+              <input type="text" name="pron" autocomplete="off" placeholder="Phonetic spelling"></label>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Headshot</legend>
+            <p class="grp-d">High-resolution JPG or PNG, at least 1200 px on the long side. Uploads are stored privately and shared only with the SALUTE team.</p>
+            <div class="upload" id="hs">
+              <img class="thumb" id="hs-thumb" alt="" hidden>
+              <div class="up-info" id="hs-info">
+                <p class="up-name" id="hs-name">No file selected</p>
+                <p class="up-meta" id="hs-meta" role="status">Choose an image to attach it to your profile.</p>
+              </div>
+              <input class="sr" type="file" id="hs-input" name="headshot" accept="image/*" aria-describedby="hs-meta">
+              <label class="btn btn-line btn-sm up-btn" for="hs-input" id="hs-btn">Choose image</label>
+              <button type="button" class="textbtn" id="hs-remove" hidden>Remove</button>
+            </div>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Communications</legend>
+            <p class="grp-d">Who should we coordinate with on your behalf, if not you?</p>
+            <div class="row2">
+              <label class="fld"><span class="lbl">Team contact name <i>Optional</i></span><input type="text" name="teamName" autocomplete="off"></label>
+              <label class="fld"><span class="lbl">Team contact email <i>Optional</i></span><input type="email" name="teamEmail" inputmode="email" autocomplete="off"></label>
+            </div>
+            <label class="fld"><span class="lbl">Social link <i>Optional</i></span><span class="hint">LinkedIn, Instagram, or your preferred profile.</span>
+              <input type="url" name="social" inputmode="url" autocomplete="off" placeholder="linkedin.com/in/yourname"></label>
+          </fieldset>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 Evening -->
+      <section class="step" data-step="2" aria-labelledby="t2" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">03</p>
+          <h2 class="ps-title" id="t2" tabindex="-1">Your evening</h2>
+          <p class="ps-lead">Friday, November 20, 2026, 6:30 p.m. Prince George Ballroom, New York City.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <fieldset class="grp">
+            <legend>In-person attendance</legend>
+            <p class="grp-d">Your recognition will be presented at S.SUITE on Friday, November 20, 2026, in New York City. Honorees must be present to accept their nomination.</p>
+            <div class="choices">
+              <label class="choice"><input type="checkbox" name="attend" value="yes"><span><b>I confirm that I will attend S.SUITE in person on November 20</b><small>Prince George Ballroom · New York City · 6:30 p.m.</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="grp" id="guest-grp">
+            <legend>Your complimentary guest</legend>
+            <p class="grp-d">Your invitation includes one complimentary guest. If you would like to invite additional guests, they may register at the special honoree rate of $300 per person, subject to availability. Additional seats are confirmed only after registration and payment.</p>
+            <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’d like to bring a guest</b></span></label></div>
+            <div class="reveal-box" id="guest-box" hidden>
+              <div class="row2">
+                <label class="fld"><span class="lbl">Guest name</span><input type="text" name="gName" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Guest email</span><input type="email" name="gEmail" inputmode="email" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Guest title <i>Optional</i></span><input type="text" name="gTitle" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Guest organization <i>Optional</i></span><input type="text" name="gOrg" autocomplete="off"></label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Additional seating <span style="font:inherit;font-style:italic">Optional</span></legend>
+            <p class="grp-d">In addition to your complimentary guest, individual guests may register at the $300 honoree rate. Honorees may also purchase a table at the extended early-bird rate of $5,000. Neither option is required to accept your nomination.</p>
+            <div class="choices">
+              <label class="choice"><input type="checkbox" name="tableLink"><span><b>Send me the secure link to purchase a table for $5,000</b><small>SALUTE will follow up with the extended early-bird purchase link and seating details.</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Meal preference</legend>
+            <div class="choices compact" id="diet">
+              <label class="choice"><input type="radio" name="diet" value="Vegetarian"><span><b>Vegetarian</b></span></label>
+              <label class="choice"><input type="radio" name="diet" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
+            </div>
+            <label class="fld" style="margin-top:22px"><span class="lbl">Food allergies <i>Optional</i></span><textarea name="dietNote" rows="3"></textarea></label>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Accessibility &amp; accommodations</legend>
+            <label class="fld"><span class="lbl">How can we make the evening comfortable for you? <i>Optional</i></span><textarea name="access" rows="3"></textarea></label>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Arrival &amp; travel</legend>
+            <label class="fld"><span class="lbl">Arrival or travel notes <i>Optional</i></span><span class="hint">Expected arrival time, travelling from out of town, car service, or anything else.</span><textarea name="travel" rows="3"></textarea></label>
+          </fieldset>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 Announcement -->
+      <section class="step" data-step="3" aria-labelledby="t3" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">04</p>
+          <h2 class="ps-title" id="t3" tabindex="-1">Your announcement</h2>
+          <p class="ps-lead">Help us make sharing your S.SUITE recognition seamless.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <p class="note"><b>SALUTE will announce you as an inaugural S.SUITE <span data-b="honor"></span> Honoree.</b> We’ll use the name, title, biography, and headshot provided in your Profile and coordinate announcement details with you or your team.</p>
+          <fieldset class="grp">
+            <legend>Would you like to share the announcement?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="shareAnnouncement" value="Yes, I plan to share"><span><b>Yes, I’d be happy to share it</b><small>Please send me the final announcement and assets.</small></span></label>
+              <label class="choice"><input type="radio" name="shareAnnouncement" value="I may share"><span><b>I may share it</b><small>Please send me the materials when they’re ready.</small></span></label>
+              <label class="choice"><input type="radio" name="shareAnnouncement" value="No plans to share"><span><b>I don’t plan to post</b><small>SALUTE may still announce the recognition through its own channels.</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Would you like SALUTE to craft a post for you?</legend>
+            <div class="choices compact">
+              <label class="choice"><input type="radio" name="draftPost" value="Yes"><span><b>Yes, please draft a post for me</b><small>We’ll prepare polished copy that you or your team can edit.</small></span></label>
+              <label class="choice"><input type="radio" name="draftPost" value="No"><span><b>No, thank you</b></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Announcement coordination</legend>
+            <div class="choices compact">
+              <label class="choice"><input type="radio" name="annContact" value="Me directly"><span><b>Coordinate with me directly</b></span></label>
+              <label class="choice"><input type="radio" name="annContact" value="My communications / team contact"><span><b>Coordinate with my communications or team contact</b></span></label>
+              <label class="choice"><input type="radio" name="annContact" value="Both of us"><span><b>Coordinate with both of us</b></span></label>
+            </div>
+            <label class="fld" style="margin-top:22px"><span class="lbl">Timing or communications notes <i>Optional</i></span><textarea name="annNote" rows="3" placeholder="Share any dates, approvals, or other considerations we should know."></textarea></label>
+          </fieldset>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 Invite Others -->
+      <section class="step" data-step="4" aria-labelledby="t4" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">05</p>
+          <h2 class="ps-title" id="t4" tabindex="-1">Invite additional guests</h2>
+          <p class="ps-lead">Make it easy for the people you would like in the room to join you.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <p class="note"><b>Additional guests receive a special honoree rate of $300 per person.</b> Space is limited, and adding a name here does not reserve a seat. Each guest’s place is confirmed only after SALUTE shares the registration link and payment is completed.</p>
+          <fieldset class="grp">
+            <legend>Your personal invitation link</legend>
+            <p class="grp-d" id="gl-desc">Your personalized link appears here as soon as you submit your acceptance. It takes invited guests straight to the $300 honoree rate.</p>
+            <div class="linkbox"><input type="text" id="gl-field" value="Your personalized link will appear here after acceptance" readonly aria-label="Personalized guest invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy" hidden>Copy link</button></div>
+            <p class="letter-msg" role="status" id="gl-msg"></p>
+          </fieldset>
+          <div data-mount="invite"></div>
+          <fieldset class="grp" style="margin-top:34px">
+            <legend>How would you like invitations handled?</legend>
+            <p class="grp-d">You may share your link yourself, ask SALUTE to prepare messages for your approval, or authorize SALUTE to contact the people listed. No one is contacted without the direction you record here.</p>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="inviteMode" value="I’ll send it myself using the prepared template"><span><b>I’ll send it myself</b><small>Using the prepared template below.</small></span></label>
+              <label class="choice"><input type="radio" name="inviteMode" value="SALUTE drafts for my approval"><span><b>SALUTE drafts for my approval</b><small>Nothing goes out until you approve it.</small></span></label>
+              <label class="choice"><input type="radio" name="inviteMode" value="SALUTE may contact them, with my recorded permission"><span><b>SALUTE may contact them</b><small>You’re recording your permission here.</small></span></label>
+              <label class="choice"><input type="radio" name="inviteMode" value="Save only, no outreach"><span><b>Save only, no outreach</b><small>Keep the list on file; contact no one.</small></span></label>
+            </div>
+          </fieldset>
+          <div class="grp">
+            <p class="grp-t">Invitation template</p>
+            <p class="grp-d">Edit freely. Your edits are saved with your responses.</p>
+            <div class="letter" data-letter="invite">
+              <div class="letter-head"><span class="eyebrow">A note from you</span><span class="tools"><button type="button" class="textbtn" data-copy>Copy</button><button type="button" class="textbtn" data-reset>Reset</button></span></div>
+              <label class="fld"><span class="lbl">Subject</span><input type="text" data-role="subj"></label>
+              <label class="fld"><span class="lbl sr">Message</span><textarea class="body" data-role="body" rows="12"></textarea></label>
+              <p class="letter-msg" role="status" data-role="lmsg"></p>
+            </div>
+          </div>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-skip>Skip for now</button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 Support SALUTE -->
+      <section class="step" data-step="5" aria-labelledby="t5" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">06</p>
+          <h2 class="ps-title" id="t5" tabindex="-1">Support SALUTE</h2>
+          <p class="ps-lead">Entirely optional, and entirely separate from accepting your invitation.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <p class="note"><b>We do not ask honorees to make a donation, and your acceptance never depends on fundraising.</b> If there is anyone you would feel comfortable introducing to SALUTE, we would be grateful for the opportunity to share our work and the impact of our 501(c)(3) mission. You may add their name and email below, choose to make the introduction yourself, or authorize SALUTE to reach out. No one is contacted without your recorded direction.</p>
+          <div data-mount="support"></div>
+          <fieldset class="grp" style="margin-top:34px">
+            <legend>How should introductions happen?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="supportMode" value="I’ll introduce them myself"><span><b>I’ll introduce them myself</b><small>Using the introduction below.</small></span></label>
+              <label class="choice"><input type="radio" name="supportMode" value="SALUTE drafts for my approval"><span><b>SALUTE drafts for my approval</b><small>Nothing goes out until you approve it.</small></span></label>
+              <label class="choice"><input type="radio" name="supportMode" value="SALUTE may reach out, with my recorded authorization"><span><b>I authorize SALUTE to reach out</b><small>You’re recording your authorization here.</small></span></label>
+              <label class="choice"><input type="radio" name="supportMode" value="Save only, no outreach"><span><b>Save only, no outreach</b><small>Keep the names on file; contact no one.</small></span></label>
+            </div>
+          </fieldset>
+          <div class="grp">
+            <p class="grp-t">Introduction template</p>
+            <p class="grp-d">A warm, no-pressure introduction. Edit freely; your edits are saved with your responses.</p>
+            <div class="letter" data-letter="support">
+              <div class="letter-head"><span class="eyebrow">A note from you</span><span class="tools"><button type="button" class="textbtn" data-copy>Copy</button><button type="button" class="textbtn" data-reset>Reset</button></span></div>
+              <label class="fld"><span class="lbl">Subject</span><input type="text" data-role="subj"></label>
+              <label class="fld"><span class="lbl sr">Message</span><textarea class="body" data-role="body" rows="12"></textarea></label>
+              <p class="letter-msg" role="status" data-role="lmsg"></p>
+            </div>
+          </div>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue to review <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-skip>Skip for now</button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 07 Review -->
+      <section class="step" data-step="6" aria-labelledby="t6" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">07</p>
+          <h2 class="ps-title" id="t6" tabindex="-1">Review</h2>
+          <p class="ps-lead">A last look at everything, before you finish.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <div id="review-body">
+            <div class="figs" id="figs"></div>
+            <div id="review-secs"></div>
+            <div class="finalbox">
+              <p class="note"><b>Nothing is announced or sent when you submit.</b> The SALUTE team will confirm your seats, announcement timing and materials with you directly. You can return to this page to update your answers at any time.</p>
+              <div class="acts" style="margin-top:20px">
+                <button type="button" class="btn btn-fill" id="submit">Submit my response <span class="arrow" aria-hidden="true">→</span></button>
+                <button type="button" class="btn btn-line" data-prev>Back</button>
+              </div>
+            </div>
+          </div>
+          <div class="confirm" id="confirm" tabindex="-1" hidden aria-labelledby="c-h">
+            <div class="cm-mast" aria-hidden="true">S.SUITE</div>
+            <p class="eyebrow" id="c-eyebrow">Response received</p>
+            <h3 id="c-h" style="margin-top:14px">Thank you.</h3>
+            <p class="lede" id="c-lede"></p>
+            <p class="stamp" id="c-stamp"></p>
+            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px">Share it with anyone you would like in the room. It applies the $300 honoree rate automatically.</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div></div>
+            <p class="small" id="c-small">Nothing has been announced, and no one you listed has been contacted. Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
+            <div class="cacts">
+              <button type="button" class="btn btn-wf" id="c-review">Review or update</button>
+              <button type="button" class="btn btn-wl" id="c-invite">Back to Invitation</button>
+              
+            </div>
+          </div>
+        </div>
+      </section>
+    </form>
+  </main>
+</div>
+
+<template id="tpl-contacts">
+  <div class="cm">
+    <label class="fld"><span class="lbl">Paste a list</span><span class="hint">One person per line: Name, Email</span>
+      <textarea data-role="paste" rows="5" placeholder="Priya Shah, priya@example.com&#10;Jordan Lee, jordan@example.com"></textarea></label>
+    <div class="cm-tools"><button type="button" class="btn btn-fill btn-sm" data-role="paste-btn">Add pasted contacts</button></div>
+    <h3 class="cm-h">Add one person</h3>
+    <div class="row2">
+      <label class="fld"><span class="lbl">Name</span><input type="text" data-role="name" autocomplete="off"></label>
+      <label class="fld"><span class="lbl">Email</span><input type="email" data-role="email" inputmode="email" autocomplete="off"></label>
+    </div>
+    <div class="cm-tools"><button type="button" class="btn btn-line btn-sm" data-role="add-btn">Add contact</button></div>
+    <h3 class="cm-h">Or use a spreadsheet</h3>
+    <div class="cm-tools">
+      <label class="btn btn-line btn-sm up-btn" style="flex:1 1 180px">Upload CSV<input class="sr" type="file" accept=".csv,text/csv" data-role="csv"></label>
+      <button type="button" class="btn btn-line btn-sm" data-role="tpl-btn">Download template</button>
+    </div>
+    <p class="cm-msg" role="status" data-role="msg"></p>
+    <div class="cm-list-head"><p class="cm-count" data-role="count" aria-live="polite">0 contacts</p><button type="button" class="textbtn" data-role="clear" hidden>Remove all</button></div>
+    <p class="cm-empty" data-role="empty">No one added yet.</p>
+    <ul class="cm-list" data-role="list"></ul>
+  </div>
+</template>
+
+<script src="/honoree/honoree.js?v=20261004a"></script>
+</body>
+</html>
