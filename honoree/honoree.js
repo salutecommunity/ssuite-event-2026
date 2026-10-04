@@ -122,7 +122,11 @@ function goto(i,opts){
   if(!opts.keepConfirm){submitted=false;$('#confirm').hidden=true;$('#review-body').hidden=false}
   cur=i;
   stepEls.forEach(function(s,k){s.hidden=(k!==i)});
-  if(i===6) renderReview();
+  if(i===6){renderReview();
+    // A notice from an earlier attempt must reflect what is still missing now.
+    var al=$('.alert',stepEls[6]);
+    if(al&&!al.hidden){var bad=firstInvalidStep();if(bad==null)clearErrors(stepEls[6]);else{showSubmitErrors(validate(bad).map(function(e){return e.msg}),bad)}}
+  }
   updateNav();
   window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
   var h=$('.ps-title',stepEls[i]);if(h)h.focus({preventScroll:true});
