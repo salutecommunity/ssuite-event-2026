@@ -216,7 +216,7 @@ function validate(i){
   if(i===4){
     var sv=parseList(val('supportList'));
     if(sv.bad.length) push('supportList','Add a valid email for: '+sv.bad.slice(0,3).join('; ')+(sv.bad.length>3?' …':''));
-    if(sv.items.length&&!val('supportMode')) push('supportMode','Let us know whether we may reach out on your behalf.');
+    if(sv.items.length&&!val('supportMode')) push('supportMode','Choose how SALUTE should reach out.');
   }
   return e;
 }
@@ -325,8 +325,9 @@ $('#gl-note').addEventListener('click',function(){copyText(guestNote(),$('#gl-ms
 var TABLE_CUTOVER=Date.parse('2026-10-08T04:00:00Z');
 if(Date.now()>=TABLE_CUTOVER) $('#table-price').textContent='$7,500 for a table of ten.';
 $('#table-buy').addEventListener('click',function(){
-  var go=function(){location.href='/?table=1'};
-  if(dirty&&ready){clearTimeout(saveTimer);saving=false;api({action:'save',response:collect()}).then(go,go)}else go();
+  var w=window.open('/?table=1','_blank');
+  if(w){try{w.opener=null}catch(e){}}else location.href='/?table=1';
+  if(dirty&&ready) saveNow();
 });
 
 /* ── Upload a list (CSV, TXT or Excel), parsed in the browser ── */
@@ -448,7 +449,7 @@ function renderReview(){
   if(dec){
     sec('Support SALUTE',4,[
       sv0.length?['People to reach out to',plural(sv0.length,'person')]:null,
-      sv0.length?['Reach out on my behalf',val('supportMode')==='mention'?'Yes':(val('supportMode')==='check'?'Check with me first':'')]:null
+      sv0.length?['Outreach',val('supportMode')==='mention'?'SALUTE can reach out directly':(val('supportMode')==='cc'?'Copy me when reaching out':'')]:null
     ]);
     return;
   }
@@ -472,7 +473,7 @@ function renderReview(){
   ]);
   sec('Support SALUTE',4,[
     sv.length?['People to reach out to',plural(sv.length,'person')]:null,
-    sv.length?['Reach out on my behalf',val('supportMode')==='mention'?'Yes':(val('supportMode')==='check'?'Check with me first':'')]:null
+    sv.length?['Outreach',val('supportMode')==='mention'?'SALUTE can reach out directly':(val('supportMode')==='cc'?'Copy me when reaching out':'')]:null
   ]);
 }
 

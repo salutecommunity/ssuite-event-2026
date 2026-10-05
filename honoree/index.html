@@ -393,6 +393,14 @@ a{color:inherit}
 .err{font-size:13px}
 .filepick{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:-12px 0 6px}
 .filepick .hint{margin:0}
+
+/* v10: clear section headings and grouped guest details */
+.grp>legend{font:400 24px/1.15 var(--serif);letter-spacing:-.02em;text-transform:none;margin-bottom:8px}
+.grp>legend:has(+.grp-d){margin-bottom:4px}
+.grp{padding-bottom:40px}
+.grp+.grp{padding-top:0}
+.reveal-box{margin-top:14px;padding:4px 0 2px 20px;border-left:2px solid var(--black)}
+.sub>legend.lbl{margin-bottom:2px}
 </style>
 </head>
 <body data-view="invite">
@@ -612,14 +620,15 @@ a{color:inherit}
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
             <legend>Your meal</legend>
+            <p class="grp-d">For you.</p>
             <div class="choices compact" id="diet">
               <label class="choice"><input type="radio" name="diet" value="Vegetarian"><span><b>Vegetarian</b></span></label>
               <label class="choice"><input type="radio" name="diet" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
             </div>
           </fieldset>
           <fieldset class="grp" id="guest-grp">
-            <legend>Your complimentary guest</legend>
-            <p class="grp-d">Your seat and <b>one</b> guest are complimentary. Anyone else is $300 per ticket. You can invite them in the next step.</p>
+            <legend>Your guest</legend>
+            <p class="grp-d">Your seat and <b>one</b> guest are complimentary. Anyone else is $300 per ticket, and you can invite them in the next step.</p>
             <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
@@ -648,7 +657,8 @@ a{color:inherit}
             </div>
           </fieldset>
           <fieldset class="grp">
-            <label class="fld"><span class="lbl">Allergies or accessibility needs, for you or your guest <span class="opt">optional</span></span><textarea name="access" rows="3"></textarea></label>
+            <legend>Allergies or accessibility needs <span class="opt">optional</span></legend>
+            <label class="fld"><span class="lbl sr">Allergies or accessibility needs</span><span class="hint" style="margin:0 0 4px">For you or your guest.</span><textarea name="access" rows="3"></textarea></label>
           </fieldset>
 
           <div class="acts">
@@ -692,7 +702,8 @@ a{color:inherit}
           <fieldset class="grp">
             <legend>Host a table <span class="opt">optional</span></legend>
             <p class="grp-d">Ten seats at your own table. <span id="table-price">$5,000 at our extended early-bird rate (regular $7,500).</span></p>
-            <button type="button" class="btn btn-line" id="table-buy">Host a table <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" id="table-buy">Host a table <span class="arrow" aria-hidden="true">↗</span></button>
+            <p class="hint" style="margin-top:10px">Opens checkout in a new tab. This page stays open.</p>
             </fieldset>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
@@ -725,10 +736,10 @@ a{color:inherit}
             <p class="hint" id="support-sum" role="status" aria-live="polite"></p>
           </fieldset>
           <fieldset class="grp" id="support-mode-grp">
-            <legend>May we reach out on your behalf?</legend>
+            <legend>How should SALUTE reach out?</legend>
             <div class="choices">
-              <label class="choice"><input type="radio" name="supportMode" value="mention"><span><b>Yes, you may reach out on my behalf</b></span></label>
-              <label class="choice"><input type="radio" name="supportMode" value="check"><span><b>Please check with me before reaching out</b></span></label>
+              <label class="choice"><input type="radio" name="supportMode" value="mention"><span><b>SALUTE can reach out to them directly</b></span></label>
+              <label class="choice"><input type="radio" name="supportMode" value="cc"><span><b>Please copy me when reaching out</b></span></label>
             </div>
           </fieldset>
           <div class="acts">
