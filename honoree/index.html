@@ -378,6 +378,21 @@ a{color:inherit}
 .sub{border:0;padding:0;margin:4px 0 22px;min-width:0}
 .sub>legend{padding:0;margin-bottom:4px}
 .rsec{border-top:1px solid var(--line)}
+
+/* v9: one consistent type scale inside the form */
+.grp-d,.hint,.choice small,.upload .up-meta,.note,.statusbar,.alert,.letter-msg,.ctx p,.must p{font-family:var(--sans);font-size:15px;line-height:1.55}
+.grp-d,.hint,.choice small,.upload .up-meta{color:var(--mute)}
+.ctx p,.must p{color:var(--ink2);margin:0 0 10px;max-width:560px;font-weight:400;letter-spacing:0}
+.ctx p b,.must p b{font-weight:600;color:var(--black)}
+.ctx{margin:0 0 26px}.must{margin:0 0 30px}
+.ctx p.eyebrow,.must p.eyebrow{display:block;font:500 11px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--black);margin:0 0 10px}
+.choice b,.choices.compact .choice b{font-size:20px;line-height:1.2}
+.upload .up-name{font-size:18px}
+.rrow dd{font-size:15px}
+.opt{font-size:14px}
+.err{font-size:13px}
+.filepick{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:-12px 0 6px}
+.filepick .hint{margin:0}
 </style>
 </head>
 <body data-view="invite">
@@ -508,10 +523,14 @@ a{color:inherit}
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <p class="statusbar" id="statusbar" hidden></p>
+          <div class="ctx">
+            <p class="eyebrow">About the evening</p>
+            <p><b>S.SUITE</b> is the inaugural honors evening of <b>SALUTE</b> (South Asian Leaders Unite to Empower), a 501(c)(3) private professional network expanding access, visibility and connection for South Asian women leaders and allies.</p>
+            <p>The evening includes a seated dinner and the honors presentation, followed by a fireside conversation with <b>Indra Nooyi</b>, recipient of The S.SUITE Chair, moderated by <b>Anu Aiyengar</b>, Global Chair of Investment Banking at J.P. Morgan.</p>
+          </div>
           <div class="must" role="note">
-            <span class="eyebrow">Please note</span>
-            <p>To accept, honorees must attend S.SUITE in person on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City.</p>
-            <small>Accepting does not require any purchase, sponsorship or donation.</small>
+            <p class="eyebrow">Please note</p>
+            <p>To accept, honorees must attend in person on <b>Friday, November 20, 2026, at 6:30 p.m.</b> at the Prince George Ballroom in New York City. Accepting does not require any purchase, sponsorship or donation.</p>
           </div>
           <fieldset class="grp">
             <legend>Your decision</legend>
@@ -523,6 +542,7 @@ a{color:inherit}
           <div id="decline-box" hidden>
             <label class="fld"><span class="lbl">A note to the SALUTE team <span class="opt">optional</span></span>
               <textarea name="declineNote" rows="4"></textarea></label>
+            <p class="grp-d">Even if you can’t join us, you can still support SALUTE’s work. You’ll see how on the next page.</p>
           </div>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
@@ -547,8 +567,8 @@ a{color:inherit}
             <label class="fld"><span class="lbl">Title</span><input type="text" name="pubTitle" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Organization(s)</span><input type="text" name="pubOrg" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Short bio <span class="opt">optional</span></span>
-              <span class="hint">Up to 150 words · <span id="bio-count">0 words</span></span>
-              <textarea name="bio" rows="5"></textarea></label>
+              <span class="hint">Up to 250 words · <span id="bio-count">0 words</span></span>
+              <textarea name="bio" rows="8"></textarea></label>
           </fieldset>
           <fieldset class="grp">
             <legend>Headshot</legend>
@@ -650,9 +670,10 @@ a{color:inherit}
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
             <legend>Who you’d like to invite</legend>
-            <p class="grp-d">One per line: name and email.</p>
+            <p class="grp-d">Type or paste one per line (name and email), or upload a list.</p>
             <label class="fld"><span class="lbl sr">Guests to invite</span>
               <textarea name="inviteList" rows="6" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
+            <div class="filepick"><input class="sr" type="file" id="inv-file" accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain"><label class="btn btn-line btn-sm" for="inv-file">Upload a list</label><span class="hint" id="inv-file-msg">CSV or Excel with names and emails.</span></div>
             <p class="hint" id="invite-sum" role="status" aria-live="polite"></p>
           </fieldset>
           <fieldset class="grp" id="invite-mode-grp">
@@ -697,9 +718,10 @@ a{color:inherit}
             </fieldset>
           <fieldset class="grp">
             <legend>People SALUTE could reach out to</legend>
-            <p class="grp-d">One per line: name and email.</p>
+            <p class="grp-d">Type or paste one per line (name and email), or upload a list.</p>
             <label class="fld"><span class="lbl sr">People SALUTE could reach out to</span>
               <textarea name="supportList" rows="5" placeholder="Jane Smith, jane@example.com"></textarea></label>
+            <div class="filepick"><input class="sr" type="file" id="sup-file" accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain"><label class="btn btn-line btn-sm" for="sup-file">Upload a list</label><span class="hint" id="sup-file-msg">CSV or Excel with names and emails.</span></div>
             <p class="hint" id="support-sum" role="status" aria-live="polite"></p>
           </fieldset>
           <fieldset class="grp" id="support-mode-grp">

@@ -191,7 +191,7 @@ function validate(i){
   }
   if(i===1){
     if(!val('pubName')) push('pubName','Add the name you’d like to appear publicly.');
-    if(words(val('bio'))>150) push('bio','Please keep your bio to 150 words or fewer.');
+    if(words(val('bio'))>250) push('bio','Please keep your bio to 250 words or fewer.');
     if(!HS) push('headshot','Please upload a headshot.');
     if(val('teamEmail')&&!EMAIL.test(val('teamEmail'))) push('teamEmail','Enter a valid email for your team contact.');
   }
@@ -328,6 +328,51 @@ $('#table-buy').addEventListener('click',function(){
   var go=function(){location.href='/?table=1'};
   if(dirty&&ready){clearTimeout(saveTimer);saving=false;api({action:'save',response:collect()}).then(go,go)}else go();
 });
+
+/* ── Upload a list (CSV, TXT or Excel), parsed in the browser ── */
+var XLSX_URL='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+function loadXlsx(){return window.XLSX?Promise.resolve(window.XLSX):new Promise(function(ok,no){var sc=document.createElement('script');sc.src=XLSX_URL;sc.onload=function(){ok(window.XLSX)};sc.onerror=function(){no(new Error('Excel files could not be read. Please save as CSV and try again.'))};document.head.appendChild(sc)})}
+function csvRows(text){
+  var rows=[],row=[],cell='',q=false;
+  for(var i=0;i<text.length;i++){var c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){cell+='"';i++}else q=false}else cell+=c}
+    else if(c==='"')q=true;else if(c===','||c==='\t'||c===';'){row.push(cell);cell=''}
+    else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);rows.push(row);row=[];cell=''}
+    else cell+=c}
+  row.push(cell);rows.push(row);return rows;
+}
+function rowsToLines(rows){
+  var out=[],EM=/[^\s<>,;"'()]+@[^\s<>,;"'()]+\.[^\s<>,;"'()]{2,}/;
+  rows.forEach(function(r){
+    var cells=r.map(function(x){return String(x==null?'':x).trim()}).filter(Boolean);
+    var em=null,rest=[];
+    cells.forEach(function(c){var m=c.match(EM);if(m&&!em)em=m[0];else if(!/^(e-?mail|name|first|last|first name|last name|full name)$/i.test(c))rest.push(c)});
+    if(em) out.push((rest.slice(0,2).join(' ')+(rest.length?', ':'')+em).trim());
+  });
+  return out;
+}
+function wireListUpload(inputId,field,msgId,noun){
+  var inp=$('#'+inputId),msg=$('#'+msgId),ta=F.namedItem(field);
+  inp.addEventListener('change',function(){
+    var f=inp.files&&inp.files[0];inp.value='';if(!f)return;
+    if(f.size>5*1024*1024){msg.textContent='Please choose a file under 5 MB.';return}
+    msg.textContent='Reading '+f.name+'…';
+    var isX=/\.xlsx?$/i.test(f.name);
+    var p=isX?Promise.all([loadXlsx(),f.arrayBuffer()]).then(function(a){var wb=a[0].read(a[1],{type:'array'});var rows=[];wb.SheetNames.forEach(function(n){rows=rows.concat(a[0].utils.sheet_to_json(wb.Sheets[n],{header:1,raw:false}))});return rows})
+            :f.text().then(csvRows);
+    p.then(function(rows){
+      var lines=rowsToLines(rows);
+      if(!lines.length){msg.textContent='We couldn’t find any email addresses in that file.';return}
+      var have={};parseList(ta.value).items.forEach(function(x){have[x.email.toLowerCase()]=1});
+      var add=lines.filter(function(l){var m=parseList(l).items[0];return m&&!have[m.email.toLowerCase()]});
+      ta.value=(ta.value.trim()?ta.value.trim()+'\n':'')+add.join('\n');
+      ta.dispatchEvent(new Event('input',{bubbles:true}));
+      msg.textContent=add.length?plural(add.length,noun)+' added from '+f.name+'. Review the list above.':'Everyone in that file is already on your list.';
+    }).catch(function(e){msg.textContent=e.message||'That file could not be read. Please try a CSV.'});
+  });
+}
+wireListUpload('inv-file','inviteList','inv-file-msg','guest');
+wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
 var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gMode','diet','access','inviteList','inviteMode','supportList','supportMode'];
