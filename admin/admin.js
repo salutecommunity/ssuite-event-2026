@@ -231,7 +231,7 @@ function clearWorkspace() {
 }
 
 function tabMeta(tab) {
-  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
+  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], partners: ["Event partnerships", "Partners"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
 async function loadTab(tab, page = 1, search = "") {
   activeTab = tab; currentPage = page; lastSearch = search;
@@ -253,6 +253,7 @@ function render(tab, payload) {
   if (tab === "invitations") return renderInvitationRequests(host, payload);
   if (tab === "membercodes") return renderMemberCodeRequests(host, payload);
   if (tab === "tables") return renderTables(host, payload);
+  if (tab === "partners") return renderPartners(host, payload);
   if (tab === "audit") return renderAudit(host, payload);
   if (tab === "attendees") host.append(adminAttendeeButton());
   const searchable = ["orders", "attendees", "email", "auction", "donations"].includes(tab);
@@ -267,6 +268,74 @@ function render(tab, payload) {
   };
   renderDataTable(host, payload, configByTab[tab] || [], tab === "attendees");
   if (["orders", "attendees", "donations"].includes(tab)) host.append(exportButton(tab));
+}
+
+function renderPartners(host, payload) {
+  const rows = payload.data || [];
+  if (!rows.length) { host.append(element("p", "empty", "No partner tables are available.")); return; }
+  const list = element("div", "table-list");
+  const approvalLabels = {
+    yes: "Yes \u2014 manual administrative follow-up required",
+    no: "No internal approval reported",
+    needs_check: "Needs confirmation \u2014 follow up",
+  };
+  for (const item of rows) {
+    const profile = item.profile || {};
+    const table = item.table || {};
+    const company = profile.organization_name || profile.recognition_name || item.host?.company || "Company not recorded";
+    const card = element("article", "table-card");
+    const seats = Number(table.seat_count) || 0;
+    const tier = seats === 10 ? "Associate Partner" : seats === 5 ? "Supporting Partner" : "Partner";
+    const tableLabel = table.table_number ? "Table " + table.table_number : "Table number not assigned";
+    card.append(element("span", "record-label", tableLabel + " \u00B7 " + seats + " seats \u00B7 " + tier));
+    card.append(element("h3", "", company));
+    if (table.name) card.append(element("p", "", "Table name: " + table.name));
+    if (profile.recognition_name) card.append(element("p", "", "Company name for recognition: " + profile.recognition_name));
+    const recognition = profile.recognition_preference === "logo" ? "Company logo" : profile.recognition_preference === "name" ? "Name only" : "Not recorded";
+    card.append(element("p", "", "Recognition preference: " + recognition));
+    const contact = [profile.contact_name, profile.contact_email, profile.contact_phone].filter(Boolean).join(" \u00B7 ");
+    card.append(element("p", "", "Partner contact: " + (contact || "Not recorded")));
+    if (item.host && (item.host.name || item.host.email)) card.append(element("p", "", "Table host: " + [item.host.name, item.host.email].filter(Boolean).join(" \u00B7 ")));
+    if (profile.organization_bio) {
+      card.append(element("p", "", "Company description: " + profile.organization_bio));
+    }
+    if (profile.website_url) card.append(element("p", "", "Website: " + profile.website_url));
+    if (profile.linkedin_url) card.append(element("p", "", "LinkedIn: " + profile.linkedin_url));
+    const approvalText = approvalLabels[profile.posts_approval_required] || "Not recorded";
+    card.append(element("p", "", "SALUTE-post approval: " + approvalText));
+    if (profile.posts_approval_required === "yes") {
+      const approver = [profile.approval_contact_name, profile.approval_contact_email].filter(Boolean).join(" \u00B7 ");
+      card.append(element("p", "", "Approval contact: " + (approver || "Not provided")));
+      if (profile.approval_guidelines) card.append(element("p", "", "Approval guidelines: " + profile.approval_guidelines));
+    }
+    if (item.has_logo) {
+      card.append(element("p", "", "Private logo: " + (profile.logo_filename || "Uploaded file")));
+      const button = element("button", "button outline", "Access private logo (10-minute link)");
+      button.type = "button";
+      button.addEventListener("click", async () => {
+        const popup = window.open("about:blank", "_blank");
+        if (popup) popup.opener = null;
+        if (!popup) { status("Allow pop-ups to access this private logo.", "error"); return; }
+        setBusy(button, true);
+        status("Preparing a short-lived private logo link\u2026");
+        try {
+          const result = await call({ action: "partner_logo", profile_id: item.id });
+          const link = new URL(result.signed_url);
+          const configuredUrl = new URL(String(config.supabaseUrl || ""));
+          if (link.protocol !== "https:" || link.origin !== configuredUrl.origin) throw new Error("The private logo link was not valid.");
+          popup.location.replace(link.href);
+          status("Private logo opened. Its link expires after 10 minutes.", "success");
+        } catch (error) {
+          popup.close();
+          status(error.message || "The private logo could not be accessed.", "error");
+        } finally { setBusy(button, false); }
+      });
+      card.append(button);
+    } else card.append(element("p", "fineprint", "No logo file is on record."));
+    list.append(card);
+  }
+  host.append(list);
+  host.append(element("p", "fineprint", "Partner approval preferences are recorded for staff follow-up. This dashboard does not enforce an automated publishing hold."));
 }
 
 function renderInvitationRequests(host, payload) {
