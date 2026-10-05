@@ -469,7 +469,9 @@ a{color:inherit}
         <li><button type="button" class="p-step" data-i="0"><span class="n">01</span><span class="t">Response</span></button></li>
         <li><button type="button" class="p-step" data-i="1"><span class="n">02</span><span class="t">Profile</span></button></li>
         <li><button type="button" class="p-step" data-i="2"><span class="n">03</span><span class="t">Evening</span></button></li>
-        <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Review</span></button></li>
+        <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Guests</span></button></li>
+        <li><button type="button" class="p-step" data-i="4"><span class="n">05</span><span class="t">Support</span></button></li>
+        <li><button type="button" class="p-step" data-i="5"><span class="n">06</span><span class="t">Review</span></button></li>
       </ol>
     </nav>
     <div class="p-line" aria-hidden="true"><i id="p-fill"></i></div>
@@ -590,13 +592,85 @@ a{color:inherit}
             </div>
             <label class="fld" style="margin-top:22px"><span class="lbl">Anything else we should know? <i>Optional</i></span><span class="hint">Allergies, accessibility needs or arrival notes.</span><textarea name="access" rows="3"></textarea></label>
           </fieldset>
+
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 Guests -->
+      <section class="step" data-step="3" aria-labelledby="t3" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">04</p>
+          <h2 class="ps-title" id="t3" tabindex="-1">Invite your guests</h2>
+          <p class="ps-lead">Anyone you invite can join you at the honoree rate of <b>$300 per ticket</b> (regular price $400). Optional.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
-            <legend>Inviting others <span style="font:inherit;font-style:italic">Optional</span></legend>
-            <p class="grp-d" id="gl-desc">Once you accept, you’ll receive a personal invitation link to share. Your guests can buy tickets at the $300 honoree rate (regular price $400).</p>
-            <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button></div>
+            <legend>Who you’d like to invite</legend>
+            <p class="grp-d">One person per line: name and email, or just an email. You can paste a list.</p>
+            <label class="fld"><span class="lbl sr">Guests to invite</span>
+              <textarea name="inviteList" rows="6" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
+            <p class="hint" id="invite-sum" role="status" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="grp" id="invite-mode-grp" hidden>
+            <legend>How should the invitations go out?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="inviteMode" value="salute"><span><b>SALUTE emails them on my behalf</b><small>We’ll send your personal invitation and copy you.</small></span></label>
+              <label class="choice"><input type="radio" name="inviteMode" value="self"><span><b>I’ll email them myself</b><small>Use your personal invitation link below.</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Your personal invitation link</legend>
+            <p class="grp-d" id="gl-desc">Your link appears here once you’ve accepted. It applies the $300 honoree rate automatically, and each seat is confirmed once the guest registers and pays.</p>
+            <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button><button type="button" class="btn btn-line btn-sm" id="gl-note">Copy a note</button></div>
             <p class="letter-msg" role="status" id="gl-msg"></p>
-            <div class="choices" style="margin-top:18px">
-              <label class="choice"><input type="checkbox" name="tableLink"><span><b>I’d like to hear about hosting a table or supporting SALUTE</b><small>Entirely optional. Tables are $5,000 at our extended early-bird rate.</small></span></label>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Host a table</legend>
+            <p class="grp-d">Bring ten guests together at your own table. <span id="table-price">$5,000 at our extended early-bird rate (regular $7,500).</span> You’ll name your guests afterward on a private table page.</p>
+            <button type="button" class="btn btn-line" id="table-buy">Host a table <span class="arrow" aria-hidden="true">→</span></button>
+            <p class="hint" style="margin-top:10px">Opens secure checkout. Your answers here are saved.</p>
+          </fieldset>
+          <div class="acts">
+            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-line" data-prev>Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 Support -->
+      <section class="step" data-step="4" aria-labelledby="t4" hidden>
+        <header class="ps-head">
+          <p class="ps-num" aria-hidden="true">05</p>
+          <h2 class="ps-title" id="t4" tabindex="-1">Support SALUTE</h2>
+          <p class="ps-lead">Entirely optional. Your recognition never depends on a contribution.</p>
+          <p class="ps-count" data-count></p>
+        </header>
+        <div class="ps-body">
+          <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <fieldset class="grp">
+            <legend>Make a contribution</legend>
+            <p class="grp-d">SALUTE is a 501(c)(3). Contributions expand access, visibility and connection for South Asian women leaders.</p>
+            <a class="btn btn-line" id="give-link" href="https://event.ssuite.org/#give" target="_blank" rel="noopener">Contribute <span class="arrow" aria-hidden="true">→</span></a>
+            <p class="hint" style="margin-top:10px">Opens secure checkout in a new tab.</p>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>People SALUTE could reach out to</legend>
+            <p class="grp-d">Anyone who might want to support SALUTE’s work. One person per line: name and email.</p>
+            <label class="fld"><span class="lbl sr">People SALUTE could reach out to</span>
+              <textarea name="supportList" rows="5" placeholder="Jane Smith, jane@example.com"></textarea></label>
+            <p class="hint" id="support-sum" role="status" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="grp" id="support-mode-grp" hidden>
+            <legend>May we mention your name?</legend>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="supportMode" value="mention"><span><b>Yes, you may reach out on my behalf</b></span></label>
+              <label class="choice"><input type="radio" name="supportMode" value="check"><span><b>Please check with me before reaching out</b></span></label>
             </div>
           </fieldset>
           <div class="acts">
@@ -606,11 +680,11 @@ a{color:inherit}
         </div>
       </section>
 
-      <!-- 04 Review -->
-      <section class="step" data-step="3" aria-labelledby="t3" hidden>
+      <!-- 06 Review -->
+      <section class="step" data-step="5" aria-labelledby="t5" hidden>
         <header class="ps-head">
-          <p class="ps-num" aria-hidden="true">04</p>
-          <h2 class="ps-title" id="t3" tabindex="-1">Review</h2>
+          <p class="ps-num" aria-hidden="true">06</p>
+          <h2 class="ps-title" id="t5" tabindex="-1">Review</h2>
           <p class="ps-lead">A quick look before you submit.</p>
           <p class="ps-count" data-count></p>
         </header>
@@ -647,6 +721,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261005d"></script>
+<script src="/honoree/honoree.js?v=20261005e"></script>
 </body>
 </html>

@@ -29,7 +29,7 @@ function api(body){
 function gate(msg){$('#gate-msg').textContent=msg;$('#gate-pulse').hidden=true;$('#gate').hidden=false}
 
 /* ── Honoree data ────────────────────────────────── */
-var H=null, STATE=null, SUBMITTED_AT=null, GUEST_URL=null;
+var H=null, STATE=null, SUBMITTED_AT=null, GUEST_URL=null, GUEST_CODE=null;
 function first(){return (H&&H.first_name)||''}
 function fmtDate(iso){if(!iso)return '';var d=new Date(iso+(iso.length===10?'T12:00:00':''));return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
 function fmtWhen(iso){var d=new Date(iso);return d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
@@ -85,7 +85,7 @@ function startReveal(){
 /* ── Portal core ─────────────────────────────────── */
 var pf=$('#pf'),F=pf.elements;
 var stepEls=$$('.step',pf),navBtns=$$('.p-step');
-var NAMES=['Response','Profile','Evening','Review'];
+var NAMES=['Response','Profile','Evening','Guests','Support','Review'];
 var LAST=NAMES.length-1;
 var cur=0,done={},submitted=false;
 function val(n){var e=F.namedItem(n);return e&&typeof e.value==='string'?e.value.trim():''}
@@ -182,6 +182,7 @@ function clearOne(e){
   if(step&&!$('.err',step)){var a=$('.alert',step);if(a){a.hidden=true;a.textContent=''}}
 }
 function words(t){t=t.trim();return t?t.split(/\s+/).length:0}
+function plural(n,w){return n+' '+w+(n===1?'':'s')}
 function validate(i){
   var e=[];
   function push(n,m){var x=F.namedItem(n);e.push({el:x&&x.length&&!x.tagName?x[0]:x,msg:m})}
@@ -201,15 +202,48 @@ function validate(i){
     }
     if(!val('diet')) push('diet','Choose a vegetarian or non-vegetarian meal.');
   }
+  if(i===3){
+    var iv=parseList(val('inviteList'));
+    if(iv.bad.length) push('inviteList','Add a valid email for: '+iv.bad.slice(0,3).join('; ')+(iv.bad.length>3?' …':''));
+    if(iv.items.length&&!val('inviteMode')) push('inviteMode','Choose how the invitations should go out.');
+  }
+  if(i===4){
+    var sv=parseList(val('supportList'));
+    if(sv.bad.length) push('supportList','Add a valid email for: '+sv.bad.slice(0,3).join('; ')+(sv.bad.length>3?' …':''));
+    if(sv.items.length&&!val('supportMode')) push('supportMode','Let us know whether we may reach out on your behalf.');
+  }
   return e;
 }
 
+/* name + email lists */
+function parseList(text){
+  var items=[],bad=[],seen={};
+  String(text||'').split(/\r?\n/).forEach(function(line){
+    line=line.trim();if(!line)return;
+    var m=line.match(/[^\s<>,;"'()]+@[^\s<>,;"'()]+\.[^\s<>,;"'()]{2,}/);
+    if(!m||!EMAIL.test(m[0])){bad.push(line.slice(0,40));return}
+    var email=m[0],key=email.toLowerCase();if(seen[key])return;seen[key]=1;
+    var name=line.replace(m[0],'').replace(/[<>()"]/g,' ').replace(/[,;\t]+/g,' ').replace(/\s+/g,' ').trim();
+    items.push({name:name,email:email});
+  });
+  return {items:items,bad:bad};
+}
+function listSummary(id,text,noun){
+  var r=parseList(text),el=$(id),out='';
+  if(r.items.length) out=plural(r.items.length,noun)+' added.';
+  if(r.bad.length) out+=(out?' ':'')+plural(r.bad.length,'line')+' still need'+(r.bad.length===1?'s':'')+' an email.';
+  el.textContent=out;
+  return r;
+}
 /* conditional reveals */
 function syncReveals(){
   $('#decline-box').hidden=!declined();
   $('#guest-box').hidden=!chk('guest');
+  $('#invite-mode-grp').hidden=!listSummary('#invite-sum',val('inviteList'),'guest').items.length;
+  $('#support-mode-grp').hidden=!listSummary('#support-sum',val('supportList'),'person').items.length;
   updateNav();
 }
+pf.addEventListener('input',function(e){if(e.target.name==='inviteList'||e.target.name==='supportList')syncReveals()});
 pf.addEventListener('change',syncReveals);
 pf.addEventListener('submit',function(e){e.preventDefault()});
 
@@ -260,7 +294,6 @@ $('#hs-remove').addEventListener('click',function(){
   .catch(function(e){$('#hs-meta').textContent=e.message}).then(function(){hsBusy=false});
 });
 
-function plural(n,w){return n+' '+w+(n===1?'':'s')}
 
 /* ── Guest link ──────────────────────────────────── */
 function copyText(txt,msgEl,ok){
@@ -273,19 +306,29 @@ function guestNote(){
 function showGuestLink(){
   if(!GUEST_URL) return;
   $('#gl-field').value=GUEST_URL;$('#gl-box').hidden=false;
-  $('#gl-desc').textContent='Share this link with anyone you’d like to invite. It applies the $300 honoree rate automatically (regular price $400), and each seat is confirmed once registration and payment are complete.';
+  $('#gl-desc').textContent='Share it with anyone you’d like to invite. It applies the $300 honoree rate automatically (regular price $400), and each seat is confirmed once the guest registers and pays.';
 }
 $('#gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#gl-msg'))});
 $('#c-gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#c-small'))});
 $('#c-note-copy').addEventListener('click',function(){copyText(guestNote(),$('#c-small'),'Note copied, with your link included.')});
+$('#gl-note').addEventListener('click',function(){copyText(guestNote(),$('#gl-msg'),'Note copied, with your link included.')});
+/* Host a table: the event site's own secure table checkout. Not credited through the guest code,
+   which would spend ten of the honoree's guest seats. */
+var TABLE_CUTOVER=Date.parse('2026-10-08T04:00:00Z');
+if(Date.now()>=TABLE_CUTOVER) $('#table-price').textContent='$7,500 for a table of ten.';
+$('#table-buy').addEventListener('click',function(){
+  var go=function(){location.href='/?table=1'};
+  if(dirty&&ready){clearTimeout(saveTimer);saving=false;api({action:'save',response:collect()}).then(go,go)}else go();
+});
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gName','gEmail','diet','access'];
-var BOOLS=['guest','tableLink'];
+var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gName','gEmail','diet','access','inviteList','inviteMode','supportList','supportMode'];
+var BOOLS=['guest'];
 function collect(){
   var r={};
   FIELDS.forEach(function(k){r[k]=val(k)});
   BOOLS.forEach(function(k){r[k]=chk(k)});
+  r.invitees=parseList(r.inviteList).items;r.supporters=parseList(r.supportList).items;
   r.step=cur;r.done=Object.keys(done).filter(function(k){return done[k]}).map(Number);
   return r;
 }
@@ -357,8 +400,16 @@ function renderReview(){
   sec('Evening',2,[
     ['Complimentary guest',chk('guest')?[val('gName'),val('gEmail')].filter(Boolean).join(' · '):noneSpan('No guest')],
     ['Meal',val('diet')],
-    ['Other notes',val('access')||noneSpan('None')],
-    ['Tables & support',chk('tableLink')?'Would like to hear more':noneSpan('Not at this time')]
+    ['Other notes',val('access')||noneSpan('None')]
+  ]);
+  var iv=parseList(val('inviteList')).items,sv=parseList(val('supportList')).items;
+  sec('Guests',3,[
+    ['Guests to invite',iv.length?plural(iv.length,'guest')+' at the $300 honoree rate':noneSpan('None added')],
+    ['Invitations',iv.length?(val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')):noneSpan('—')]
+  ]);
+  sec('Support SALUTE',4,[
+    ['People to reach out to',sv.length?plural(sv.length,'person'):noneSpan('None added')],
+    ['Mention my name',sv.length?(val('supportMode')==='mention'?'Yes, on my behalf':(val('supportMode')==='check'?'Check with me first':'')):noneSpan('—')]
   ]);
 }
 
@@ -386,7 +437,7 @@ $('#submit').addEventListener('click',function(){
   submitting=true;clearTimeout(saveTimer);
   var btn=$('#submit');btn.disabled=true;btn.firstChild.textContent='Submitting… ';
   api({action:'submit',response:collect()}).then(function(r){
-    STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;dirty=false;
+    STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;dirty=false;
     for(var i=0;i<=LAST;i++) if(!(declined()&&i>0&&i<LAST)) done[i]=true;
     submitted=true;showConfirm();statusBar();showGuestLink();saveState('Submitted');
   }).catch(function(e){
@@ -420,7 +471,7 @@ $('#c-invite').addEventListener('click',toInvite);
 /* ── Boot ────────────────────────────────────────── */
 if(!token){gate('This private invitation link is incomplete. Please open it again from your email, or write to ssuite@salute.community.');return}
 api({action:'get'}).then(function(d){
-  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;HS=d.headshot||null;
+  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;HS=d.headshot||null;
   bind();
   var saved=d.response&&Object.keys(d.response).length?d.response:null;
   restore(saved,H.prefill);
