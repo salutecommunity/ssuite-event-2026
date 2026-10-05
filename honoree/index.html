@@ -426,32 +426,42 @@ a{color:inherit}
 .panel .choice small a{color:var(--black)}
   .ps-paren{font-size:.62em;font-style:normal;letter-spacing:0;color:#555;white-space:nowrap}
 
-/* v15 mobile navigation */
-.p-cur{display:none}
+/* v16 mobile navigation */
+.p-cur,.p-inv-li{display:none}
 @media(max-width:899px){
-  .p-steps{overflow:visible}
-  .p-cur{display:flex;align-items:center;gap:12px;width:100%;min-height:54px;padding:0 18px;background:none;border:0;color:#fff;text-align:left;cursor:pointer}
-  .p-cur-k{font:500 10px/1 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.68);white-space:nowrap}
-  .p-cur-t{flex:1;font:400 21px/1 var(--serif);letter-spacing:-.02em}
-  .p-cur-c{display:inline-flex;align-items:center;gap:8px;font:500 10px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
-  .p-cur-c::after{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
-  .p-steps.open .p-cur-c::after{transform:translateY(2px) rotate(-135deg)}
+  .p-top{display:flex;flex-wrap:wrap;align-items:center}
+  .p-bar{flex:0 0 auto;min-height:58px;padding:0 0 0 20px}
+  .p-back{display:none}
+  .p-mast{font-size:24px;align-items:center}
+  .p-mast .savestate{margin:0 0 0 2px;font-size:9px}
+  .p-steps{flex:1 1 0;position:static;overflow:visible;border-top:0;min-width:0}
+  .p-cur{display:flex;align-items:center;justify-content:flex-end;gap:10px;width:100%;min-height:58px;padding:0 20px 0 8px;background:none;border:0;color:#fff;cursor:pointer}
+  .p-cur-t{font:400 20px/1 var(--serif);letter-spacing:-.02em;white-space:nowrap}
+  .p-cur-k{font:500 10px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.62);white-space:nowrap}
+  .p-cur-c{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.45)}
+  .p-cur-c::after{content:"";width:7px;height:7px;border:solid #fff;border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg);transition:transform .2s}
+  .p-steps.is-open .p-cur-c::after{transform:translateY(2px) rotate(-135deg)}
+  .p-line{flex:0 0 100%;height:3px;background:rgba(255,255,255,.22);-webkit-mask:repeating-linear-gradient(90deg,#000 0 calc(16.6667% - 3px),transparent calc(16.6667% - 3px) 16.6667%);mask:repeating-linear-gradient(90deg,#000 0 calc(16.6667% - 3px),transparent calc(16.6667% - 3px) 16.6667%)}
   .p-steps ol{display:none}
-  .p-steps.open ol{display:block;position:absolute;left:0;right:0;top:100%;min-width:0;background:#fff;color:var(--black);border-bottom:1px solid var(--black);box-shadow:0 22px 44px rgba(0,0,0,.2);max-height:calc(100svh - 130px);overflow-y:auto}
+  .p-steps.is-open ol{display:block;position:absolute;left:0;right:0;top:100%;min-width:0;padding:6px 0 0;background:#fff;color:var(--black);border-bottom:1px solid var(--black);box-shadow:0 24px 48px rgba(0,0,0,.22);max-height:calc(100svh - 70px);overflow-y:auto}
   .p-steps li{flex:none}
-  .p-step{min-width:0;min-height:58px;flex-direction:row;justify-content:flex-start;align-items:center;gap:16px;padding:0 20px;border-right:0;border-bottom:1px solid var(--line);color:var(--black)}
-  .p-step .n{display:inline-flex;align-items:center;gap:8px;min-width:34px;font:500 11px/1 var(--sans);letter-spacing:.12em;color:var(--mute)}
-  .p-step .t{font-size:20px}
+  .p-step{min-width:0;min-height:56px;flex-direction:row;justify-content:flex-start;align-items:center;gap:16px;padding:0 22px;border-right:0;border-bottom:1px solid var(--line);color:var(--black)}
+  .p-step .n{display:inline-flex;align-items:center;gap:8px;min-width:38px;font:500 11px/1 var(--sans);letter-spacing:.12em;color:var(--mute)}
+  .p-step .t{font-size:21px}
   .p-step.is-done{color:var(--black)}
   .p-step.is-done .t{text-decoration:none}
-  .p-step.is-current{background:var(--cream);color:var(--black)}
+  .p-step.is-current{background:var(--cream)}
   .p-step.is-current .t{font-style:italic}
   .p-step:disabled{opacity:.35}
+  .p-inv-li{display:block}
+  .p-inv{width:100%;min-height:56px;padding:0 22px;background:none;border:0;text-align:left;font:500 10.5px/1.2 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--black)}
   .ps-count{display:none}
   .lg-only{display:none}
-  .acts{position:sticky;bottom:0;z-index:20;flex-direction:row;align-items:stretch;gap:10px;margin:18px -20px 0;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.97);border-top:1px solid var(--line)}
-  .acts .btn{width:auto;min-width:0;min-height:52px;padding:0 16px}
-  .acts [data-prev],.acts [data-back-invite]{order:1;flex:0 0 32%;margin-right:0}
+  .p-main{padding-top:30px}
+  .acts{position:sticky;bottom:0;z-index:20;flex-direction:row;align-items:stretch;gap:10px;margin:22px -20px 0;padding:10px 20px calc(10px + env(safe-area-inset-bottom,0px));background:#fff;border-top:1px solid var(--line);box-shadow:0 -10px 24px rgba(255,255,255,.9)}
+  .acts .btn{width:auto;min-width:0;min-height:50px;padding:0 18px}
+  .acts [data-prev],.acts [data-back-invite]{order:1;flex:0 0 auto;margin-right:0;border-color:var(--line);font-size:0;gap:0;width:54px;padding:0}
+  .acts [data-prev]::before,.acts [data-back-invite]::before{content:"←";font:400 18px/1 var(--sans);color:var(--black)}
   .acts [data-skip]{order:2;flex:1 1 0}
   .acts [data-next],.acts #submit{order:3;flex:1 1 0}
 }
@@ -559,7 +569,7 @@ a{color:inherit}
       <div class="p-mast"><span aria-hidden="true">S.SUITE</span><small>Honoree Invitation · <span data-b="full_name"></span></small><span class="savestate" id="savestate" aria-live="polite"></span></div>
     </div>
     <nav class="p-steps" id="p-steps" aria-label="Invitation progress">
-      <button type="button" class="p-cur" id="p-cur" aria-expanded="false" aria-controls="p-steps-list"><span class="p-cur-k" id="p-cur-k">Step 1 of 6</span><span class="p-cur-t" id="p-cur-t">Response</span><span class="p-cur-c">All steps</span></button>
+      <button type="button" class="p-cur" id="p-cur" aria-expanded="false" aria-controls="p-steps-list" aria-label="Show all steps"><span class="p-cur-t" id="p-cur-t">Response</span><span class="p-cur-k" id="p-cur-k">1 of 6</span><span class="p-cur-c" aria-hidden="true"></span></button>
       <ol id="p-steps-list">
         <li><button type="button" class="p-step" data-i="0"><span class="n">01</span><span class="t">Response</span></button></li>
         <li><button type="button" class="p-step" data-i="1"><span class="n">02</span><span class="t">Profile</span></button></li>
@@ -567,6 +577,7 @@ a{color:inherit}
         <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Guests</span></button></li>
         <li><button type="button" class="p-step" data-i="4"><span class="n">05</span><span class="t">Support</span></button></li>
         <li><button type="button" class="p-step" data-i="5"><span class="n">06</span><span class="t">Review</span></button></li>
+        <li class="p-inv-li"><button type="button" class="p-inv" data-back-invite><span aria-hidden="true">←</span> Back to the invitation</button></li>
       </ol>
     </nav>
     <div class="p-line" aria-hidden="true"><i id="p-fill"></i></div>
@@ -875,6 +886,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261005v15"></script>
+<script src="/honoree/honoree.js?v=20261005v16"></script>
 </body>
 </html>
