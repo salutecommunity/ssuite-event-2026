@@ -323,15 +323,119 @@ $('#gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#gl-msg'
 $('#c-gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#c-small'))});
 $('#c-note-copy').addEventListener('click',function(){copyText(guestNote(),$('#c-small'),'Note copied, with your link included.')});
 $('#gl-note').addEventListener('click',function(){copyText(guestNote(),$('#gl-msg'),'Note copied, with your link included.')});
-/* Host a table: the event site's own secure table checkout. Not credited through the guest code,
-   which would spend ten of the honoree's guest seats. */
+/* Host a table, inside the portal. The table host's details are collected here and sent
+   to the event site's own checkout service; payment happens on Stripe's secure page in this
+   same tab, which returns here. Not credited through the guest code, which would spend ten
+   of the honoree's guest seats. */
 var TABLE_CUTOVER=Date.parse('2026-10-08T04:00:00Z');
+var CHECKOUT_API='https://iddzcbknnddkonrcwgpt.supabase.co/functions/v1/';
+var TS_KEY='0x4AAAAAAEdV18cDQPUcfZOG', tsWidget=null, tsLoading=null;
+var POLICY={terms:'ssuite-event-terms-2026-08-25',privacy:'ssuite-event-privacy-2026-08-25',media:'ssuite-media-release-2026-08-25'};
+var TABLE_STATUS='', TABLE_REF='';
 if(Date.now()>=TABLE_CUTOVER) $('#table-price').textContent='$7,500 for a table of ten.';
+function loadTurnstile(){
+  if(window.turnstile) return Promise.resolve(window.turnstile);
+  if(tsLoading) return tsLoading;
+  tsLoading=new Promise(function(ok,no){var sc=document.createElement('script');sc.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';sc.async=true;
+    sc.onload=function(){var n=0;(function w(){if(window.turnstile)ok(window.turnstile);else if(n++>80)no(new Error('x'));else setTimeout(w,100)})()};
+    sc.onerror=function(){no(new Error('Secure checkout could not load. Please refresh and try again.'))};document.head.appendChild(sc)});
+  return tsLoading;
+}
+function renderTurnstile(){
+  return loadTurnstile().then(function(ts){
+    if(tsWidget===null) tsWidget=ts.render('#table-turnstile',{sitekey:TS_KEY,action:'ssuite_checkout',appearance:'interaction-only'});
+    return ts;
+  });
+}
+function tsToken(){
+  return renderTurnstile().then(function(ts){
+    var until=Date.now()+40000;
+    return new Promise(function(ok,no){(function w(){var t=ts.getResponse(tsWidget);if(t)ok(t);else if(Date.now()>until)no(new Error('We could not verify this browser. Please refresh the page and try again.'));else setTimeout(w,250)})()});
+  });
+}
+function prefillTable(){
+  var nm=(val('pubName')||(H&&H.full_name)||'').trim().split(/\s+/);
+  if(!val('tFirst')&&nm[0]) setField('tFirst',nm[0]);
+  if(!val('tLast')&&nm.length>1) setField('tLast',nm.slice(1).join(' '));
+  if(!val('tTitle')&&val('pubTitle')) setField('tTitle',val('pubTitle'));
+  if(!val('tOrg')&&val('pubOrg')) setField('tOrg',val('pubOrg').split(' · ')[0]);
+  if(!val('tMeal')&&val('diet')) setField('tMeal',val('diet'));
+}
+function tableView(){
+  var done=$('#table-done'), paid=TABLE_STATUS==='paid';
+  $('#table-buy').hidden=paid; if(paid){$('#table-form').hidden=true}
+  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent='Your table for ten is reserved. Thank you.';done.appendChild(b);
+    done.appendChild(document.createTextNode(' Your receipt and table link are on their way by email'+(TABLE_REF?' (order '+TABLE_REF+')':'')+'. You can add your guests’ names from that link.'));done.hidden=false}
+  else if(TABLE_STATUS==='canceled'){done.textContent='Checkout was canceled. No payment was taken. You can try again whenever you like.';done.hidden=false}
+  else if(TABLE_STATUS==='pending'){done.textContent='Your payment is still being recorded. Your receipt will arrive by email shortly.';done.hidden=false}
+  else done.hidden=true;
+}
 $('#table-buy').addEventListener('click',function(){
-  var w=window.open('/?table=1','_blank');
-  if(w){try{w.opener=null}catch(e){}}else location.href='/?table=1';
-  if(dirty&&ready) saveNow();
+  var f=$('#table-form'), open=f.hidden;
+  f.hidden=!open;this.setAttribute('aria-expanded',String(open));
+  if(open){prefillTable();renderTurnstile().catch(function(){});var e=F.namedItem('tFirst');if(e&&!e.value)e.focus();else if(F.namedItem('tEmail'))F.namedItem('tEmail').focus()}
 });
+function tableErr(m){var e=$('#table-err');e.textContent=m||'';e.hidden=!m;if(m)e.focus&&e.setAttribute('tabindex','-1')}
+$('#table-pay').addEventListener('click',function(){
+  var btn=this;
+  var t={first:val('tFirst').trim(),last:val('tLast').trim(),email:val('tEmail').trim().toLowerCase(),phone:val('tPhone').trim(),title:val('tTitle').trim(),org:val('tOrg').trim(),meal:val('tMeal')};
+  var miss=[];
+  if(!t.first)miss.push('first name');if(!t.last)miss.push('last name');if(!EMAIL.test(t.email))miss.push('a valid email');
+  if(t.phone.replace(/\D/g,'').length<7)miss.push('a mobile phone number');if(!t.title)miss.push('title');if(!t.org)miss.push('organization');if(!t.meal)miss.push('meal');
+  if(miss.length){tableErr('Please add '+miss.join(', ')+'.');return}
+  if(!$('#t-agree').checked){tableErr('Please agree to the Event Terms, Privacy Notice and Media Release to continue.');return}
+  tableErr('');btn.disabled=true;var lbl=btn.firstChild.textContent;btn.firstChild.textContent='Preparing secure checkout… ';
+  tsToken().then(function(tok){
+    var o=location.origin+'/honoree/';
+    var body={ticket_type_code:'full_table',order_type:'table',quantity:1,guest_quantity:0,
+      purchaser:{first_name:t.first,last_name:t.last,email:t.email,phone:t.phone},member_attestation:false,
+      how_heard:'S.Suite community or event',
+      attendees:[{first_name:t.first,last_name:t.last,email:t.email,phone:t.phone,job_title:t.title,company:t.org,meal_preference:t.meal,has_dietary_or_allergy_needs:false,has_accessibility_needs:false}],
+      combined_agreement:true,terms_version:POLICY.terms,privacy_version:POLICY.privacy,media_release_version:POLICY.media,
+      turnstile_token:tok,success_url:o+'?table=paid&session_id={CHECKOUT_SESSION_ID}',cancel_url:o+'?table=cancel'};
+    return fetch(CHECKOUT_API+'create-checkout',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+      .then(function(r){return r.json().catch(function(){return {}}).then(function(j){
+        if(!r.ok||typeof j.checkout_url!=='string') throw new Error(j.error||'Checkout could not be started. No payment has been taken.');
+        var u=new URL(j.checkout_url);if(u.protocol!=='https:'||u.hostname!=='checkout.stripe.com') throw new Error('Checkout could not be opened securely. No payment was taken.');
+        TABLE_STATUS='started';dirty=true;
+        return api({action:'save',response:collect()}).catch(function(){}).then(function(){location.assign(u.toString())});
+      })});
+  }).catch(function(e){
+    tableErr(e.message||'Checkout could not be started. No payment has been taken.');
+    btn.disabled=false;btn.firstChild.textContent=lbl;
+    if(window.turnstile&&tsWidget!==null){try{window.turnstile.reset(tsWidget)}catch(x){}}
+  });
+});
+/* Coming back from Stripe: confirm against the order record, never on the URL alone. */
+var TABLE_RETURN=(function(){
+  var q=new URLSearchParams(location.search), t=q.get('table');
+  if(!t) return null;
+  try{history.replaceState(null,'',location.pathname)}catch(e){}
+  var sid=q.get('session_id')||'';
+  return {kind:t,session:/^cs_(live|test)_[A-Za-z0-9]{8,320}$/.test(sid)?sid:''};
+})();
+function checkTableReturn(){
+  if(!TABLE_RETURN) return;
+  if(TABLE_RETURN.kind==='cancel'){if(TABLE_STATUS!=='paid'){TABLE_STATUS='canceled';saveSoon(200)}openTableStep();return}
+  if(!TABLE_RETURN.session){openTableStep();return}
+  var tries=0;
+  (function look(){
+    fetch(CHECKOUT_API+'checkout-status',{method:'POST',mode:'cors',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:TABLE_RETURN.session})})
+    .then(function(r){return r.json()}).then(function(d){
+      var st=d&&d.state;
+      if(st==='pending'&&tries++<10){TABLE_STATUS='pending';tableView();setTimeout(look,3000);return}
+      if(st&&st!=='pending'&&st!=='not_found'&&st!=='refunded'){TABLE_STATUS='paid';TABLE_REF=String(d.reference||'').slice(0,60)}
+      else if(st==='pending'){TABLE_STATUS='pending'}
+      saveSoon(200);tableView();
+    }).catch(function(){TABLE_STATUS='pending';tableView()});
+  })();
+  openTableStep();
+}
+function openTableStep(){
+  tableView();
+  setView('portal');goto(3);
+  setTimeout(function(){var el=$('#table-panel');if(el)el.scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'})},250);
+}
 
 /* ── Upload a list (CSV, TXT or Excel), parsed in the browser ── */
 var XLSX_URL='https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
@@ -379,13 +483,14 @@ wireListUpload('inv-file','inviteList','inv-file-msg','guest');
 wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gMode','diet','access','inviteList','inviteMode','supportList','supportMode'];
+var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal'];
 var BOOLS=['guest'];
 function collect(){
   var r={};
   FIELDS.forEach(function(k){r[k]=val(k)});
   BOOLS.forEach(function(k){r[k]=chk(k)});
   r.invitees=parseList(r.inviteList).items;r.supporters=parseList(r.supportList).items;
+  r.tableStatus=TABLE_STATUS;r.tableRef=TABLE_REF;
   r.step=cur;r.done=Object.keys(done).filter(function(k){return done[k]}).map(Number);
   return r;
 }
@@ -402,6 +507,7 @@ function restore(r,prefill){
     BOOLS.forEach(function(k){var e=F.namedItem(k);if(e)e.checked=r[k]===true});
     (r.done||[]).forEach(function(i){if(i<=LAST)done[i]=true});
     if(typeof r.step==='number') cur=Math.max(0,Math.min(LAST,r.step));
+    TABLE_STATUS=r.tableStatus||'';TABLE_REF=r.tableRef||'';
   }
   bioCount();syncReveals();
 }
@@ -453,7 +559,8 @@ function renderReview(){
     var ivd=parseList(val('inviteList')).items;
     sec('Guests',3,[
       ivd.length?['Guests to invite',plural(ivd.length,'guest')+' at $300 each']:null,
-      ivd.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null
+      ivd.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null,
+      TABLE_STATUS==='paid'?['Table of ten','Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
     ]);
     sec('Support SALUTE',4,[
       sv0.length?['People to reach out to',plural(sv0.length,'person')]:null,
@@ -477,7 +584,8 @@ function renderReview(){
   var iv=parseList(val('inviteList')).items,sv=parseList(val('supportList')).items;
   sec('Guests',3,[
     iv.length?['Additional guests',plural(iv.length,'guest')+' at $300 each']:null,
-    iv.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null
+    iv.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null,
+    TABLE_STATUS==='paid'?['Table of ten','Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
   ]);
   sec('Support SALUTE',4,[
     sv.length?['People to reach out to',plural(sv.length,'person')]:null,
@@ -552,6 +660,7 @@ api({action:'get'}).then(function(d){
   $('#gate').hidden=true;views.invite.hidden=false;document.body.setAttribute('data-view','invite');
   startReveal();updateNav();onScroll();
   ready=true;
+  tableView();checkTableReturn();
 }).catch(function(e){
   gate(e.status===400?'This private invitation link is not valid or is no longer active. Please write to ssuite@salute.community and we will help right away.':'We could not open your invitation just now. Please refresh the page in a moment.');
 });

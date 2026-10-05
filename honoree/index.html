@@ -401,6 +401,29 @@ a{color:inherit}
 .grp+.grp{padding-top:0}
 .reveal-box{margin-top:14px;padding:4px 0 2px 20px;border-left:2px solid var(--black)}
 .sub>legend.lbl{margin-bottom:2px}
+
+/* v12: Guests and Support set as distinct panels; in-portal table checkout */
+.panel{background:#f4f2ee;padding:26px 20px 24px;margin:0 0 20px}
+@media(min-width:640px){.panel{padding:32px 34px 30px}}
+.panel-k{font:500 11px/1.4 var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin:0 0 8px}
+.panel-k .opt{font-size:14px}
+.panel-t{font:400 26px/1.15 var(--serif);letter-spacing:-.02em;margin:0 0 6px}
+.panel .fld textarea{background:#fff;border:1px solid var(--line);padding:12px 14px}
+.panel .fld textarea:focus{background:#fff;box-shadow:none;border-color:var(--black)}
+.panel .fld input:not([type=file]):focus{background:transparent}
+.panel .filepick{margin:-14px 0 4px}
+.panel .sub{margin:18px 0 0}
+.panel-sep{height:1px;background:var(--line);margin:24px 0 20px}
+.panel .lbl+.grp-d{margin-top:4px}
+.panel .linkbox input{background:#fff;border:1px solid var(--line);padding:12px;font-size:15px}
+.tform{margin-top:22px;padding-top:6px}
+.tform .alert{margin:12px 0 0}
+.tform #table-pay{width:100%;margin-top:14px}
+@media(min-width:640px){.tform #table-pay{width:auto;min-width:300px}}
+.tts{margin-top:10px;min-height:0}
+.tdone{background:#fff;border-left:2px solid var(--black);padding:14px 16px;margin:6px 0 16px;font-size:15px;line-height:1.55}
+.tdone b{font-weight:600}
+.panel .choice small a{color:var(--black)}
 </style>
 </head>
 <body data-view="invite">
@@ -678,33 +701,62 @@ a{color:inherit}
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <fieldset class="grp">
-            <legend>Who you’d like to invite</legend>
+          <div class="panel">
+            <p class="panel-k">Invite guests</p>
+            <h3 class="panel-t">Who you’d like to invite</h3>
             <p class="grp-d">Type or paste one per line (name and email), or upload a list.</p>
             <label class="fld"><span class="lbl sr">Guests to invite</span>
-              <textarea name="inviteList" rows="6" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
+              <textarea name="inviteList" rows="5" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
             <div class="filepick"><input class="sr" type="file" id="inv-file" accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain"><label class="btn btn-line btn-sm" for="inv-file">Upload a list</label><span class="hint" id="inv-file-msg">CSV or Excel with names and emails.</span></div>
             <p class="hint" id="invite-sum" role="status" aria-live="polite"></p>
-          </fieldset>
-          <fieldset class="grp" id="invite-mode-grp">
-            <legend>How should the invitations go out?</legend>
-            <div class="choices">
-              <label class="choice"><input type="radio" name="inviteMode" value="salute"><span><b>SALUTE emails them on my behalf</b><small>We’ll copy you.</small></span></label>
-              <label class="choice"><input type="radio" name="inviteMode" value="self"><span><b>I’ll email them myself</b><small>Use your link below.</small></span></label>
-            </div>
-          </fieldset>
-          <fieldset class="grp">
-            <legend>Your personal invitation link</legend>
+            <fieldset class="sub" id="invite-mode-grp">
+              <legend class="lbl">How should the invitations go out?</legend>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="inviteMode" value="salute"><span><b>SALUTE emails them on my behalf</b><small>We’ll copy you.</small></span></label>
+                <label class="choice"><input type="radio" name="inviteMode" value="self"><span><b>I’ll email them myself</b><small>Use your link below.</small></span></label>
+              </div>
+            </fieldset>
+            <div class="panel-sep"></div>
+            <p class="lbl">Your personal invitation link</p>
             <p class="grp-d" id="gl-desc">Share it with anyone you’d like to invite. It applies the $300 honoree rate at checkout.</p>
             <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button><button type="button" class="btn btn-line btn-sm" id="gl-note">Copy a note</button></div>
             <p class="letter-msg" role="status" id="gl-msg"></p>
-          </fieldset>
-          <fieldset class="grp">
-            <legend>Host a table <span class="opt">optional</span></legend>
-            <p class="grp-d">Ten seats at your own table. <span id="table-price">$5,000 at our extended early-bird rate (regular $7,500).</span></p>
-            <button type="button" class="btn btn-line" id="table-buy">Host a table <span class="arrow" aria-hidden="true">↗</span></button>
-            <p class="hint" style="margin-top:10px">Opens checkout in a new tab. This page stays open.</p>
-            </fieldset>
+          </div>
+
+          <div class="panel" id="table-panel">
+            <p class="panel-k">Host a table <span class="opt">optional</span></p>
+            <h3 class="panel-t">A table of ten</h3>
+            <p class="grp-d"><span id="table-price">$5,000 at our extended early-bird rate (regular $7,500).</span> You choose who sits with you.</p>
+            <div id="table-done" class="tdone" role="status" hidden></div>
+            <button type="button" class="btn btn-line" id="table-buy" aria-expanded="false" aria-controls="table-form">Host a table</button>
+            <div class="tform" id="table-form" hidden>
+              <p class="grp-d">Who is buying the table? The table host’s details are below; you can add your guests’ names afterward.</p>
+              <div class="row2">
+                <label class="fld"><span class="lbl">First name</span><input type="text" name="tFirst" autocomplete="given-name"></label>
+                <label class="fld"><span class="lbl">Last name</span><input type="text" name="tLast" autocomplete="family-name"></label>
+              </div>
+              <div class="row2">
+                <label class="fld"><span class="lbl">Email</span><input type="email" name="tEmail" inputmode="email" autocomplete="email"></label>
+                <label class="fld"><span class="lbl">Mobile phone</span><input type="tel" name="tPhone" inputmode="tel" autocomplete="tel"></label>
+              </div>
+              <div class="row2">
+                <label class="fld"><span class="lbl">Title</span><input type="text" name="tTitle" autocomplete="organization-title"></label>
+                <label class="fld"><span class="lbl">Organization</span><input type="text" name="tOrg" autocomplete="organization"></label>
+              </div>
+              <fieldset class="sub">
+                <legend class="lbl">Table host’s meal</legend>
+                <div class="choices compact">
+                  <label class="choice"><input type="radio" name="tMeal" value="Vegetarian"><span><b>Vegetarian</b></span></label>
+                  <label class="choice"><input type="radio" name="tMeal" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
+                </div>
+              </fieldset>
+              <div class="choices"><label class="choice"><input type="checkbox" id="t-agree"><span><small style="margin:0">I agree to the <a href="/event-terms.html" target="_blank" rel="noopener">Event Terms</a>, <a href="/event-privacy.html" target="_blank" rel="noopener">Privacy Notice</a> and <a href="/media-release.html" target="_blank" rel="noopener">Media Release</a>, and to event texts. Message and data rates may apply; reply STOP to stop.</small></span></label></div>
+              <div id="table-turnstile" class="tts"></div>
+              <p class="alert" id="table-err" role="alert" hidden></p>
+              <button type="button" class="btn btn-fill" id="table-pay">Continue to secure payment <span class="arrow" aria-hidden="true">→</span></button>
+              <p class="hint" style="margin-top:12px">You’ll pay on Stripe’s secure page and come straight back here. Your answers stay saved.</p>
+            </div>
+          </div>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="btn btn-line" data-prev>Back</button>
@@ -722,26 +774,29 @@ a{color:inherit}
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <fieldset class="grp">
-            <legend>Make a contribution</legend>
+          <div class="panel">
+            <p class="panel-k">Option one</p>
+            <h3 class="panel-t">Make a contribution</h3>
             <p class="grp-d">SALUTE is a 501(c)(3).</p>
-            <a class="btn btn-line" id="give-link" href="https://event.ssuite.org/#give" target="_blank" rel="noopener">Contribute <span class="arrow" aria-hidden="true">→</span></a>
-            </fieldset>
-          <fieldset class="grp">
-            <legend>People SALUTE could reach out to</legend>
-            <p class="grp-d">Type or paste one per line (name and email), or upload a list.</p>
+            <a class="btn btn-line" id="give-link" href="https://event.ssuite.org/#give" target="_blank" rel="noopener">Contribute <span class="arrow" aria-hidden="true">↗</span></a>
+          </div>
+
+          <div class="panel">
+            <p class="panel-k">Option two</p>
+            <h3 class="panel-t">Introduce potential supporters</h3>
+            <p class="grp-d">People SALUTE could reach out to about supporting its work. One per line (name and email), or upload a list.</p>
             <label class="fld"><span class="lbl sr">People SALUTE could reach out to</span>
-              <textarea name="supportList" rows="5" placeholder="Jane Smith, jane@example.com"></textarea></label>
+              <textarea name="supportList" rows="4" placeholder="Jane Smith, jane@example.com"></textarea></label>
             <div class="filepick"><input class="sr" type="file" id="sup-file" accept=".csv,.txt,.xlsx,.xls,text/csv,text/plain"><label class="btn btn-line btn-sm" for="sup-file">Upload a list</label><span class="hint" id="sup-file-msg">CSV or Excel with names and emails.</span></div>
             <p class="hint" id="support-sum" role="status" aria-live="polite"></p>
-          </fieldset>
-          <fieldset class="grp" id="support-mode-grp">
-            <legend>How should SALUTE reach out?</legend>
-            <div class="choices">
-              <label class="choice"><input type="radio" name="supportMode" value="mention"><span><b>SALUTE can reach out to them directly</b></span></label>
-              <label class="choice"><input type="radio" name="supportMode" value="cc"><span><b>Please copy me when reaching out</b></span></label>
-            </div>
-          </fieldset>
+            <fieldset class="sub" id="support-mode-grp">
+              <legend class="lbl">How should SALUTE reach out?</legend>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="supportMode" value="mention"><span><b>SALUTE can reach out to them directly</b></span></label>
+                <label class="choice"><input type="radio" name="supportMode" value="cc"><span><b>Please copy me when reaching out</b></span></label>
+              </div>
+            </fieldset>
+          </div>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="btn btn-line" data-prev>Back</button>
@@ -790,6 +845,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261005f"></script>
+<script src="/honoree/honoree.js?v=20261005v12"></script>
 </body>
 </html>
