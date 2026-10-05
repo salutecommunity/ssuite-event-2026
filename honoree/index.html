@@ -353,6 +353,14 @@ a{color:inherit}
 .confirm .linkbox input{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);padding:12px}
 .confirm .gl{margin-top:26px;text-align:left}
 .confirm .gl .eyebrow{color:rgba(255,255,255,.7)}
+
+/* Simplified flow: the one condition that matters, stated plainly */
+.must{border:1.5px solid var(--black);padding:20px 22px;margin:0 0 30px;background:#fff}
+.must .eyebrow{display:block;margin-bottom:8px}
+.must p{margin:0;font:400 19px/1.45 var(--serif);letter-spacing:-.005em}
+.must small{display:block;margin-top:10px;font:400 14px/1.5 var(--sans);color:#555}
+.open-dark .inperson{max-width:440px;margin:22px auto 0;padding:14px 16px;border:1px solid rgba(255,255,255,.55);font:400 15px/1.45 var(--sans);color:#fff}
+.open-dark .inperson b{font-weight:600}
 </style>
 </head>
 <body data-view="invite">
@@ -386,6 +394,7 @@ a{color:inherit}
           <p class="cat" data-b="honor_label"></p>
           <p class="recog">You’ve been nominated and recognized as an inaugural S.SUITE Honoree.</p>
           <p class="about">S.SUITE recognizes South Asian women leaders and allies shaping business, capital, culture, impact, and community.</p>
+          <p class="inperson"><b>Please note:</b> honorees must attend in person to accept, on Friday, November 20, 2026, in New York City.</p>
           <div class="open-cta">
             <button type="button" class="btn btn-wl" data-enter>Accept Your Invitation <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="textbtn" data-scroll="#platform" style="color:#fff">Explore S.SUITE <span aria-hidden="true">↓</span></button>
@@ -449,7 +458,7 @@ a{color:inherit}
   </footer>
 </div>
 
-<!-- ═══════════ NEELA — private portal ═══════════ -->
+
 <div id="view-portal" hidden>
   <div class="p-top" id="p-top">
     <div class="p-bar">
@@ -458,13 +467,10 @@ a{color:inherit}
     </div>
     <nav class="p-steps" id="p-steps" aria-label="Invitation progress">
       <ol>
-        <li><button type="button" class="p-step" data-i="0"><span class="n">01</span><span class="t">Invitation</span></button></li>
+        <li><button type="button" class="p-step" data-i="0"><span class="n">01</span><span class="t">Response</span></button></li>
         <li><button type="button" class="p-step" data-i="1"><span class="n">02</span><span class="t">Profile</span></button></li>
         <li><button type="button" class="p-step" data-i="2"><span class="n">03</span><span class="t">Evening</span></button></li>
-        <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Announcement</span></button></li>
-        <li><button type="button" class="p-step" data-i="4"><span class="n">05</span><span class="t">Invite Others</span></button></li>
-        <li><button type="button" class="p-step" data-i="5"><span class="n">06</span><span class="t">Support SALUTE</span></button></li>
-        <li><button type="button" class="p-step" data-i="6"><span class="n">07</span><span class="t">Review</span></button></li>
+        <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Review</span></button></li>
       </ol>
     </nav>
     <div class="p-line" aria-hidden="true"><i id="p-fill"></i></div>
@@ -477,38 +483,29 @@ a{color:inherit}
       <section class="step" data-step="0" aria-labelledby="t0">
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">01</p>
-          <h2 class="ps-title" id="t0" tabindex="-1">Your invitation</h2>
-          <p class="ps-lead">We would be honored to recognize you in person as an inaugural S.SUITE <span data-b="honor"></span> Honoree on Friday, November 20, 2026.<span id="deadline-line"></span></p>
+          <h2 class="ps-title" id="t0" tabindex="-1">Your response</h2>
+          <p class="ps-lead">We would be honored to recognize you as an inaugural S.SUITE <span data-b="honor"></span> Honoree.<span id="deadline-line"></span></p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <p class="statusbar" id="statusbar" hidden></p>
+          <div class="must" role="note">
+            <span class="eyebrow">Please note</span>
+            <p>To accept, honorees must attend S.SUITE in person on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City.</p>
+            <small>Accepting does not require any purchase, sponsorship or donation.</small>
+          </div>
           <fieldset class="grp">
             <legend>Your decision</legend>
             <div class="choices">
-              <label class="choice"><input type="radio" name="response" value="accept"><span><b>I’m honored to accept</b><small>I accept the nomination and confirm that I will attend S.SUITE in person on Friday, November 20, 2026, in New York City.</small></span></label>
-              <label class="choice"><input type="radio" name="response" value="decline"><span><b>Respectfully decline</b><small>With gratitude, I’m unable to accept the invitation at this time.</small></span></label>
+              <label class="choice"><input type="radio" name="response" value="accept"><span><b>I’m honored to accept</b><small>I will attend in person on November 20.</small></span></label>
+              <label class="choice"><input type="radio" name="response" value="decline"><span><b>Respectfully decline</b><small>With gratitude, I’m unable to accept at this time.</small></span></label>
             </div>
           </fieldset>
-          <p class="note"><b>In-person attendance on November 20 is required to accept the nomination.</b> Acceptance is not contingent on purchasing tickets, sponsorship, donations, or fundraising.</p>
           <div id="decline-box" hidden>
             <label class="fld"><span class="lbl">A note to the SALUTE team <i>Optional</i></span>
-              <textarea name="declineNote" rows="4" placeholder="Share anything you’d like the team to know."></textarea></label>
-            <p class="note">We understand, and we’re grateful you took the time to consider it. Declining will take you straight to review.</p>
+              <textarea name="declineNote" rows="4"></textarea></label>
           </div>
-          <fieldset class="grp" id="handoff-grp">
-            <legend>Prefer to delegate?</legend>
-            <p class="grp-d">A member of your team can complete the remaining steps on your behalf.</p>
-            <div class="choices"><label class="choice"><input type="checkbox" name="handoff"><span><b>Hand off completion to a team member</b><small>You’ll stay in control of your decision above.</small></span></label></div>
-            <div class="reveal-box" id="handoff-box" hidden>
-              <div class="row2">
-                <label class="fld"><span class="lbl">Team member name</span><input type="text" name="hoName" autocomplete="off" placeholder="Full name"></label>
-                <label class="fld"><span class="lbl">Team member email</span><input type="email" name="hoEmail" inputmode="email" autocomplete="off" placeholder="name@company.com"></label>
-              </div>
-              <p class="note">SALUTE will share your private link with them and keep you copied. You remain in control of your decision.</p>
-            </div>
-          </fieldset>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="btn btn-line" data-back-invite>Back to Invitation</button>
@@ -521,26 +518,23 @@ a{color:inherit}
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">02</p>
           <h2 class="ps-title" id="t1" tabindex="-1">Your profile</h2>
-          <p class="ps-lead">How you’d like to be presented, in your words.</p>
+          <p class="ps-lead">How you’d like to be listed. We’ll coordinate the announcement with you and send a ready-to-share post before anything is public.</p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
-            <legend>Public listing</legend>
-            <label class="fld"><span class="lbl">Preferred public name</span><input type="text" name="pubName" autocomplete="off"></label>
-            <label class="fld"><span class="lbl">Professional title</span><input type="text" name="pubTitle" autocomplete="off"></label>
+            <legend>How you’ll be listed</legend>
+            <label class="fld"><span class="lbl">Name</span><input type="text" name="pubName" autocomplete="off"></label>
+            <label class="fld"><span class="lbl">Title</span><input type="text" name="pubTitle" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Organization(s)</span><input type="text" name="pubOrg" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Short bio <i>Optional</i></span>
-              <span class="hint">Around 75 words is ideal; 120 is the maximum. <span id="bio-count">0 words</span></span>
-              <textarea name="bio" rows="6" placeholder="Write in the third person, as it would appear in print."></textarea></label>
-            <label class="fld"><span class="lbl">Name pronunciation <i>Optional</i></span>
-              <span class="hint">A phonetic spelling helps the host say your name as you do.</span>
-              <input type="text" name="pron" autocomplete="off" placeholder="Phonetic spelling"></label>
+              <span class="hint">Up to 120 words. <span id="bio-count">0 words</span></span>
+              <textarea name="bio" rows="5"></textarea></label>
           </fieldset>
           <fieldset class="grp">
-            <legend>Headshot</legend>
-            <p class="grp-d">High-resolution JPG or PNG, at least 1200 px on the long side. Uploads are stored privately and shared only with the SALUTE team.</p>
+            <legend>Headshot <span style="font:inherit;font-style:italic">Optional</span></legend>
+            <p class="grp-d">A high-resolution image. It’s stored privately and shared only with the SALUTE team.</p>
             <div class="upload" id="hs">
               <img class="thumb" id="hs-thumb" alt="" hidden>
               <div class="up-info" id="hs-info">
@@ -553,15 +547,14 @@ a{color:inherit}
             </div>
           </fieldset>
           <fieldset class="grp">
-            <legend>Communications</legend>
-            <p class="grp-d">Who should we coordinate with on your behalf, if not you?</p>
+            <legend>Someone on your team <span style="font:inherit;font-style:italic">Optional</span></legend>
+            <p class="grp-d">If you’d like us to copy an assistant or communications contact on logistics and the announcement.</p>
             <div class="row2">
-              <label class="fld"><span class="lbl">Team contact name <i>Optional</i></span><input type="text" name="teamName" autocomplete="off"></label>
-              <label class="fld"><span class="lbl">Team contact email <i>Optional</i></span><input type="email" name="teamEmail" inputmode="email" autocomplete="off"></label>
+              <label class="fld"><span class="lbl">Name</span><input type="text" name="teamName" autocomplete="off"></label>
+              <label class="fld"><span class="lbl">Email</span><input type="email" name="teamEmail" inputmode="email" autocomplete="off"></label>
             </div>
-            <label class="fld"><span class="lbl">Social link <i>Optional</i></span><span class="hint">LinkedIn, Instagram, or your preferred profile.</span>
-              <input type="url" name="social" inputmode="url" autocomplete="off" placeholder="linkedin.com/in/yourname"></label>
           </fieldset>
+          
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="btn btn-line" data-prev>Back</button>
@@ -574,53 +567,38 @@ a{color:inherit}
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">03</p>
           <h2 class="ps-title" id="t2" tabindex="-1">Your evening</h2>
-          <p class="ps-lead">Friday, November 20, 2026, 6:30 p.m. Prince George Ballroom, New York City.</p>
+          <p class="ps-lead">Friday, November 20, 2026, 6:30 p.m. · Prince George Ballroom, New York City.</p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <fieldset class="grp">
-            <legend>In-person attendance</legend>
-            <p class="grp-d">Your recognition will be presented at S.SUITE on Friday, November 20, 2026, in New York City. Honorees must be present to accept their nomination.</p>
-            <div class="choices">
-              <label class="choice"><input type="checkbox" name="attend" value="yes"><span><b>I confirm that I will attend S.SUITE in person on November 20</b><small>Prince George Ballroom · New York City · 6:30 p.m.</small></span></label>
-            </div>
-          </fieldset>
           <fieldset class="grp" id="guest-grp">
-            <legend>Your complimentary guest</legend>
-            <p class="grp-d">Your invitation includes one complimentary guest. If you would like to invite additional guests, they may register at the special honoree rate of $300 per person, subject to availability. Additional seats are confirmed only after registration and payment.</p>
-            <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’d like to bring a guest</b></span></label></div>
+            <legend>Your guest</legend>
+            <p class="grp-d">Your invitation includes complimentary seats for you and one guest.</p>
+            <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
                 <label class="fld"><span class="lbl">Guest name</span><input type="text" name="gName" autocomplete="off"></label>
                 <label class="fld"><span class="lbl">Guest email</span><input type="email" name="gEmail" inputmode="email" autocomplete="off"></label>
-                <label class="fld"><span class="lbl">Guest title <i>Optional</i></span><input type="text" name="gTitle" autocomplete="off"></label>
-                <label class="fld"><span class="lbl">Guest organization <i>Optional</i></span><input type="text" name="gOrg" autocomplete="off"></label>
               </div>
             </div>
           </fieldset>
           <fieldset class="grp">
-            <legend>Additional seating <span style="font:inherit;font-style:italic">Optional</span></legend>
-            <p class="grp-d">In addition to your complimentary guest, individual guests may register at the $300 honoree rate. Honorees may also purchase a table at the extended early-bird rate of $5,000. Neither option is required to accept your nomination.</p>
-            <div class="choices">
-              <label class="choice"><input type="checkbox" name="tableLink"><span><b>Send me the secure link to purchase a table for $5,000</b><small>SALUTE will follow up with the extended early-bird purchase link and seating details.</small></span></label>
-            </div>
-          </fieldset>
-          <fieldset class="grp">
-            <legend>Meal preference</legend>
+            <legend>Your meal</legend>
             <div class="choices compact" id="diet">
               <label class="choice"><input type="radio" name="diet" value="Vegetarian"><span><b>Vegetarian</b></span></label>
               <label class="choice"><input type="radio" name="diet" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
             </div>
-            <label class="fld" style="margin-top:22px"><span class="lbl">Food allergies <i>Optional</i></span><textarea name="dietNote" rows="3"></textarea></label>
+            <label class="fld" style="margin-top:22px"><span class="lbl">Anything else we should know? <i>Optional</i></span><span class="hint">Allergies, accessibility needs or arrival notes.</span><textarea name="access" rows="3"></textarea></label>
           </fieldset>
           <fieldset class="grp">
-            <legend>Accessibility &amp; accommodations</legend>
-            <label class="fld"><span class="lbl">How can we make the evening comfortable for you? <i>Optional</i></span><textarea name="access" rows="3"></textarea></label>
-          </fieldset>
-          <fieldset class="grp">
-            <legend>Arrival &amp; travel</legend>
-            <label class="fld"><span class="lbl">Arrival or travel notes <i>Optional</i></span><span class="hint">Expected arrival time, travelling from out of town, car service, or anything else.</span><textarea name="travel" rows="3"></textarea></label>
+            <legend>Inviting others <span style="font:inherit;font-style:italic">Optional</span></legend>
+            <p class="grp-d" id="gl-desc">Once you accept, you’ll receive a personal invitation link to share. Your guests can buy tickets at the $300 honoree rate (regular price $400).</p>
+            <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button></div>
+            <p class="letter-msg" role="status" id="gl-msg"></p>
+            <div class="choices" style="margin-top:18px">
+              <label class="choice"><input type="checkbox" name="tableLink"><span><b>I’d like to hear about hosting a table or supporting SALUTE</b><small>Entirely optional. Tables are $5,000 at our extended early-bird rate.</small></span></label>
+            </div>
           </fieldset>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
@@ -629,148 +607,21 @@ a{color:inherit}
         </div>
       </section>
 
-      <!-- 04 Announcement -->
+      <!-- 04 Review -->
       <section class="step" data-step="3" aria-labelledby="t3" hidden>
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">04</p>
-          <h2 class="ps-title" id="t3" tabindex="-1">Your announcement</h2>
-          <p class="ps-lead">Help us make sharing your S.SUITE recognition seamless.</p>
-          <p class="ps-count" data-count></p>
-        </header>
-        <div class="ps-body">
-          <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <p class="note"><b>SALUTE will announce you as an inaugural S.SUITE <span data-b="honor"></span> Honoree.</b> We’ll use the name, title, biography, and headshot provided in your Profile and coordinate announcement details with you or your team.</p>
-          <fieldset class="grp">
-            <legend>Would you like to share the announcement?</legend>
-            <div class="choices">
-              <label class="choice"><input type="radio" name="shareAnnouncement" value="Yes, I plan to share"><span><b>Yes, I’d be happy to share it</b><small>Please send me the final announcement and assets.</small></span></label>
-              <label class="choice"><input type="radio" name="shareAnnouncement" value="I may share"><span><b>I may share it</b><small>Please send me the materials when they’re ready.</small></span></label>
-              <label class="choice"><input type="radio" name="shareAnnouncement" value="No plans to share"><span><b>I don’t plan to post</b><small>SALUTE may still announce the recognition through its own channels.</small></span></label>
-            </div>
-          </fieldset>
-          <fieldset class="grp">
-            <legend>Would you like SALUTE to craft a post for you?</legend>
-            <div class="choices compact">
-              <label class="choice"><input type="radio" name="draftPost" value="Yes"><span><b>Yes, please draft a post for me</b><small>We’ll prepare polished copy that you or your team can edit.</small></span></label>
-              <label class="choice"><input type="radio" name="draftPost" value="No"><span><b>No, thank you</b></span></label>
-            </div>
-          </fieldset>
-          <fieldset class="grp">
-            <legend>Announcement coordination</legend>
-            <div class="choices compact">
-              <label class="choice"><input type="radio" name="annContact" value="Me directly"><span><b>Coordinate with me directly</b></span></label>
-              <label class="choice"><input type="radio" name="annContact" value="My communications / team contact"><span><b>Coordinate with my communications or team contact</b></span></label>
-              <label class="choice"><input type="radio" name="annContact" value="Both of us"><span><b>Coordinate with both of us</b></span></label>
-            </div>
-            <label class="fld" style="margin-top:22px"><span class="lbl">Timing or communications notes <i>Optional</i></span><textarea name="annNote" rows="3" placeholder="Share any dates, approvals, or other considerations we should know."></textarea></label>
-          </fieldset>
-          <div class="acts">
-            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
-            <button type="button" class="btn btn-line" data-prev>Back</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 05 Invite Others -->
-      <section class="step" data-step="4" aria-labelledby="t4" hidden>
-        <header class="ps-head">
-          <p class="ps-num" aria-hidden="true">05</p>
-          <h2 class="ps-title" id="t4" tabindex="-1">Invite additional guests</h2>
-          <p class="ps-lead">Make it easy for the people you would like in the room to join you.</p>
-          <p class="ps-count" data-count></p>
-        </header>
-        <div class="ps-body">
-          <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <p class="note"><b>Additional guests receive a special honoree rate of $300 per person.</b> Space is limited, and adding a name here does not reserve a seat. Each guest’s place is confirmed only after SALUTE shares the registration link and payment is completed.</p>
-          <fieldset class="grp">
-            <legend>Your personal invitation link</legend>
-            <p class="grp-d" id="gl-desc">Your personalized link appears here as soon as you submit your acceptance. It takes invited guests straight to the $300 honoree rate.</p>
-            <div class="linkbox"><input type="text" id="gl-field" value="Your personalized link will appear here after acceptance" readonly aria-label="Personalized guest invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy" hidden>Copy link</button></div>
-            <p class="letter-msg" role="status" id="gl-msg"></p>
-          </fieldset>
-          <div data-mount="invite"></div>
-          <fieldset class="grp" style="margin-top:34px">
-            <legend>How would you like invitations handled?</legend>
-            <p class="grp-d">You may share your link yourself, ask SALUTE to prepare messages for your approval, or authorize SALUTE to contact the people listed. No one is contacted without the direction you record here.</p>
-            <div class="choices">
-              <label class="choice"><input type="radio" name="inviteMode" value="I’ll send it myself using the prepared template"><span><b>I’ll send it myself</b><small>Using the prepared template below.</small></span></label>
-              <label class="choice"><input type="radio" name="inviteMode" value="SALUTE drafts for my approval"><span><b>SALUTE drafts for my approval</b><small>Nothing goes out until you approve it.</small></span></label>
-              <label class="choice"><input type="radio" name="inviteMode" value="SALUTE may contact them, with my recorded permission"><span><b>SALUTE may contact them</b><small>You’re recording your permission here.</small></span></label>
-              <label class="choice"><input type="radio" name="inviteMode" value="Save only, no outreach"><span><b>Save only, no outreach</b><small>Keep the list on file; contact no one.</small></span></label>
-            </div>
-          </fieldset>
-          <div class="grp">
-            <p class="grp-t">Invitation template</p>
-            <p class="grp-d">Edit freely. Your edits are saved with your responses.</p>
-            <div class="letter" data-letter="invite">
-              <div class="letter-head"><span class="eyebrow">A note from you</span><span class="tools"><button type="button" class="textbtn" data-copy>Copy</button><button type="button" class="textbtn" data-reset>Reset</button></span></div>
-              <label class="fld"><span class="lbl">Subject</span><input type="text" data-role="subj"></label>
-              <label class="fld"><span class="lbl sr">Message</span><textarea class="body" data-role="body" rows="12"></textarea></label>
-              <p class="letter-msg" role="status" data-role="lmsg"></p>
-            </div>
-          </div>
-          <div class="acts">
-            <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
-            <button type="button" class="btn btn-line" data-skip>Skip for now</button>
-            <button type="button" class="btn btn-line" data-prev>Back</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 06 Support SALUTE -->
-      <section class="step" data-step="5" aria-labelledby="t5" hidden>
-        <header class="ps-head">
-          <p class="ps-num" aria-hidden="true">06</p>
-          <h2 class="ps-title" id="t5" tabindex="-1">Support SALUTE</h2>
-          <p class="ps-lead">Entirely optional, and entirely separate from accepting your invitation.</p>
-          <p class="ps-count" data-count></p>
-        </header>
-        <div class="ps-body">
-          <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <p class="note"><b>We do not ask honorees to make a donation, and your acceptance never depends on fundraising.</b> If there is anyone you would feel comfortable introducing to SALUTE, we would be grateful for the opportunity to share our work and the impact of our 501(c)(3) mission. You may add their name and email below, choose to make the introduction yourself, or authorize SALUTE to reach out. No one is contacted without your recorded direction.</p>
-          <div data-mount="support"></div>
-          <fieldset class="grp" style="margin-top:34px">
-            <legend>How should introductions happen?</legend>
-            <div class="choices">
-              <label class="choice"><input type="radio" name="supportMode" value="I’ll introduce them myself"><span><b>I’ll introduce them myself</b><small>Using the introduction below.</small></span></label>
-              <label class="choice"><input type="radio" name="supportMode" value="SALUTE drafts for my approval"><span><b>SALUTE drafts for my approval</b><small>Nothing goes out until you approve it.</small></span></label>
-              <label class="choice"><input type="radio" name="supportMode" value="SALUTE may reach out, with my recorded authorization"><span><b>I authorize SALUTE to reach out</b><small>You’re recording your authorization here.</small></span></label>
-              <label class="choice"><input type="radio" name="supportMode" value="Save only, no outreach"><span><b>Save only, no outreach</b><small>Keep the names on file; contact no one.</small></span></label>
-            </div>
-          </fieldset>
-          <div class="grp">
-            <p class="grp-t">Introduction template</p>
-            <p class="grp-d">A warm, no-pressure introduction. Edit freely; your edits are saved with your responses.</p>
-            <div class="letter" data-letter="support">
-              <div class="letter-head"><span class="eyebrow">A note from you</span><span class="tools"><button type="button" class="textbtn" data-copy>Copy</button><button type="button" class="textbtn" data-reset>Reset</button></span></div>
-              <label class="fld"><span class="lbl">Subject</span><input type="text" data-role="subj"></label>
-              <label class="fld"><span class="lbl sr">Message</span><textarea class="body" data-role="body" rows="12"></textarea></label>
-              <p class="letter-msg" role="status" data-role="lmsg"></p>
-            </div>
-          </div>
-          <div class="acts">
-            <button type="button" class="btn btn-fill" data-next>Continue to review <span class="arrow" aria-hidden="true">→</span></button>
-            <button type="button" class="btn btn-line" data-skip>Skip for now</button>
-            <button type="button" class="btn btn-line" data-prev>Back</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 07 Review -->
-      <section class="step" data-step="6" aria-labelledby="t6" hidden>
-        <header class="ps-head">
-          <p class="ps-num" aria-hidden="true">07</p>
-          <h2 class="ps-title" id="t6" tabindex="-1">Review</h2>
-          <p class="ps-lead">A last look at everything, before you finish.</p>
+          <h2 class="ps-title" id="t3" tabindex="-1">Review</h2>
+          <p class="ps-lead">A quick look before you submit.</p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <div id="review-body">
-            <div class="figs" id="figs"></div>
+            
             <div id="review-secs"></div>
             <div class="finalbox">
-              <p class="note"><b>Nothing is announced or sent when you submit.</b> The SALUTE team will confirm your seats, announcement timing and materials with you directly. You can return to this page to update your answers at any time.</p>
+              <p class="note"><b>Nothing is announced when you submit.</b> The SALUTE team will be in touch to confirm your seats and announcement timing. You can come back to update your answers anytime.</p>
               <div class="acts" style="margin-top:20px">
                 <button type="button" class="btn btn-fill" id="submit">Submit my response <span class="arrow" aria-hidden="true">→</span></button>
                 <button type="button" class="btn btn-line" data-prev>Back</button>
@@ -783,8 +634,8 @@ a{color:inherit}
             <h3 id="c-h" style="margin-top:14px">Thank you.</h3>
             <p class="lede" id="c-lede"></p>
             <p class="stamp" id="c-stamp"></p>
-            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px">Share it with anyone you would like in the room. It applies the $300 honoree rate automatically.</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div></div>
-            <p class="small" id="c-small">Nothing has been announced, and no one you listed has been contacted. Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
+            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px">Share it with anyone you would like in the room. Your guests receive the $300 honoree rate (regular price $400).</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div><p style="margin-top:14px"><button type="button" class="textbtn" id="c-note-copy" style="color:#fff">Copy a short note to send with it</button></p></div>
+            <p class="small" id="c-small">Nothing has been announced. Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
             <div class="cacts">
               <button type="button" class="btn btn-wf" id="c-review">Review or update</button>
               <button type="button" class="btn btn-wl" id="c-invite">Back to Invitation</button>
@@ -797,29 +648,6 @@ a{color:inherit}
   </main>
 </div>
 
-<template id="tpl-contacts">
-  <div class="cm">
-    <label class="fld"><span class="lbl">Paste a list</span><span class="hint">One person per line: Name, Email</span>
-      <textarea data-role="paste" rows="5" placeholder="Priya Shah, priya@example.com&#10;Jordan Lee, jordan@example.com"></textarea></label>
-    <div class="cm-tools"><button type="button" class="btn btn-fill btn-sm" data-role="paste-btn">Add pasted contacts</button></div>
-    <h3 class="cm-h">Add one person</h3>
-    <div class="row2">
-      <label class="fld"><span class="lbl">Name</span><input type="text" data-role="name" autocomplete="off"></label>
-      <label class="fld"><span class="lbl">Email</span><input type="email" data-role="email" inputmode="email" autocomplete="off"></label>
-    </div>
-    <div class="cm-tools"><button type="button" class="btn btn-line btn-sm" data-role="add-btn">Add contact</button></div>
-    <h3 class="cm-h">Or use a spreadsheet</h3>
-    <div class="cm-tools">
-      <label class="btn btn-line btn-sm up-btn" style="flex:1 1 180px">Upload CSV<input class="sr" type="file" accept=".csv,text/csv" data-role="csv"></label>
-      <button type="button" class="btn btn-line btn-sm" data-role="tpl-btn">Download template</button>
-    </div>
-    <p class="cm-msg" role="status" data-role="msg"></p>
-    <div class="cm-list-head"><p class="cm-count" data-role="count" aria-live="polite">0 contacts</p><button type="button" class="textbtn" data-role="clear" hidden>Remove all</button></div>
-    <p class="cm-empty" data-role="empty">No one added yet.</p>
-    <ul class="cm-list" data-role="list"></ul>
-  </div>
-</template>
-
-<script src="/honoree/honoree.js?v=20261004b"></script>
+<script src="/honoree/honoree.js?v=20261005b"></script>
 </body>
 </html>
