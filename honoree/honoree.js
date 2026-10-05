@@ -116,7 +116,15 @@ function updateNav(){
   var sc=$('#p-steps'),b=navBtns[cur];
   if(!views.portal.hidden) sc.scrollTo?sc.scrollTo({left:Math.max(0,b.parentNode.offsetLeft-(sc.clientWidth-b.offsetWidth)/2),behavior:reduce?'auto':'smooth'}):(sc.scrollLeft=b.parentNode.offsetLeft);
   $$('[data-count]').forEach(function(c){c.textContent='Step '+(cur+1)+' of '+NAMES.length+' · '+NAMES[cur]});
+  var ck=$('#p-cur-k'),ct=$('#p-cur-t');if(ck){ck.textContent='Step '+(cur+1)+' of '+NAMES.length;ct.textContent=NAMES[cur]}
+  closeStepMenu();
 }
+function closeStepMenu(){var n=$('#p-steps'),c=$('#p-cur');if(n)n.classList.remove('open');if(c)c.setAttribute('aria-expanded','false')}
+(function(){var c=$('#p-cur'),n=$('#p-steps');if(!c)return;
+  c.addEventListener('click',function(e){e.stopPropagation();var o=!n.classList.contains('open');n.classList.toggle('open',o);c.setAttribute('aria-expanded',o?'true':'false')});
+  document.addEventListener('click',function(e){if(n.classList.contains('open')&&!n.contains(e.target))closeStepMenu()});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&n.classList.contains('open')){closeStepMenu();c.focus()}});
+})();
 function goto(i,opts){
   opts=opts||{};
   if(!opts.keepConfirm){submitted=false;$('#confirm').hidden=true;$('#review-body').hidden=false}
