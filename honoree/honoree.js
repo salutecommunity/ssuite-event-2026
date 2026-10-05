@@ -483,7 +483,7 @@ wireListUpload('inv-file','inviteList','inv-file-msg','guest');
 wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal'];
+var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal'];
 var BOOLS=['guest'];
 function collect(){
   var r={};
@@ -576,10 +576,11 @@ function renderReview(){
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   sec('Evening',2,[
-    ['Complimentary guest',chk('guest')?[[val('gFirst'),val('gLast')].join(' ').trim(),val('gEmail'),[val('gTitle'),val('gOrg')].filter(Boolean).join(', '),val('gMeal')].filter(Boolean).join(' · '):'No guest'],
-    chk('guest')&&val('gMode')?['Guest details',val('gMode')==='salute'?'SALUTE emails my guest, copying me':'I’ll share them myself']:null,
     ['Your meal',val('diet')],
-    val('access')?['Allergies or accessibility',val('access')]:null
+    val('access')?['Your allergies or dietary needs',val('access')]:null,
+    ['Complimentary guest',chk('guest')?[[val('gFirst'),val('gLast')].join(' ').trim(),val('gEmail'),[val('gTitle'),val('gOrg')].filter(Boolean).join(', '),val('gMeal')].filter(Boolean).join(' · '):'No guest'],
+    chk('guest')&&val('gAccess')?['Guest’s allergies or dietary needs',val('gAccess')]:null,
+    chk('guest')&&val('gMode')?['Guest details',val('gMode')==='salute'?'SALUTE emails my guest, copying me':'I’ll share them myself']:null
   ]);
   var iv=parseList(val('inviteList')).items,sv=parseList(val('supportList')).items;
   sec('Guests',3,[
