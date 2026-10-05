@@ -7,7 +7,8 @@
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="no-referrer">
 <title>S.SUITE · A private invitation</title>
-<link rel="icon" href="/assets/ssuite-mark.png">
+<link rel="icon" href="/assets/favicon.png?v=20260902b" sizes="any">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=20260902b">
 <style>
 @font-face{font-family:Aperitif;src:url('/honoree/assets/aperitifserif-regular.woff');font-display:swap}
 @font-face{font-family:Aperitif;src:url('/honoree/assets/aperitifserif-italic.woff');font-style:italic;font-display:swap}
@@ -374,6 +375,8 @@ a{color:inherit}
 .ps-head{border-bottom:0!important}
 .grp-d b{font-weight:600;color:var(--black)}
 .rrow{border-top:0;padding:8px 0}
+.sub{border:0;padding:0;margin:4px 0 22px;min-width:0}
+.sub>legend{padding:0;margin-bottom:4px}
 .rsec{border-top:1px solid var(--line)}
 </style>
 </head>
@@ -544,16 +547,17 @@ a{color:inherit}
             <label class="fld"><span class="lbl">Title</span><input type="text" name="pubTitle" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Organization(s)</span><input type="text" name="pubOrg" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Short bio <span class="opt">optional</span></span>
-              <span class="hint">Up to 120 words · <span id="bio-count">0 words</span></span>
+              <span class="hint">Up to 150 words · <span id="bio-count">0 words</span></span>
               <textarea name="bio" rows="5"></textarea></label>
           </fieldset>
           <fieldset class="grp">
-            <legend>Headshot <span class="opt">optional</span></legend>
+            <legend>Headshot</legend>
+            <p class="grp-d">For the program and announcement. A high-resolution image works best.</p>
             <div class="upload" id="hs">
               <img class="thumb" id="hs-thumb" alt="" hidden>
               <div class="up-info" id="hs-info">
                 <p class="up-name" id="hs-name">No file selected</p>
-                <p class="up-meta" id="hs-meta" role="status">High resolution, kept private.</p>
+                <p class="up-meta" id="hs-meta" role="status">JPG, PNG or HEIC.</p>
               </div>
               <input class="sr" type="file" id="hs-input" name="headshot" accept="image/*" aria-describedby="hs-meta">
               <label class="btn btn-line btn-sm up-btn" for="hs-input" id="hs-btn">Choose image</label>
@@ -592,9 +596,28 @@ a{color:inherit}
             <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
-                <label class="fld"><span class="lbl">Guest name</span><input type="text" name="gName" autocomplete="off"></label>
-                <label class="fld"><span class="lbl">Guest email</span><input type="email" name="gEmail" inputmode="email" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">First name</span><input type="text" name="gFirst" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Last name</span><input type="text" name="gLast" autocomplete="off"></label>
               </div>
+              <label class="fld"><span class="lbl">Email</span><input type="email" name="gEmail" inputmode="email" autocomplete="off"></label>
+              <div class="row2">
+                <label class="fld"><span class="lbl">Title</span><input type="text" name="gTitle" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Organization</span><input type="text" name="gOrg" autocomplete="off"></label>
+              </div>
+              <fieldset class="sub">
+                <legend class="lbl">Your guest’s meal</legend>
+                <div class="choices compact">
+                  <label class="choice"><input type="radio" name="gMeal" value="Vegetarian"><span><b>Vegetarian</b></span></label>
+                  <label class="choice"><input type="radio" name="gMeal" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
+                </div>
+              </fieldset>
+              <fieldset class="sub">
+                <legend class="lbl">Who should send your guest the details?</legend>
+                <div class="choices">
+                  <label class="choice"><input type="radio" name="gMode" value="salute"><span><b>SALUTE emails my guest directly</b><small>We’ll copy you.</small></span></label>
+                  <label class="choice"><input type="radio" name="gMode" value="self"><span><b>I’ll share the details myself</b></span></label>
+                </div>
+              </fieldset>
             </div>
           </fieldset>
           <fieldset class="grp">
@@ -603,7 +626,7 @@ a{color:inherit}
               <label class="choice"><input type="radio" name="diet" value="Vegetarian"><span><b>Vegetarian</b></span></label>
               <label class="choice"><input type="radio" name="diet" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
             </div>
-            <label class="fld" style="margin-top:22px"><span class="lbl">Allergies or accessibility needs <span class="opt">optional</span></span><textarea name="access" rows="3"></textarea></label>
+            <label class="fld" style="margin-top:22px"><span class="lbl">Allergies or accessibility needs, for you or your guest <span class="opt">optional</span></span><textarea name="access" rows="3"></textarea></label>
           </fieldset>
 
           <div class="acts">
@@ -630,7 +653,7 @@ a{color:inherit}
               <textarea name="inviteList" rows="6" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
             <p class="hint" id="invite-sum" role="status" aria-live="polite"></p>
           </fieldset>
-          <fieldset class="grp" id="invite-mode-grp" hidden>
+          <fieldset class="grp" id="invite-mode-grp">
             <legend>How should the invitations go out?</legend>
             <div class="choices">
               <label class="choice"><input type="radio" name="inviteMode" value="salute"><span><b>SALUTE emails them on my behalf</b><small>We’ll copy you.</small></span></label>
@@ -660,7 +683,7 @@ a{color:inherit}
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">05</p>
           <h2 class="ps-title" id="t4" tabindex="-1">Support SALUTE</h2>
-          <p class="ps-lead">Your recognition never depends on a contribution. <span class="opt">optional</span></p>
+          <p class="ps-lead" id="support-lead">Your recognition never depends on a contribution. <span class="opt">optional</span></p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
@@ -677,8 +700,8 @@ a{color:inherit}
               <textarea name="supportList" rows="5" placeholder="Jane Smith, jane@example.com"></textarea></label>
             <p class="hint" id="support-sum" role="status" aria-live="polite"></p>
           </fieldset>
-          <fieldset class="grp" id="support-mode-grp" hidden>
-            <legend>May we mention your name?</legend>
+          <fieldset class="grp" id="support-mode-grp">
+            <legend>May we reach out on your behalf?</legend>
             <div class="choices">
               <label class="choice"><input type="radio" name="supportMode" value="mention"><span><b>Yes, you may reach out on my behalf</b></span></label>
               <label class="choice"><input type="radio" name="supportMode" value="check"><span><b>Please check with me before reaching out</b></span></label>

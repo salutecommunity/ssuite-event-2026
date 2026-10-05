@@ -97,7 +97,7 @@ window.addEventListener('resize',measureHead);
 function updateNav(){
   var dec=declined();
   navBtns.forEach(function(b,i){
-    var off=dec&&i>0&&i<LAST;
+    var off=dec&&i>0&&i<4;
     b.disabled=off;
     b.classList.toggle('is-current',i===cur);
     b.classList.toggle('is-done',!!done[i]&&!off&&i!==cur);
@@ -136,13 +136,13 @@ function enterPortal(){inviteY=window.scrollY;setView('portal');goto(cur,{noSave
 function toInvite(){setView('invite',{keepScroll:true})}
 $('#p-back').addEventListener('click',toInvite);
 $$('[data-back-invite]').forEach(function(b){b.addEventListener('click',toInvite)});
-$$('[data-prev]').forEach(function(b){b.addEventListener('click',function(){goto(cur===LAST&&declined()?0:cur-1)})});
+$$('[data-prev]').forEach(function(b){b.addEventListener('click',function(){goto(declined()&&cur===LAST?4:(declined()&&cur===4?0:cur-1))})});
 $$('[data-next]').forEach(function(b){b.addEventListener('click',next)});
 function next(){
   var errs=validate(cur);
   if(errs.length){showErrors(stepEls[cur],errs);return}
   clearErrors(stepEls[cur]);done[cur]=true;
-  goto(cur===0&&declined()?LAST:cur+1);
+  goto(cur===0&&declined()?4:cur+1);
 }
 
 /* validation + errors */
@@ -191,14 +191,20 @@ function validate(i){
   }
   if(i===1){
     if(!val('pubName')) push('pubName','Add the name you’d like to appear publicly.');
-    if(words(val('bio'))>120) push('bio','Please keep your bio to 120 words or fewer.');
+    if(words(val('bio'))>150) push('bio','Please keep your bio to 150 words or fewer.');
+    if(!HS) push('headshot','Please upload a headshot.');
     if(val('teamEmail')&&!EMAIL.test(val('teamEmail'))) push('teamEmail','Enter a valid email for your team contact.');
   }
   if(i===2){
     if(chk('guest')){
-      if(!val('gName')) push('gName','Add your guest’s name.');
+      if(!val('gFirst')) push('gFirst','Add your guest’s first name.');
+      if(!val('gLast')) push('gLast','Add your guest’s last name.');
       if(!val('gEmail')) push('gEmail','Add your guest’s email.');
       else if(!EMAIL.test(val('gEmail'))) push('gEmail','Enter a valid email for your guest.');
+      if(!val('gTitle')) push('gTitle','Add your guest’s title.');
+      if(!val('gOrg')) push('gOrg','Add your guest’s organization.');
+      if(!val('gMeal')) push('gMeal','Choose your guest’s meal.');
+      if(!val('gMode')) push('gMode','Choose who should send your guest the details.');
     }
     if(!val('diet')) push('diet','Choose a vegetarian or non-vegetarian meal.');
   }
@@ -239,7 +245,8 @@ function listSummary(id,text,noun){
 function syncReveals(){
   $('#decline-box').hidden=!declined();
   $('#guest-box').hidden=!chk('guest');
-  $('#invite-mode-grp').hidden=!listSummary('#invite-sum',val('inviteList'),'guest').items.length;
+  listSummary('#invite-sum',val('inviteList'),'guest');
+  $('#support-lead').firstChild.textContent=declined()?'We’re grateful you considered it. If you’d still like to support SALUTE’s work, here’s how. ':'Your recognition never depends on a contribution. ';
   $('#support-mode-grp').hidden=!listSummary('#support-sum',val('supportList'),'person').items.length;
   updateNav();
 }
@@ -263,6 +270,7 @@ function hsRender(){
     $('#hs-name').textContent=HS.filename||'Headshot';
     $('#hs-meta').textContent=(HS.size_bytes?fmtSize(HS.size_bytes)+' · ':'')+'Uploaded securely. Only the SALUTE team can see it.';
     $('#hs-remove').hidden=false;$('#hs-btn').textContent='Replace image';
+    var hf=$('#hs').closest('fieldset');if(hf){var he=$('.err',hf);if(he)he.remove()}hsIn.removeAttribute('aria-invalid');
   }else{
     t.hidden=true;t.removeAttribute('src');
     $('#hs-name').textContent='No file selected';
@@ -322,7 +330,7 @@ $('#table-buy').addEventListener('click',function(){
 });
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gName','gEmail','diet','access','inviteList','inviteMode','supportList','supportMode'];
+var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gMode','diet','access','inviteList','inviteMode','supportList','supportMode'];
 var BOOLS=['guest'];
 function collect(){
   var r={};
@@ -391,7 +399,14 @@ function renderReview(){
   var rr=[['Nomination',resp==='accept'?'Accepted · I will attend in person on November 20':(resp==='decline'?'Respectfully declined':noneSpan('No response yet'))]];
   if(dec&&val('declineNote')) rr.push(['Note to the team',val('declineNote')]);
   sec('Response',0,rr);
-  if(dec) return;
+  var sv0=parseList(val('supportList')).items;
+  if(dec){
+    sec('Support SALUTE',4,[
+      sv0.length?['People to reach out to',plural(sv0.length,'person')]:null,
+      sv0.length?['Reach out on my behalf',val('supportMode')==='mention'?'Yes':(val('supportMode')==='check'?'Check with me first':'')]:null
+    ]);
+    return;
+  }
   var bw=words(val('bio'));
   sec('Profile',1,[
     ['Listed as',[val('pubName'),val('pubTitle'),val('pubOrg')].filter(Boolean).join(' · ')],
@@ -400,8 +415,9 @@ function renderReview(){
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   sec('Evening',2,[
-    ['Complimentary guest',chk('guest')?[val('gName'),val('gEmail')].filter(Boolean).join(' · '):'No guest'],
-    ['Meal',val('diet')],
+    ['Complimentary guest',chk('guest')?[[val('gFirst'),val('gLast')].join(' ').trim(),val('gEmail'),[val('gTitle'),val('gOrg')].filter(Boolean).join(', '),val('gMeal')].filter(Boolean).join(' · '):'No guest'],
+    chk('guest')&&val('gMode')?['Guest details',val('gMode')==='salute'?'SALUTE emails my guest, copying me':'I’ll share them myself']:null,
+    ['Your meal',val('diet')],
     val('access')?['Allergies or accessibility',val('access')]:null
   ]);
   var iv=parseList(val('inviteList')).items,sv=parseList(val('supportList')).items;
@@ -411,7 +427,7 @@ function renderReview(){
   ]);
   sec('Support SALUTE',4,[
     sv.length?['People to reach out to',plural(sv.length,'person')]:null,
-    sv.length?['Mention my name',val('supportMode')==='mention'?'Yes, on my behalf':(val('supportMode')==='check'?'Check with me first':'')]:null
+    sv.length?['Reach out on my behalf',val('supportMode')==='mention'?'Yes':(val('supportMode')==='check'?'Check with me first':'')]:null
   ]);
 }
 
@@ -427,7 +443,7 @@ function showSubmitErrors(list,stepFix){
 }
 function firstInvalidStep(){
   if(!val('response')) return 0;
-  if(declined()) return validate(0).length?0:null;
+  if(declined()) return validate(0).length?0:(validate(4).length?4:null);
   for(var i=0;i<LAST;i++){if(validate(i).length)return i}
   return null;
 }
@@ -440,7 +456,7 @@ $('#submit').addEventListener('click',function(){
   var btn=$('#submit');btn.disabled=true;btn.firstChild.textContent='Submitting… ';
   api({action:'submit',response:collect()}).then(function(r){
     STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;dirty=false;
-    for(var i=0;i<=LAST;i++) if(!(declined()&&i>0&&i<LAST)) done[i]=true;
+    for(var i=0;i<=LAST;i++) if(!(declined()&&i>0&&i<4)) done[i]=true;
     submitted=true;showConfirm();statusBar();showGuestLink();saveState('Submitted');
   }).catch(function(e){
     showSubmitErrors(e.errors&&e.errors.length?e.errors:[e.message||'Your response could not be submitted. Please try again.'],null);
