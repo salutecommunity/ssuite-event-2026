@@ -246,7 +246,7 @@ function syncReveals(){
   $('#decline-box').hidden=!declined();
   $('#guest-box').hidden=!chk('guest');
   listSummary('#invite-sum',val('inviteList'),'guest');
-  $('#guests-lead').firstChild.innerHTML=declined()?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them at the honoree rate of <b>$300 per ticket</b> (regular $400).':'Beyond your one complimentary guest, anyone you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
+  $('#guests-lead').firstChild.innerHTML=declined()?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them. Each guest pays the honoree rate of <b>$300 per ticket</b> (regular $400).':'Additional guests are not complimentary. Beyond your one complimentary guest, each person you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
   if(GUEST_URL) showGuestLink();
   $('#support-lead').firstChild.textContent=declined()?'We’re grateful you considered it. If you’d still like to support SALUTE’s work, here’s how. ':'Your recognition never depends on a contribution. ';
   listSummary('#support-sum',val('supportList'),'person');

@@ -424,6 +424,7 @@ a{color:inherit}
 .tdone{background:#fff;border-left:2px solid var(--black);padding:14px 16px;margin:6px 0 16px;font-size:15px;line-height:1.55}
 .tdone b{font-weight:600}
 .panel .choice small a{color:var(--black)}
+  .ps-paren{font-size:.62em;font-style:normal;letter-spacing:0;color:#555;white-space:nowrap}
 </style>
 </head>
 <body data-view="invite">
@@ -652,7 +653,7 @@ a{color:inherit}
           </fieldset>
           <fieldset class="grp" id="guest-grp">
             <legend>Your guest</legend>
-            <p class="grp-d">Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Anyone else is $300 per ticket, and you can invite them in the next step.</p>
+            <p class="grp-d">Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.</p>
             <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
@@ -693,15 +694,15 @@ a{color:inherit}
       <section class="step" data-step="3" aria-labelledby="t3" hidden>
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">04</p>
-          <h2 class="ps-title" id="t3" tabindex="-1">Additional guests</h2>
-          <p class="ps-lead" id="guests-lead"><span>Beyond your one complimentary guest, anyone you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).</span> <span class="opt">optional</span></p>
+          <h2 class="ps-title" id="t3" tabindex="-1">Additional guests <span class="ps-paren">($300 per ticket)</span></h2>
+          <p class="ps-lead" id="guests-lead"><span>Additional guests are not complimentary. Beyond your one complimentary guest, each person you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).</span> <span class="opt">optional</span></p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <div class="panel">
-            <p class="panel-k">Invite guests</p>
-            <h3 class="panel-t">Who you’d like to invite</h3>
+            <p class="panel-k">Invite guests (paid)</p>
+            <h3 class="panel-t">Who you’d like to invite <span class="ps-paren">($300 per ticket)</span></h3>
             <p class="grp-d">Type or paste one per line (name and email), or upload a list.</p>
             <label class="fld"><span class="lbl sr">Guests to invite</span>
               <textarea name="inviteList" rows="5" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
@@ -716,7 +717,7 @@ a{color:inherit}
             </fieldset>
             <div class="panel-sep"></div>
             <p class="lbl">Your personal invitation link</p>
-            <p class="grp-d" id="gl-desc">Share it with anyone you’d like to invite. It applies the $300 honoree rate at checkout.</p>
+            <p class="grp-d" id="gl-desc">Share it with anyone you’d like to invite. Each guest pays $300 per ticket at checkout.</p>
             <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button><button type="button" class="btn btn-line btn-sm" id="gl-note">Copy a note</button></div>
             <p class="letter-msg" role="status" id="gl-msg"></p>
           </div>
@@ -843,6 +844,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261005v13"></script>
+<script src="/honoree/honoree.js?v=20261005v14"></script>
 </body>
 </html>
