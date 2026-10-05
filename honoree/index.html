@@ -465,6 +465,47 @@ a{color:inherit}
   .acts [data-skip]{order:2;flex:1 1 0}
   .acts [data-next],.acts #submit{order:3;flex:1 1 0}
 }
+/* v17 mobile form polish */
+@media(max-width:899px){
+  .p-mast .savestate{display:none}
+  .p-line{-webkit-mask:none;mask:none;height:2px;background:rgba(255,255,255,.18)}
+  .p-main{padding:26px 16px 0}
+  .ps-title{font-size:38px}
+  .ps-lead{font-size:18px;margin-top:10px}
+  .ps-head{margin-bottom:4px}
+  .step{gap:22px}
+  /* every section is one calm panel */
+  .grp,.panel,.must{background:#f4f2ee;padding:22px 18px 20px;margin:0 0 14px;border:0}
+  .grp+.grp{padding-top:22px;border-top:0}
+  .grp>legend{float:left;width:100%;font:400 23px/1.15 var(--serif);letter-spacing:-.02em;margin-bottom:6px}
+  .grp>legend+*{clear:both}
+  .grp-d{font-size:14px;margin:0 0 14px}
+  .ctx{padding:0 2px}
+  .must{border-left:0}
+  /* boxed fields */
+  .fld{margin-bottom:16px}
+  .fld:last-child{margin-bottom:0}
+  .lbl,.fld>span:first-child{font:500 10.5px/1.4 var(--sans);letter-spacing:.14em}
+  .fld input:not([type=file]),.fld select{min-height:48px;margin-top:6px;padding:10px 14px;background:#fff;border:1px solid #d6d2ca;font-size:16px}
+  .fld textarea{min-height:92px;margin-top:6px;padding:12px 14px;background:#fff;border:1px solid #d6d2ca;font-size:16px;resize:none}
+  .fld input:not([type=file]):focus,.fld textarea:focus{background:#fff;box-shadow:none;border-color:var(--black)}
+  .fld [aria-invalid="true"]{border-color:var(--black);border-width:2px}
+  .panel .fld textarea{border-color:#d6d2ca}
+  .opt{white-space:nowrap;margin-left:6px}
+  /* choices */
+  .choice{padding:9px 0}
+  .choice b,.choices.compact .choice b{font-size:19px}
+  .choice input{background:#fff}
+  .choice input[type=checkbox]:checked{background:var(--black)}
+  /* guest details: no side rule, a hairline instead */
+  .reveal-box{margin-top:12px;padding:16px 0 0;border-left:0;border-top:1px solid #d6d2ca}
+  .sub{margin:6px 0 16px}
+  .sub:last-child{margin-bottom:0}
+  .panel-sep{border-color:#d6d2ca}
+  .upload{background:transparent}
+  .acts{margin:8px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+  .note{margin-bottom:6px}
+}
 </style>
 </head>
 <body data-view="invite">
@@ -886,6 +927,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261005v16"></script>
+<script src="/honoree/honoree.js?v=20261005v17"></script>
 </body>
 </html>
