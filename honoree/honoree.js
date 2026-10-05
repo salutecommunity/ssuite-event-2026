@@ -97,7 +97,7 @@ window.addEventListener('resize',measureHead);
 function updateNav(){
   var dec=declined();
   navBtns.forEach(function(b,i){
-    var off=dec&&i>0&&i<4;
+    var off=dec&&(i===1||i===2);
     b.disabled=off;
     b.classList.toggle('is-current',i===cur);
     b.classList.toggle('is-done',!!done[i]&&!off&&i!==cur);
@@ -136,13 +136,13 @@ function enterPortal(){inviteY=window.scrollY;setView('portal');goto(cur,{noSave
 function toInvite(){setView('invite',{keepScroll:true})}
 $('#p-back').addEventListener('click',toInvite);
 $$('[data-back-invite]').forEach(function(b){b.addEventListener('click',toInvite)});
-$$('[data-prev]').forEach(function(b){b.addEventListener('click',function(){goto(declined()&&cur===LAST?4:(declined()&&cur===4?0:cur-1))})});
+$$('[data-prev]').forEach(function(b){b.addEventListener('click',function(){goto(declined()&&cur===3?0:cur-1)})});
 $$('[data-next]').forEach(function(b){b.addEventListener('click',next)});
 function next(){
   var errs=validate(cur);
   if(errs.length){showErrors(stepEls[cur],errs);return}
   clearErrors(stepEls[cur]);done[cur]=true;
-  goto(cur===0&&declined()?4:cur+1);
+  goto(cur===0&&declined()?3:cur+1);
 }
 
 /* validation + errors */
@@ -246,6 +246,8 @@ function syncReveals(){
   $('#decline-box').hidden=!declined();
   $('#guest-box').hidden=!chk('guest');
   listSummary('#invite-sum',val('inviteList'),'guest');
+  $('#guests-lead').firstChild.innerHTML=declined()?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them at the honoree rate of <b>$300 per ticket</b> (regular $400).':'Beyond your one complimentary guest, anyone you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
+  if(GUEST_URL) showGuestLink();
   $('#support-lead').firstChild.textContent=declined()?'We’re grateful you considered it. If you’d still like to support SALUTE’s work, here’s how. ':'Your recognition never depends on a contribution. ';
   listSummary('#support-sum',val('supportList'),'person');
   updateNav();
@@ -309,12 +311,13 @@ function copyText(txt,msgEl,ok){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){msgEl.textContent=ok||'Link copied.'},fb)}else fb();
 }
 function guestNote(){
+  if(val('response')!=='accept') return 'SALUTE (South Asian Leaders Unite to Empower) is hosting S.SUITE, its inaugural honors evening celebrating South Asian women leaders and allies, on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City. The evening includes a fireside conversation with Indra Nooyi, moderated by Anu Aiyengar.\n\nI think you would be a wonderful addition to the room. SALUTE has extended a special guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+H.full_name;
   return 'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE, and I would love for you to join me on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\nI hope you can join me.\n\n'+H.full_name;
 }
 function showGuestLink(){
   if(!GUEST_URL) return;
   $('#gl-field').value=GUEST_URL;$('#gl-box').hidden=false;
-  $('#gl-desc').textContent='Share it with additional guests. It applies the $300 honoree rate at checkout.';
+  $('#gl-desc').textContent=declined()?'Share it with anyone you think should be in the room. It applies the $300 rate at checkout.':'Share it with anyone you’d like to invite. It applies the $300 honoree rate at checkout.';
 }
 $('#gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#gl-msg'))});
 $('#c-gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#c-small'))});
@@ -447,6 +450,11 @@ function renderReview(){
   sec('Response',0,rr);
   var sv0=parseList(val('supportList')).items;
   if(dec){
+    var ivd=parseList(val('inviteList')).items;
+    sec('Guests',3,[
+      ivd.length?['Guests to invite',plural(ivd.length,'guest')+' at $300 each']:null,
+      ivd.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null
+    ]);
     sec('Support SALUTE',4,[
       sv0.length?['People to reach out to',plural(sv0.length,'person')]:null,
       sv0.length?['Outreach',val('supportMode')==='mention'?'SALUTE can reach out directly':(val('supportMode')==='cc'?'Copy me when reaching out':'')]:null
@@ -489,7 +497,7 @@ function showSubmitErrors(list,stepFix){
 }
 function firstInvalidStep(){
   if(!val('response')) return 0;
-  if(declined()) return validate(0).length?0:(validate(4).length?4:null);
+  if(declined()){var ds=[0,3,4];for(var q=0;q<ds.length;q++)if(validate(ds[q]).length)return ds[q];return null}
   for(var i=0;i<LAST;i++){if(validate(i).length)return i}
   return null;
 }
@@ -502,7 +510,7 @@ $('#submit').addEventListener('click',function(){
   var btn=$('#submit');btn.disabled=true;btn.firstChild.textContent='Submitting… ';
   api({action:'submit',response:collect()}).then(function(r){
     STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;dirty=false;
-    for(var i=0;i<=LAST;i++) if(!(declined()&&i>0&&i<4)) done[i]=true;
+    for(var i=0;i<=LAST;i++) if(!(declined()&&(i===1||i===2))) done[i]=true;
     submitted=true;showConfirm();statusBar();showGuestLink();saveState('Submitted');
   }).catch(function(e){
     showSubmitErrors(e.errors&&e.errors.length?e.errors:[e.message||'Your response could not be submitted. Please try again.'],null);
@@ -516,7 +524,8 @@ function showConfirm(){
     ?'Thank you for considering the nomination. We are grateful for the time you took, and the SALUTE team will be in touch personally.'
     :'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20. The SALUTE team will be in touch personally to confirm your seats and announcement timing.';
   $('#c-stamp').textContent=SUBMITTED_AT?'Received '+fmtWhen(SUBMITTED_AT):'';
-  var showGl=!dec&&!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
+  $('#c-gl-desc').textContent=dec?'Share it with anyone you think should be in the room. They pay the $300 rate (regular $400).':'For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).';
+  var showGl=!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
   $('#review-body').hidden=true;$('#confirm').hidden=false;
   cur=LAST;stepEls.forEach(function(s,k){s.hidden=(k!==LAST)});
   updateNav();

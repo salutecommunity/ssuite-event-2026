@@ -43,10 +43,20 @@
     .then(function (res) {
       if (!res.ok || !res.d || !res.d.host || !res.d.guest_code) { fail(res.d && res.d.error); return; }
       var host = res.d.host;
-      var honor = "Inaugural S.Suite " + host.honor + " Honoree";
       bind("host", host.full_name);
       bind("first", host.first_name);
-      bind("honor", honor);
+      if (host.honor) {
+        bind("honor", "Inaugural S.Suite " + host.honor + " Honoree");
+      } else {
+        // Not (yet) an accepted honoree: keep the nomination confidential.
+        Array.prototype.forEach.call(document.querySelectorAll('[data-bind="honor"]'), function (el) { el.hidden = true; });
+        var to = document.querySelector(".invite-lockup .to");
+        if (to) to.textContent = "You are invited by " + host.first_name + " to the inaugural";
+        var swap = [[".seat-card .micro", "Guest seat"], [".seat-card .rate-note", "Special invitation rate · Regular price $400"]];
+        swap.forEach(function (x) { var el = document.querySelector(x[0]); if (el) el.textContent = x[1]; });
+        Array.prototype.forEach.call(document.querySelectorAll(".seat-card li"), function (li) { if (/honoree guest rate/i.test(li.textContent)) li.textContent = "The special invitation rate, applied for you"; });
+        document.body.dataset.invitationLabel = "Special invitation rate";
+      }
       document.title = "An invitation from " + host.full_name + " · S.Suite";
       document.body.dataset.invitationCode = res.d.guest_code;
       document.body.dataset.hostName = host.full_name;

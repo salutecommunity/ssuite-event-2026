@@ -550,7 +550,7 @@ a{color:inherit}
           <div id="decline-box" hidden>
             <label class="fld"><span class="lbl">A note to the SALUTE team <span class="opt">optional</span></span>
               <textarea name="declineNote" rows="4"></textarea></label>
-            <p class="grp-d">Even if you can’t join us, you can still support SALUTE’s work. You’ll see how on the next page.</p>
+            <p class="grp-d">Even if you can’t join us, you can still invite others or support SALUTE’s work. You’ll see how on the next pages.</p>
           </div>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
@@ -628,7 +628,7 @@ a{color:inherit}
           </fieldset>
           <fieldset class="grp" id="guest-grp">
             <legend>Your guest</legend>
-            <p class="grp-d">Your seat and <b>one</b> guest are complimentary. Anyone else is $300 per ticket, and you can invite them in the next step.</p>
+            <p class="grp-d">Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Anyone else is $300 per ticket, and you can invite them in the next step.</p>
             <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
@@ -673,7 +673,7 @@ a{color:inherit}
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">04</p>
           <h2 class="ps-title" id="t3" tabindex="-1">Additional guests</h2>
-          <p class="ps-lead">Beyond your one complimentary guest, anyone you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400). <span class="opt">optional</span></p>
+          <p class="ps-lead" id="guests-lead"><span>Beyond your one complimentary guest, anyone you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).</span> <span class="opt">optional</span></p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
@@ -695,7 +695,7 @@ a{color:inherit}
           </fieldset>
           <fieldset class="grp">
             <legend>Your personal invitation link</legend>
-            <p class="grp-d" id="gl-desc">Appears here once you’ve accepted.</p>
+            <p class="grp-d" id="gl-desc">Share it with anyone you’d like to invite. It applies the $300 honoree rate at checkout.</p>
             <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button><button type="button" class="btn btn-line btn-sm" id="gl-note">Copy a note</button></div>
             <p class="letter-msg" role="status" id="gl-msg"></p>
           </fieldset>
@@ -776,7 +776,7 @@ a{color:inherit}
             <h3 id="c-h" style="margin-top:14px">Thank you.</h3>
             <p class="lede" id="c-lede"></p>
             <p class="stamp" id="c-stamp"></p>
-            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px">For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div><p style="margin-top:14px"><button type="button" class="textbtn" id="c-note-copy" style="color:#fff">Copy a short note to send with it</button></p></div>
+            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px" id="c-gl-desc">For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div><p style="margin-top:14px"><button type="button" class="textbtn" id="c-note-copy" style="color:#fff">Copy a short note to send with it</button></p></div>
             <p class="small" id="c-small">Nothing has been announced. Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
             <div class="cacts">
               <button type="button" class="btn btn-wf" id="c-review">Review or update</button>
@@ -790,6 +790,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261005e"></script>
+<script src="/honoree/honoree.js?v=20261005f"></script>
 </body>
 </html>
