@@ -247,7 +247,7 @@ function syncReveals(){
   $('#guest-box').hidden=!chk('guest');
   listSummary('#invite-sum',val('inviteList'),'guest');
   $('#support-lead').firstChild.textContent=declined()?'We’re grateful you considered it. If you’d still like to support SALUTE’s work, here’s how. ':'Your recognition never depends on a contribution. ';
-  $('#support-mode-grp').hidden=!listSummary('#support-sum',val('supportList'),'person').items.length;
+  listSummary('#support-sum',val('supportList'),'person');
   updateNav();
 }
 pf.addEventListener('input',function(e){if(e.target.name==='inviteList'||e.target.name==='supportList')syncReveals()});
