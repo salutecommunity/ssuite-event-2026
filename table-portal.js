@@ -84,13 +84,23 @@
       const card = document.createElement("article"), title = document.createElement("h3"), detail = document.createElement("p");
       title.textContent = `Seat ${String(seat.seat_number).padStart(2, "0")}`;
       if (seat.locked) detail.textContent = "This seat is not available to invite.";
-      else if (seat.attendee_id) detail.textContent = `${[seat.first_name, seat.last_name].filter(Boolean).join(" ") || "Guest"} — ${seat.registration_status === "complete" ? "registered" : "waiting on their details"}`;
+      else if (seat.attendee_id) detail.textContent = `${[seat.first_name, seat.last_name].filter(Boolean).join(" ") || seat.email || "Guest"} — ${seat.registration_status === "complete" ? "registered" : "waiting on their details"}`;
       else { const invite = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); detail.textContent = invite ? ({ draft: "Invitation not sent yet.", queued: "Invitation sending now.", sent: "Invitation sent — waiting on their details.", opened: "Invitation opened — waiting on their details.", started: "They have started — waiting on their details." }[invite.status] || "Invitation sent — waiting on their details.") : "Open seat."; }
       card.append(title, detail);
       const invitation = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["queued", "sent", "opened", "started"].includes(i.status));
-      if (invitation) { const actions = document.createElement("div"); actions.className = "actions"; const resend = document.createElement("button"); resend.type = "button"; resend.className = "secondary"; resend.textContent = "Resend invitation"; resend.addEventListener("click", () => resendInvitation(invitation.id)); actions.append(resend); card.append(actions); }
+      const actions = document.createElement("div"); actions.className = "actions seat-actions";
+      if (invitation) { const resend = document.createElement("button"); resend.type = "button"; resend.className = "secondary"; resend.textContent = "Resend invitation"; resend.addEventListener("click", () => resendInvitation(invitation.id)); actions.append(resend); }
+      // Hosts can free a seat for a guest who has declined, or remove someone. The host's own seat is never offered.
+      if (seat.attendee_id && !seat.locked && seat.attendee_id !== table.lead_attendee_id && changesOpen()) {
+        const who = [seat.first_name, seat.last_name].filter(Boolean).join(" ") || seat.email || "this guest";
+        for (const [reason, label] of [["declined", "Mark as declined"], ["removed", "Remove from table"]]) { const b = document.createElement("button"); b.type = "button"; b.className = "secondary"; b.textContent = label; b.addEventListener("click", () => releaseSeat(seat.seat_number, reason, who)); actions.append(b); }
+      }
+      if (actions.childElementCount) card.append(actions);
       grid.append(card);
     }
+    let released = $("released-list"); if (!released) { released = document.createElement("div"); released.id = "released-list"; released.className = "released-list"; grid.after(released); }
+    released.replaceChildren(); const gone = Array.isArray(table.released) ? table.released : [];
+    if (gone.length) { const h = document.createElement("h3"); h.textContent = "Declined or removed"; const ul = document.createElement("ul"); for (const g of gone) { const li = document.createElement("li"); li.textContent = `${g.name || g.email || "Guest"} — ${g.reason === "declined" ? "declined" : "removed"}${g.seat_number ? ` (was Seat ${String(g.seat_number).padStart(2, "0")})` : ""}`; ul.append(li); } released.append(h, ul); }
     const select = $("invite-form").elements.seat_number; select.replaceChildren();
     for (const seat of openSeats()) { const option = document.createElement("option"); option.value = String(seat.seat_number); option.textContent = `Seat ${String(seat.seat_number).padStart(2, "0")}`; select.append(option); }
     const form = $("invite-form"); form.hidden = openSeats().length === 0 || !changesOpen();
@@ -145,6 +155,12 @@
   }
   async function resendInvitation(invitationId) {
     try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend is on its way. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
+  }
+  async function releaseSeat(seatNumber, reason, who) {
+    const question = reason === "declined" ? `Mark ${who} as declined?\n\nTheir seat opens so you can invite someone else. We won't email them.` : `Remove ${who} from your table?\n\nTheir seat opens so you can invite someone else. We won't email them.`;
+    if (!confirm(question)) return;
+    try { status("Updating your table…"); await call({ action: "release_seat", seat_number: seatNumber, reason }); await load(""); status(reason === "declined" ? `${who} is marked as declined. Seat ${String(seatNumber).padStart(2, "0")} is open again.` : `${who} has been removed. Seat ${String(seatNumber).padStart(2, "0")} is open again.`, "success"); }
+    catch (e) { status(e && /closed/i.test(e.message) ? e.message : "This seat could not be updated just now. Please try again, or write to ssuite@salute.community.", "error"); }
   }
   async function revoke() {
     if (!confirm("Turn off this link? Your table page will stop opening from the link in your email, and you will need to ask us for a new one.")) return;
