@@ -266,7 +266,7 @@ function hsRender(){
   }else{
     t.hidden=true;t.removeAttribute('src');
     $('#hs-name').textContent='No file selected';
-    $('#hs-meta').textContent='Choose an image to attach it to your profile.';
+    $('#hs-meta').textContent='High resolution, kept private.';
     $('#hs-remove').hidden=true;$('#hs-btn').textContent='Choose image';
   }
 }
@@ -306,7 +306,7 @@ function guestNote(){
 function showGuestLink(){
   if(!GUEST_URL) return;
   $('#gl-field').value=GUEST_URL;$('#gl-box').hidden=false;
-  $('#gl-desc').textContent='Share it with anyone you’d like to invite. It applies the $300 honoree rate automatically (regular price $400), and each seat is confirmed once the guest registers and pays.';
+  $('#gl-desc').textContent='Share it with additional guests. It applies the $300 honoree rate at checkout.';
 }
 $('#gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#gl-msg'))});
 $('#c-gl-copy').addEventListener('click',function(){copyText(GUEST_URL,$('#c-small'))});
@@ -378,8 +378,10 @@ function renderReview(){
     var b=el('button','textbtn','Edit');b.type='button';b.setAttribute('aria-label','Edit '+title);
     b.addEventListener('click',function(){goto(step)});h.appendChild(b);s.appendChild(h);
     var dl=el('dl');
+    rows=rows.filter(function(r){return r});
+    if(!rows.length) rows=[['',noneSpan('Nothing added')]];
     rows.forEach(function(r){
-      var row=el('div','rrow');row.appendChild(el('dt',null,r[0]));
+      var row=el('div','rrow');if(r[0])row.appendChild(el('dt',null,r[0]));
       var dd=el('dd');
       if(r[1]&&r[1].nodeType) dd.appendChild(r[1]); else if(r[1]) dd.textContent=r[1]; else dd.appendChild(noneSpan());
       row.appendChild(dd);dl.appendChild(row);
@@ -393,23 +395,23 @@ function renderReview(){
   var bw=words(val('bio'));
   sec('Profile',1,[
     ['Listed as',[val('pubName'),val('pubTitle'),val('pubOrg')].filter(Boolean).join(' · ')],
-    ['Bio',bw?('Provided · '+plural(bw,'word')):noneSpan('Not added')],
-    ['Headshot',HS?((HS.filename||'Headshot')+' · uploaded'):noneSpan('Not uploaded')],
-    ['Team contact',val('teamName')||val('teamEmail')?[val('teamName'),val('teamEmail')].filter(Boolean).join(' · '):noneSpan('None')]
+    bw?['Bio','Provided · '+plural(bw,'word')]:null,
+    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:null,
+    val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   sec('Evening',2,[
-    ['Complimentary guest',chk('guest')?[val('gName'),val('gEmail')].filter(Boolean).join(' · '):noneSpan('No guest')],
+    ['Complimentary guest',chk('guest')?[val('gName'),val('gEmail')].filter(Boolean).join(' · '):'No guest'],
     ['Meal',val('diet')],
-    ['Other notes',val('access')||noneSpan('None')]
+    val('access')?['Allergies or accessibility',val('access')]:null
   ]);
   var iv=parseList(val('inviteList')).items,sv=parseList(val('supportList')).items;
   sec('Guests',3,[
-    ['Guests to invite',iv.length?plural(iv.length,'guest')+' at the $300 honoree rate':noneSpan('None added')],
-    ['Invitations',iv.length?(val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')):noneSpan('—')]
+    iv.length?['Additional guests',plural(iv.length,'guest')+' at $300 each']:null,
+    iv.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null
   ]);
   sec('Support SALUTE',4,[
-    ['People to reach out to',sv.length?plural(sv.length,'person'):noneSpan('None added')],
-    ['Mention my name',sv.length?(val('supportMode')==='mention'?'Yes, on my behalf':(val('supportMode')==='check'?'Check with me first':'')):noneSpan('—')]
+    sv.length?['People to reach out to',plural(sv.length,'person')]:null,
+    sv.length?['Mention my name',val('supportMode')==='mention'?'Yes, on my behalf':(val('supportMode')==='check'?'Check with me first':'')]:null
   ]);
 }
 

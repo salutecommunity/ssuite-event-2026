@@ -361,6 +361,20 @@ a{color:inherit}
 .must small{display:block;margin-top:10px;font:400 14px/1.5 var(--sans);color:#555}
 .open-dark .inperson{max-width:440px;margin:22px auto 0;padding:14px 16px;border:1px solid rgba(255,255,255,.55);font:400 15px/1.45 var(--sans);color:#fff}
 .open-dark .inperson b{font-weight:600}
+
+/* v7: calmer forms — fewer rules, one clear optional tag */
+.opt{display:inline-block;margin-left:8px;font:italic 400 15px/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--ink2);vertical-align:baseline}
+.grp+.grp{border-top:0;padding-top:8px}
+.grp{padding-bottom:30px}
+.choice{border-top:0;padding:10px 0;min-height:0}
+.choices.compact .choice{padding:8px 0;min-height:0}
+.choices{margin-top:4px}
+.upload{border:0;padding:6px 0}
+.acts{border-top:0;padding-top:8px}
+.ps-head{border-bottom:0!important}
+.grp-d b{font-weight:600;color:var(--black)}
+.rrow{border-top:0;padding:8px 0}
+.rsec{border-top:1px solid var(--line)}
 </style>
 </head>
 <body data-view="invite">
@@ -374,7 +388,7 @@ a{color:inherit}
 <div id="view-invite" hidden>
   <div class="minibar" id="minibar">
     <span class="m" aria-hidden="true">S.SUITE</span>
-    <button type="button" class="textbtn" data-enter tabindex="-1" id="mini-enter">Accept Your Invitation <span aria-hidden="true">→</span></button>
+    <button type="button" class="textbtn" data-enter tabindex="-1" id="mini-enter">View Your Invitation <span aria-hidden="true">→</span></button>
   </div>
   <main id="main-content">
     <!-- Opening: approved Classic Split -->
@@ -395,7 +409,7 @@ a{color:inherit}
           <p class="recog">You’ve been nominated and recognized as an inaugural S.SUITE Honoree.</p>
           <p class="about">S.SUITE recognizes South Asian women leaders and allies shaping business, capital, culture, impact, and community.</p>
           <div class="open-cta">
-            <button type="button" class="btn btn-wl" data-enter>Accept Your Invitation <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="button" class="btn btn-wl" data-enter>View Your Invitation <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="textbtn" data-scroll="#platform" style="color:#fff">Explore S.SUITE <span aria-hidden="true">↓</span></button>
           </div>
         </div>
@@ -504,7 +518,7 @@ a{color:inherit}
             </div>
           </fieldset>
           <div id="decline-box" hidden>
-            <label class="fld"><span class="lbl">A note to the SALUTE team <i>Optional</i></span>
+            <label class="fld"><span class="lbl">A note to the SALUTE team <span class="opt">optional</span></span>
               <textarea name="declineNote" rows="4"></textarea></label>
           </div>
           <div class="acts">
@@ -519,7 +533,7 @@ a{color:inherit}
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">02</p>
           <h2 class="ps-title" id="t1" tabindex="-1">Your profile</h2>
-          <p class="ps-lead">How you’d like to be listed. We’ll coordinate the announcement with you and send a ready-to-share post before anything is public.</p>
+          <p class="ps-lead">How you’d like to be listed. Nothing is made public without you.</p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
@@ -529,18 +543,17 @@ a{color:inherit}
             <label class="fld"><span class="lbl">Name</span><input type="text" name="pubName" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Title</span><input type="text" name="pubTitle" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Organization(s)</span><input type="text" name="pubOrg" autocomplete="off"></label>
-            <label class="fld"><span class="lbl">Short bio <i>Optional</i></span>
-              <span class="hint">Up to 120 words. <span id="bio-count">0 words</span></span>
+            <label class="fld"><span class="lbl">Short bio <span class="opt">optional</span></span>
+              <span class="hint">Up to 120 words · <span id="bio-count">0 words</span></span>
               <textarea name="bio" rows="5"></textarea></label>
           </fieldset>
           <fieldset class="grp">
-            <legend>Headshot <span style="font:inherit;font-style:italic">Optional</span></legend>
-            <p class="grp-d">A high-resolution image. It’s stored privately and shared only with the SALUTE team.</p>
+            <legend>Headshot <span class="opt">optional</span></legend>
             <div class="upload" id="hs">
               <img class="thumb" id="hs-thumb" alt="" hidden>
               <div class="up-info" id="hs-info">
                 <p class="up-name" id="hs-name">No file selected</p>
-                <p class="up-meta" id="hs-meta" role="status">Choose an image to attach it to your profile.</p>
+                <p class="up-meta" id="hs-meta" role="status">High resolution, kept private.</p>
               </div>
               <input class="sr" type="file" id="hs-input" name="headshot" accept="image/*" aria-describedby="hs-meta">
               <label class="btn btn-line btn-sm up-btn" for="hs-input" id="hs-btn">Choose image</label>
@@ -548,8 +561,8 @@ a{color:inherit}
             </div>
           </fieldset>
           <fieldset class="grp">
-            <legend>Someone on your team <span style="font:inherit;font-style:italic">Optional</span></legend>
-            <p class="grp-d">If you’d like us to copy an assistant or communications contact on logistics and the announcement.</p>
+            <legend>Someone on your team <span class="opt">optional</span></legend>
+            <p class="grp-d">We’ll copy them on logistics.</p>
             <div class="row2">
               <label class="fld"><span class="lbl">Name</span><input type="text" name="teamName" autocomplete="off"></label>
               <label class="fld"><span class="lbl">Email</span><input type="email" name="teamEmail" inputmode="email" autocomplete="off"></label>
@@ -574,8 +587,8 @@ a{color:inherit}
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp" id="guest-grp">
-            <legend>Your guest</legend>
-            <p class="grp-d">Your invitation includes complimentary seats for you and one guest.</p>
+            <legend>Your complimentary guest</legend>
+            <p class="grp-d">Your seat and <b>one</b> guest are complimentary. Anyone else is $300 per ticket. You can invite them in the next step.</p>
             <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
@@ -590,7 +603,7 @@ a{color:inherit}
               <label class="choice"><input type="radio" name="diet" value="Vegetarian"><span><b>Vegetarian</b></span></label>
               <label class="choice"><input type="radio" name="diet" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
             </div>
-            <label class="fld" style="margin-top:22px"><span class="lbl">Anything else we should know? <i>Optional</i></span><span class="hint">Allergies, accessibility needs or arrival notes.</span><textarea name="access" rows="3"></textarea></label>
+            <label class="fld" style="margin-top:22px"><span class="lbl">Allergies or accessibility needs <span class="opt">optional</span></span><textarea name="access" rows="3"></textarea></label>
           </fieldset>
 
           <div class="acts">
@@ -604,15 +617,15 @@ a{color:inherit}
       <section class="step" data-step="3" aria-labelledby="t3" hidden>
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">04</p>
-          <h2 class="ps-title" id="t3" tabindex="-1">Invite your guests</h2>
-          <p class="ps-lead">Anyone you invite can join you at the honoree rate of <b>$300 per ticket</b> (regular price $400). Optional.</p>
+          <h2 class="ps-title" id="t3" tabindex="-1">Additional guests</h2>
+          <p class="ps-lead">Beyond your one complimentary guest, anyone you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400). <span class="opt">optional</span></p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
             <legend>Who you’d like to invite</legend>
-            <p class="grp-d">One person per line: name and email, or just an email. You can paste a list.</p>
+            <p class="grp-d">One per line: name and email.</p>
             <label class="fld"><span class="lbl sr">Guests to invite</span>
               <textarea name="inviteList" rows="6" placeholder="Jane Smith, jane@example.com&#10;alex@example.com"></textarea></label>
             <p class="hint" id="invite-sum" role="status" aria-live="polite"></p>
@@ -620,22 +633,21 @@ a{color:inherit}
           <fieldset class="grp" id="invite-mode-grp" hidden>
             <legend>How should the invitations go out?</legend>
             <div class="choices">
-              <label class="choice"><input type="radio" name="inviteMode" value="salute"><span><b>SALUTE emails them on my behalf</b><small>We’ll send your personal invitation and copy you.</small></span></label>
-              <label class="choice"><input type="radio" name="inviteMode" value="self"><span><b>I’ll email them myself</b><small>Use your personal invitation link below.</small></span></label>
+              <label class="choice"><input type="radio" name="inviteMode" value="salute"><span><b>SALUTE emails them on my behalf</b><small>We’ll copy you.</small></span></label>
+              <label class="choice"><input type="radio" name="inviteMode" value="self"><span><b>I’ll email them myself</b><small>Use your link below.</small></span></label>
             </div>
           </fieldset>
           <fieldset class="grp">
             <legend>Your personal invitation link</legend>
-            <p class="grp-d" id="gl-desc">Your link appears here once you’ve accepted. It applies the $300 honoree rate automatically, and each seat is confirmed once the guest registers and pays.</p>
+            <p class="grp-d" id="gl-desc">Appears here once you’ve accepted.</p>
             <div class="linkbox" id="gl-box" hidden><input type="text" id="gl-field" readonly aria-label="Your personal invitation link"><button type="button" class="btn btn-line btn-sm" id="gl-copy">Copy link</button><button type="button" class="btn btn-line btn-sm" id="gl-note">Copy a note</button></div>
             <p class="letter-msg" role="status" id="gl-msg"></p>
           </fieldset>
           <fieldset class="grp">
-            <legend>Host a table</legend>
-            <p class="grp-d">Bring ten guests together at your own table. <span id="table-price">$5,000 at our extended early-bird rate (regular $7,500).</span> You’ll name your guests afterward on a private table page.</p>
+            <legend>Host a table <span class="opt">optional</span></legend>
+            <p class="grp-d">Ten seats at your own table. <span id="table-price">$5,000 at our extended early-bird rate (regular $7,500).</span></p>
             <button type="button" class="btn btn-line" id="table-buy">Host a table <span class="arrow" aria-hidden="true">→</span></button>
-            <p class="hint" style="margin-top:10px">Opens secure checkout. Your answers here are saved.</p>
-          </fieldset>
+            </fieldset>
           <div class="acts">
             <button type="button" class="btn btn-fill" data-next>Continue <span class="arrow" aria-hidden="true">→</span></button>
             <button type="button" class="btn btn-line" data-prev>Back</button>
@@ -648,20 +660,19 @@ a{color:inherit}
         <header class="ps-head">
           <p class="ps-num" aria-hidden="true">05</p>
           <h2 class="ps-title" id="t4" tabindex="-1">Support SALUTE</h2>
-          <p class="ps-lead">Entirely optional. Your recognition never depends on a contribution.</p>
+          <p class="ps-lead">Your recognition never depends on a contribution. <span class="opt">optional</span></p>
           <p class="ps-count" data-count></p>
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
             <legend>Make a contribution</legend>
-            <p class="grp-d">SALUTE is a 501(c)(3). Contributions expand access, visibility and connection for South Asian women leaders.</p>
+            <p class="grp-d">SALUTE is a 501(c)(3).</p>
             <a class="btn btn-line" id="give-link" href="https://event.ssuite.org/#give" target="_blank" rel="noopener">Contribute <span class="arrow" aria-hidden="true">→</span></a>
-            <p class="hint" style="margin-top:10px">Opens secure checkout in a new tab.</p>
-          </fieldset>
+            </fieldset>
           <fieldset class="grp">
             <legend>People SALUTE could reach out to</legend>
-            <p class="grp-d">Anyone who might want to support SALUTE’s work. One person per line: name and email.</p>
+            <p class="grp-d">One per line: name and email.</p>
             <label class="fld"><span class="lbl sr">People SALUTE could reach out to</span>
               <textarea name="supportList" rows="5" placeholder="Jane Smith, jane@example.com"></textarea></label>
             <p class="hint" id="support-sum" role="status" aria-live="polite"></p>
@@ -707,7 +718,7 @@ a{color:inherit}
             <h3 id="c-h" style="margin-top:14px">Thank you.</h3>
             <p class="lede" id="c-lede"></p>
             <p class="stamp" id="c-stamp"></p>
-            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px">Share it with anyone you would like in the room. Your guests receive the $300 honoree rate (regular price $400).</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div><p style="margin-top:14px"><button type="button" class="textbtn" id="c-note-copy" style="color:#fff">Copy a short note to send with it</button></p></div>
+            <div class="gl" id="c-gl" hidden><p class="eyebrow">Your guest invitation link</p><p class="small" style="margin-top:8px">For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).</p><div class="linkbox"><input type="text" id="c-gl-field" readonly aria-label="Your guest invitation link"><button type="button" class="btn btn-wl btn-sm" id="c-gl-copy">Copy link</button></div><p style="margin-top:14px"><button type="button" class="textbtn" id="c-note-copy" style="color:#fff">Copy a short note to send with it</button></p></div>
             <p class="small" id="c-small">Nothing has been announced. Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
             <div class="cacts">
               <button type="button" class="btn btn-wf" id="c-review">Review or update</button>
