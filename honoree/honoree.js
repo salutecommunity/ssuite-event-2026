@@ -335,12 +335,12 @@ $('#gl-note').addEventListener('click',function(){copyText(guestNote(),$('#gl-ms
    to the event site's own checkout service; payment happens on Stripe's secure page in this
    same tab, which returns here. Not credited through the guest code, which would spend ten
    of the honoree's guest seats. */
-var TABLE_CUTOVER=Date.parse('2026-10-08T04:00:00Z');
+/* Honorees keep the $5,000 table rate with no end date: her private honoree_table code (from the portal API) prices the table. */
+var TABLE_CODE=null;
 var CHECKOUT_API='https://iddzcbknnddkonrcwgpt.supabase.co/functions/v1/';
 var TS_KEY='0x4AAAAAAEdV18cDQPUcfZOG', tsWidget=null, tsLoading=null;
 var POLICY={terms:'ssuite-event-terms-2026-08-25',privacy:'ssuite-event-privacy-2026-08-25',media:'ssuite-media-release-2026-08-25'};
 var TABLE_STATUS='', TABLE_REF='';
-if(Date.now()>=TABLE_CUTOVER) $('#table-price').textContent='$7,500 for a table of ten.';
 function loadTurnstile(){
   if(window.turnstile) return Promise.resolve(window.turnstile);
   if(tsLoading) return tsLoading;
@@ -395,7 +395,7 @@ $('#table-pay').addEventListener('click',function(){
   tableErr('');btn.disabled=true;var lbl=btn.firstChild.textContent;btn.firstChild.textContent='Preparing secure checkout… ';
   tsToken().then(function(tok){
     var o=location.origin+'/honoree/';
-    var body={ticket_type_code:'full_table',order_type:'table',quantity:1,guest_quantity:0,
+    var body={ticket_type_code:'full_table',order_type:'table',quantity:1,guest_quantity:0,member_code:TABLE_CODE||undefined,
       purchaser:{first_name:t.first,last_name:t.last,email:t.email,phone:t.phone},member_attestation:false,
       how_heard:'S.Suite community or event',
       attendees:[{first_name:t.first,last_name:t.last,email:t.email,phone:t.phone,job_title:t.title,company:t.org,meal_preference:t.meal,has_dietary_or_allergy_needs:false,has_accessibility_needs:false}],
@@ -626,7 +626,7 @@ $('#submit').addEventListener('click',function(){
   submitting=true;clearTimeout(saveTimer);
   var btn=$('#submit');btn.disabled=true;btn.firstChild.textContent='Submitting… ';
   api({action:'submit',response:collect()}).then(function(r){
-    STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;dirty=false;
+    STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;if(r.table_code)TABLE_CODE=r.table_code;dirty=false;
     for(var i=0;i<=LAST;i++) if(!(declined()&&(i===1||i===2))) done[i]=true;
     submitted=true;showConfirm();statusBar();showGuestLink();saveState('Submitted');
   }).catch(function(e){
@@ -661,7 +661,7 @@ $('#c-invite').addEventListener('click',toInvite);
 /* ── Boot ────────────────────────────────────────── */
 if(!token){gate('This private invitation link is incomplete. Please open it again from your email, or write to ssuite@salute.community.');return}
 api({action:'get'}).then(function(d){
-  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;HS=d.headshot||null;
+  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;HS=d.headshot||null;
   bind();
   var saved=d.response&&Object.keys(d.response).length?d.response:null;
   restore(saved,H.prefill);
