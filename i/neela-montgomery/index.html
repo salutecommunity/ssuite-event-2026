@@ -751,6 +751,13 @@ document.addEventListener("ssuite:invitation-applied", function () {
   if (!st || !Number.isInteger(st.amountCents) || st.amountCents <= 0) return;
   var p = document.querySelector(".seat-card .price");
   if (p) p.textContent = "$" + (st.amountCents / 100).toLocaleString("en-US");
+  /* Show the invitation-rate total from the start, not the Community placeholder. */
+  var fix = function () {
+    var t = document.getElementById("ticket-total"), q = document.getElementById("ticket-quantity");
+    var n = q ? parseInt(q.value || "1", 10) : 1;
+    if (t && n >= 1) t.textContent = "$" + (st.amountCents * n / 100).toLocaleString("en-US");
+  };
+  fix(); setTimeout(fix, 800); setTimeout(fix, 2500);
 });
 </script>
 </body>
