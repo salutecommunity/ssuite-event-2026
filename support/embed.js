@@ -90,7 +90,8 @@
     });
     document.getElementById('sponsor-form').addEventListener('submit', async event => {
       event.preventDefault();
-      const data = new FormData(event.currentTarget);
+      const form = event.currentTarget;
+      const data = new FormData(form);
       const button = document.getElementById('sponsor-submit');
       const status = document.getElementById('form-status');
       button.disabled = true;
@@ -107,8 +108,8 @@
           })
         });
         if(!response.ok) throw new Error('Submission failed');
-        event.currentTarget.reset();
-        status.textContent = 'Thank you. Your partnership interest has been saved, and the SALUTE team will follow up.';
+        form.reset();
+        status.textContent = 'Thank you. Your interest has been saved, and the SALUTE team will follow up.';
         status.hidden = false;
       } catch (error) {
         status.innerHTML = 'We could not save your response. Please email <a href="mailto:hello@salute.community">hello@salute.community</a>.';
