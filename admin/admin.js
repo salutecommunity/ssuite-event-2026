@@ -10,8 +10,6 @@ let currentPage = 1;
 let lastSearch = "";
 let invitationStatus = "pending";
 let memberCodeStatus = "pending";
-let honoreeIncludeTests = false;
-const honoreeRowsById = new Map();
 
 function configured() {
   try {
@@ -233,7 +231,7 @@ function clearWorkspace() {
 }
 
 function tabMeta(tab) {
-  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], honorees: ["Private portal responses", "Honorees"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], partners: ["Event partnerships", "Partners"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
+  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
 async function loadTab(tab, page = 1, search = "") {
   activeTab = tab; currentPage = page; lastSearch = search;
@@ -244,7 +242,6 @@ async function loadTab(tab, page = 1, search = "") {
     const body = { action: tab === "invitations" ? "invitation_requests" : tab === "membercodes" ? "member_code_requests" : tab, page, limit: 50, search };
     if (tab === "invitations") body.status = invitationStatus;
     if (tab === "membercodes") body.status = memberCodeStatus;
-    if (tab === "honorees") body.include_tests = honoreeIncludeTests;
     const payload = await call(body);
     render(tab, payload); status("");
   } catch (error) { status(error.message || "Unable to load this private view.", "error"); }
@@ -255,9 +252,7 @@ function render(tab, payload) {
   if (tab === "overview") return renderOverview(host, payload.overview);
   if (tab === "invitations") return renderInvitationRequests(host, payload);
   if (tab === "membercodes") return renderMemberCodeRequests(host, payload);
-  if (tab === "honorees") return renderHonorees(host, payload);
   if (tab === "tables") return renderTables(host, payload);
-  if (tab === "partners") return renderPartners(host, payload);
   if (tab === "audit") return renderAudit(host, payload);
   if (tab === "attendees") host.append(adminAttendeeButton());
   const searchable = ["orders", "attendees", "email", "auction", "donations"].includes(tab);
@@ -272,74 +267,6 @@ function render(tab, payload) {
   };
   renderDataTable(host, payload, configByTab[tab] || [], tab === "attendees");
   if (["orders", "attendees", "donations"].includes(tab)) host.append(exportButton(tab));
-}
-
-function renderPartners(host, payload) {
-  const rows = payload.data || [];
-  if (!rows.length) { host.append(element("p", "empty", "No partner tables are available.")); return; }
-  const list = element("div", "table-list");
-  const approvalLabels = {
-    yes: "Yes \u2014 manual administrative follow-up required",
-    no: "No internal approval reported",
-    needs_check: "Needs confirmation \u2014 follow up",
-  };
-  for (const item of rows) {
-    const profile = item.profile || {};
-    const table = item.table || {};
-    const company = profile.organization_name || profile.recognition_name || item.host?.company || "Company not recorded";
-    const card = element("article", "table-card");
-    const seats = Number(table.seat_count) || 0;
-    const tier = seats === 10 ? "Associate Partner" : seats === 5 ? "Supporting Partner" : "Partner";
-    const tableLabel = table.table_number ? "Table " + table.table_number : "Table number not assigned";
-    card.append(element("span", "record-label", tableLabel + " \u00B7 " + seats + " seats \u00B7 " + tier));
-    card.append(element("h3", "", company));
-    if (table.name) card.append(element("p", "", "Table name: " + table.name));
-    if (profile.recognition_name) card.append(element("p", "", "Company name for recognition: " + profile.recognition_name));
-    const recognition = profile.recognition_preference === "logo" ? "Company logo" : profile.recognition_preference === "name" ? "Name only" : "Not recorded";
-    card.append(element("p", "", "Recognition preference: " + recognition));
-    const contact = [profile.contact_name, profile.contact_email, profile.contact_phone].filter(Boolean).join(" \u00B7 ");
-    card.append(element("p", "", "Partner contact: " + (contact || "Not recorded")));
-    if (item.host && (item.host.name || item.host.email)) card.append(element("p", "", "Table host: " + [item.host.name, item.host.email].filter(Boolean).join(" \u00B7 ")));
-    if (profile.organization_bio) {
-      card.append(element("p", "", "Company description: " + profile.organization_bio));
-    }
-    if (profile.website_url) card.append(element("p", "", "Website: " + profile.website_url));
-    if (profile.linkedin_url) card.append(element("p", "", "LinkedIn: " + profile.linkedin_url));
-    const approvalText = approvalLabels[profile.posts_approval_required] || "Not recorded";
-    card.append(element("p", "", "SALUTE-post approval: " + approvalText));
-    if (profile.posts_approval_required === "yes") {
-      const approver = [profile.approval_contact_name, profile.approval_contact_email].filter(Boolean).join(" \u00B7 ");
-      card.append(element("p", "", "Approval contact: " + (approver || "Not provided")));
-      if (profile.approval_guidelines) card.append(element("p", "", "Approval guidelines: " + profile.approval_guidelines));
-    }
-    if (item.has_logo) {
-      card.append(element("p", "", "Private logo: " + (profile.logo_filename || "Uploaded file")));
-      const button = element("button", "button outline", "Access private logo (10-minute link)");
-      button.type = "button";
-      button.addEventListener("click", async () => {
-        const popup = window.open("about:blank", "_blank");
-        if (popup) popup.opener = null;
-        if (!popup) { status("Allow pop-ups to access this private logo.", "error"); return; }
-        setBusy(button, true);
-        status("Preparing a short-lived private logo link\u2026");
-        try {
-          const result = await call({ action: "partner_logo", profile_id: item.id });
-          const link = new URL(result.signed_url);
-          const configuredUrl = new URL(String(config.supabaseUrl || ""));
-          if (link.protocol !== "https:" || link.origin !== configuredUrl.origin) throw new Error("The private logo link was not valid.");
-          popup.location.replace(link.href);
-          status("Private logo opened. Its link expires after 10 minutes.", "success");
-        } catch (error) {
-          popup.close();
-          status(error.message || "The private logo could not be accessed.", "error");
-        } finally { setBusy(button, false); }
-      });
-      card.append(button);
-    } else card.append(element("p", "fineprint", "No logo file is on record."));
-    list.append(card);
-  }
-  host.append(list);
-  host.append(element("p", "fineprint", "Partner approval preferences are recorded for staff follow-up. This dashboard does not enforce an automated publishing hold."));
 }
 
 function renderInvitationRequests(host, payload) {
@@ -907,88 +834,3 @@ async function showAttendee(id) { status("Loading attendee detail…"); try { co
 
 $("password-form").addEventListener("submit", signInWithPassword); $("change-password").addEventListener("click", openPasswordDialog); $("password-change-form").addEventListener("submit", changePassword); $("password-cancel").addEventListener("click", () => $("password-dialog").close()); $("password-dialog").querySelector(".close").addEventListener("click", () => $("password-dialog").close()); $("otp-form").addEventListener("submit", verifyCode); $("request-code").addEventListener("click", requestCode); $("refresh").addEventListener("click", () => loadTab(activeTab, currentPage, lastSearch)); $("tabs").addEventListener("click", (event) => { const button = event.target.closest("button[data-tab]"); if (button) loadTab(button.dataset.tab); }); $("sign-out").addEventListener("click", async () => { await supabase?.auth.signOut(); session = null; clearWorkspace(); $("workspace").hidden = true; $("auth-shell").hidden = false; $("sign-out").hidden = true; $("change-password").hidden = true; authStatus("Signed out of private administration."); }); $("attendee-dialog").querySelector(".close").addEventListener("click", () => $("attendee-dialog").close());
 initialize().catch(() => authStatus("Private sign-in is unavailable. Check deployment configuration.", "error"));
-
-/* ── Honorees: private portal responses (read-only) ─────────────────────── */
-function honoreeStage(h) {
-  if (h.response === "Accepted" && h.submitted_at) return "accepted";
-  if (h.response === "Declined" && h.submitted_at) return "declined";
-  if (h.last_saved_at) return "in progress";
-  if (h.open_count > 0) return "opened";
-  return "not opened";
-}
-function honoreeActions(h) {
-  const todo = [];
-  if (h.response === "Accepted" && h.submitted_at) todo.push("Issue complimentary seats");
-  if (h.guest_details_sent_by?.startsWith("SALUTE")) todo.push("Email her guest");
-  if (h.additional_guests_count && h.additional_guests_invited_by?.startsWith("SALUTE")) todo.push(`Invite ${h.additional_guests_count} guest${h.additional_guests_count === 1 ? "" : "s"}`);
-  if (h.potential_supporters_count) todo.push(`${h.potential_supporters_count} supporter${h.potential_supporters_count === 1 ? "" : "s"} to contact`);
-  if (h.table_status === "paid") todo.push("Table purchased");
-  return todo;
-}
-function honoreeCsvButton(kind, label) {
-  const button = element("button", "button outline", label); button.type = "button";
-  button.addEventListener("click", async () => {
-    setBusy(button, true); status("Preparing secure CSV export…");
-    try { const blob = await call({ action: "export", kind }, true); const link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = `ssuite-${kind.replace("_", "-")}.csv`; link.click(); URL.revokeObjectURL(link.href); status("CSV export downloaded.", "success"); }
-    catch (error) { status(error.message || "Export failed.", "error"); } finally { setBusy(button, false); }
-  });
-  return button;
-}
-function renderHonorees(host, payload) {
-  const rows = payload.data || []; honoreeRowsById.clear(); rows.forEach((h) => honoreeRowsById.set(h.id, h));
-  const count = (stage) => rows.filter((h) => honoreeStage(h) === stage).length;
-  const summary = element("div", "summary");
-  for (const [label, value] of [["Invited", rows.length], ["Opened their link", rows.filter((h) => h.open_count > 0).length], ["Accepted", count("accepted")], ["Declined", count("declined")]]) { const m = element("div", "metric"); m.append(element("span", "", label), element("strong", "", String(value))); summary.append(m); }
-  host.append(summary);
-  host.append(element("p", "band-note", "Everything an honoree types in her private portal saves here automatically, even before she submits. Click a name for her full response and headshot. Read-only: nothing here emails anyone."));
-  const bar = element("div", "toolbar");
-  bar.append(honoreeCsvButton("honorees", "Download all responses (CSV)"), honoreeCsvButton("honoree_contacts", "Download guests & supporters (CSV)"));
-  const toggle = element("button", "quiet", honoreeIncludeTests ? "Hide test records" : "Show test records"); toggle.type = "button";
-  toggle.addEventListener("click", () => { honoreeIncludeTests = !honoreeIncludeTests; loadTab("honorees"); });
-  bar.append(toggle); host.append(bar);
-  if (!rows.length) { host.append(element("p", "empty", "No honoree invitations yet.")); return; }
-  const wrap = element("div", "table-wrap"); const table = document.createElement("table");
-  const thead = document.createElement("thead"); const hr = document.createElement("tr");
-  for (const label of ["Honoree", "Honor", "Status", "Opened", "Last saved", "Submitted", "Headshot", "To do"]) hr.append(element("th", "", label));
-  thead.append(hr); table.append(thead); const tbody = document.createElement("tbody");
-  for (const h of rows) {
-    const tr = document.createElement("tr"); tr.dataset.attendeeId = h.id; tr.tabIndex = 0;
-    tr.addEventListener("click", () => showHonoree(h.id)); tr.addEventListener("keydown", (e) => { if (e.key === "Enter") showHonoree(h.id); });
-    const name = document.createElement("td"); name.append(element("strong", "", text(h.honoree))); if (String(h.slug).startsWith("test-")) name.append(element("small", "", " (test)"));
-    const st = document.createElement("td"); const stage = honoreeStage(h); const c = chip(stage); if (stage === "accepted") c.classList.add("approved"); if (stage === "declined") c.classList.add("rejected"); st.append(c);
-    tr.append(name, element("td", "", text(h.honor)), st,
-      element("td", "", h.open_count ? `${h.open_count}× · first ${date(h.first_opened_at)}` : "Not yet"),
-      element("td", "", date(h.last_saved_at)), element("td", "", date(h.submitted_at)),
-      element("td", "", h.headshot ? "Uploaded" : "—"), element("td", "", honoreeActions(h).join(" · ") || "—"));
-    tbody.append(tr);
-  }
-  table.append(tbody); wrap.append(table); host.append(wrap);
-}
-function showHonoree(id) {
-  const h = honoreeRowsById.get(id); if (!h) return;
-  const host = $("attendee-detail"); clear(host);
-  host.append(element("p", "eyebrow", `Honoree response · ${text(h.honor)}`));
-  const title = element("h2", "", text(h.honoree)); title.id = "attendee-title"; host.append(title);
-  const grid = (pairs) => { const g = element("div", "detail-grid"); for (const [label, value] of pairs) { const cell = document.createElement("div"); cell.append(element("span", "record-label", label), element("b", "", text(value))); g.append(cell); } return g; };
-  const section = (heading, cls = "detail-section") => { const s = element("section", cls); s.append(element("h3", "", heading)); host.append(s); return s; };
-  host.append(grid([["Status", honoreeStage(h)], ["Response", h.response || "Not chosen yet"], ["Submitted", date(h.submitted_at)], ["Last saved", date(h.last_saved_at)], ["Opened", h.open_count ? `${h.open_count} times · first ${date(h.first_opened_at)}` : "Not yet"], ["Reply by", h.response_deadline || "—"]]));
-  const todo = honoreeActions(h); if (todo.length) host.append(element("p", "notice", `To do: ${todo.join(" · ")}`));
-  if (h.response === "Declined" && h.decline_note) { const s = section("Her note"); s.append(element("p", "", h.decline_note)); }
-  const p = section("Profile");
-  if (h.headshot?.view_url) { const img = document.createElement("img"); img.className = "guest-photo"; img.src = h.headshot.view_url; img.alt = text(h.honoree); img.style.maxWidth = "220px"; img.style.display = "block"; p.append(img); }
-  if (h.headshot?.download_url) { const a = document.createElement("a"); a.href = h.headshot.download_url; a.textContent = "Download full-size headshot"; a.rel = "noopener"; p.append(a); }
-  else p.append(element("p", "", "No headshot uploaded yet."));
-  p.append(grid([["Public name", h.public_name], ["Title", h.public_title], ["Organization", h.public_organization], ["Pronunciation", h.pronunciation], ["Team contact", [h.team_contact_name, h.team_contact_email].filter(Boolean).join(" · ")], ["Social", h.social]]));
-  p.append(element("p", "", h.bio ? `Bio (${h.bio_words} words):\n${h.bio}` : "No bio added."));
-  const ev = section("Evening", "detail-section sensitive");
-  ev.append(element("p", "", `Her meal: ${text(h.meal)}\nHer allergies or dietary needs: ${h.allergies_or_dietary_needs || "None listed"}`));
-  if (h.complimentary_guest === "Yes") ev.append(element("p", "", `Complimentary guest: ${[h.guest_first_name, h.guest_last_name].filter(Boolean).join(" ")} · ${text(h.guest_email)}\n${[h.guest_title, h.guest_organization].filter(Boolean).join(", ")}\nGuest meal: ${text(h.guest_meal)}\nGuest allergies or dietary needs: ${h.guest_allergies_or_dietary_needs || "None listed"}\nGuest details sent by: ${text(h.guest_details_sent_by)}`));
-  else ev.append(element("p", "", "Complimentary guest: none added."));
-  const list = (heading, people, pref) => { const s = section(heading); s.append(element("p", "", people.length ? `${pref ? `${pref}\n\n` : ""}${people.map((c) => c.name ? `${c.name} <${c.email}>` : c.email).join("\n")}` : "None listed.")); };
-  list(`Additional guests ($300) · ${h.additional_guests_count}`, h.invitees || [], h.additional_guests_invited_by ? `Invitations sent by: ${h.additional_guests_invited_by}` : "");
-  list(`Potential supporters · ${h.potential_supporters_count}`, h.supporters || [], h.supporter_outreach);
-  const t = section("Table & links");
-  t.append(element("p", "", `Table: ${h.table_status === "paid" ? `Purchased${h.table_order ? ` (order ${h.table_order})` : ""}` : h.table_status ? h.table_status : "None"}${h.table_contact ? `\nTable contact: ${h.table_contact}` : ""}\nPersonal invitation page: ${text(h.personal_invitation_page)}\nGuest code: ${text(h.guest_code)}${h.handed_to ? `\nShe handed completion to: ${h.handed_to}` : ""}`));
-  if (h.activity?.length) { const a = section("Activity"); a.append(element("p", "", h.activity.map((x) => `${date(x.at)} · ${String(x.action).replaceAll("_", " ")}`).join("\n"))); }
-  if (!$("attendee-dialog").open) $("attendee-dialog").showModal();
-}

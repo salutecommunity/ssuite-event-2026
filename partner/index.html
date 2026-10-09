@@ -18,7 +18,6 @@
     <p class="eyebrow" id="tier-eyebrow">Private partner access</p>
     <h1 id="headline">Your partnership.</h1>
     <p class="lede" id="intro">This page opens from the private link in your table email. Keep that email — it is how you get back here.</p>
-    <p class="lede" id="coordinator-thanks"></p>
     <p id="status" class="notice" role="status" aria-live="polite">Checking secure access…</p>
   </section>
 
@@ -26,10 +25,11 @@
     <section class="card">
       <p class="eyebrow">Recognition</p>
       <h2>How you are recognized.</h2>
-      <p class="lede">Choose whether SALUTE should recognize your company by logo or by name. Enter the company name exactly as it should appear in event materials.</p>
+      <p class="lede">Partners are recognized across event materials. Send the logo you would like used, or tell us the name to set instead.</p>
       <div class="choice-row">
-        <label class="choice"><input type="radio" name="recognition_preference" value="logo" required><span>By company logo</span></label>
-        <label class="choice"><input type="radio" name="recognition_preference" value="name" required><span>By name only</span></label>
+        <label class="choice"><input type="radio" name="recognition_preference" value="logo"><span>By company logo</span></label>
+        <label class="choice"><input type="radio" name="recognition_preference" value="name"><span>By name only</span></label>
+        <label class="choice"><input type="radio" name="recognition_preference" value="undecided"><span>Not decided yet</span></label>
       </div>
 
       <div id="logo-block">
@@ -51,29 +51,15 @@
 
       <form id="partner-form" novalidate>
         <div class="fields">
-          <label class="field full"><span>COMPANY NAME FOR RECOGNITION</span><input name="recognition_name" type="text" maxlength="200" autocomplete="organization" required><small class="field-help">Enter the company name exactly as you would like it to appear in event materials.</small></label>
-          <label class="field full"><span>COMPANY DESCRIPTION / BIO <em>(optional · 100 words maximum)</em></span><textarea name="organization_bio" maxlength="4000" rows="5" aria-describedby="bio-word-count"></textarea><small id="bio-word-count" class="field-help" aria-live="polite">0 / 100 words</small></label>
+          <label class="field full"><span>NAME TO FEATURE</span><input name="recognition_name" type="text" maxlength="200" autocomplete="organization"></label>
+          <label class="field full"><span>ORGANIZATION</span><input name="organization_name" type="text" maxlength="200" autocomplete="organization"></label>
+          <label class="field full"><span>SHORT DESCRIPTION <em>(optional)</em></span><textarea name="organization_bio" maxlength="4000" rows="5"></textarea></label>
           <label class="field"><span>WEBSITE <em>(optional)</em></span><input name="website_url" type="url" maxlength="500" placeholder="https://"></label>
           <label class="field"><span>LINKEDIN <em>(optional)</em></span><input name="linkedin_url" type="url" maxlength="500" placeholder="https://"></label>
           <label class="field"><span>CONTACT NAME</span><input name="contact_name" type="text" maxlength="200" autocomplete="name"></label>
           <label class="field"><span>CONTACT EMAIL</span><input name="contact_email" type="email" maxlength="320" autocomplete="email"></label>
           <label class="field"><span>CONTACT PHONE <em>(optional)</em></span><input name="contact_phone" type="tel" maxlength="40" autocomplete="tel"></label>
         </div>
-        <section class="draft" id="communications-approval">
-          <h3>Communications approval</h3>
-          <p class="lede">Does your internal communications or marketing team need to approve all SALUTE posts mentioning your company before publication?</p>
-          <div class="choice-row">
-            <label class="choice"><input type="radio" name="posts_approval_required" value="yes" required><span>Yes</span></label>
-            <label class="choice"><input type="radio" name="posts_approval_required" value="no" required><span>No</span></label>
-            <label class="choice"><input type="radio" name="posts_approval_required" value="needs_check" required><span>I need to check</span></label>
-          </div>
-          <div class="fields" id="approval-contact-fields" hidden>
-            <label class="field"><span>APPROVAL CONTACT NAME</span><input name="approval_contact_name" type="text" maxlength="200"></label>
-            <label class="field"><span>APPROVAL CONTACT EMAIL</span><input name="approval_contact_email" type="email" maxlength="320" autocomplete="email"></label>
-            <label class="field full"><span>APPROVAL GUIDELINES <em>(optional)</em></span><textarea name="approval_guidelines" maxlength="2000" rows="3" placeholder="Share brand guidelines, review timelines, or other requirements."></textarea></label>
-          </div>
-          <p class="field-help">Your response is saved for the SALUTE team’s administrative follow-up. Posts are not automatically held or published based on this selection.</p>
-        </section>
         <p id="form-status" class="notice form-notice" role="status" aria-live="polite" hidden></p>
         <div class="actions"><button type="submit">Save details</button></div>
       </form>
@@ -107,13 +93,11 @@
         <h3>Inviting someone to your table</h3>
         <pre id="draft-invite">Dear [Name],
 
-I’d love for you to join [Company] at our table for SALUTE’s inaugural S.SUITE Honors Ceremony on Friday, November 20, 2026, at the Prince George Ballroom in New York City.
+On Friday, November 20, SALUTE holds the inaugural S.SUITE Honors Ceremony at the Prince George Ballroom in New York, celebrating South Asian women leaders and allies whose work is shaping business, capital, culture, and community. The evening includes the presentation of The S.SUITE Chair, our lifetime recognition, to Indra Nooyi, followed by a fireside conversation moderated by Anu Aiyengar of J.P. Morgan.
 
-SALUTE is a 501(c)(3) nonprofit and private, professional network that expands access, visibility, and connection for South Asian women leaders and allies. S.SUITE is SALUTE’s honors platform, recognizing leaders across business, capital, and culture. Each year’s ten honorees form The S.SUITE—a leadership team that works together to advance a community initiative.
+I am hosting a table, and I would be glad for you to be at it.
 
-This year’s program recognizes Indra Nooyi with The S.SUITE Chair, SALUTE’s lifetime recognition, followed by a fireside conversation moderated by Anu Aiyengar, Global Chair of Investment Banking at J.P. Morgan.
-
-The evening begins with a cocktail reception at 6:30 p.m., followed by dinner and the honors ceremony. I’d be glad to have you at our table. Let me know, and I’ll share your private registration link.
+If you would like to join us, let me know and I will send you a private link to confirm your details.
 
 Warmly,
 [Your name]</pre>
@@ -122,19 +106,13 @@ Warmly,
 
       <div class="draft">
         <h3>Sharing that you are a partner</h3>
-        <pre id="draft-social">[Company] is proud to support SALUTE’s inaugural S.SUITE Honors Ceremony as an Associate Partner on Friday, November 20, 2026, at the Prince George Ballroom in New York City.
-
-SALUTE is a 501(c)(3) nonprofit and private, professional network that expands access, visibility, and connection for South Asian women leaders and allies. S.SUITE is SALUTE’s honors platform recognizing leaders across business, capital, and culture. Each year’s ten honorees form The S.SUITE, a leadership team advancing a community initiative.
-
-This year’s ceremony recognizes Indra Nooyi with The S.SUITE Chair, SALUTE’s lifetime recognition, and features a fireside conversation moderated by Anu Aiyengar, Global Chair of Investment Banking at J.P. Morgan.
-
-Learn more: https://ssuite.org/</pre>
+        <pre id="draft-social">We are proud to support the inaugural S.SUITE Honors Ceremony on November 20 in New York, celebrating South Asian women leaders and allies across business, capital, culture, and community — and the lifetime recognition of Indra Nooyi.</pre>
         <button type="button" class="secondary copy" data-copy="draft-social">Copy</button>
       </div>
 
       <div class="draft">
         <h3>Introducing S.SUITE in a sentence</h3>
-        <pre id="draft-boiler">SALUTE is a 501(c)(3) nonprofit and private, professional network that expands access, visibility, and connection for South Asian women leaders and allies. S.SUITE is SALUTE’s honors platform, recognizing leaders across business, capital, and culture. Each year, ten honorees form The S.SUITE—a leadership team that works together to advance a community initiative and reports on its progress the following year.</pre>
+        <pre id="draft-boiler">S.SUITE is SALUTE's inaugural honors ceremony, celebrating South Asian women leaders and allies whose leadership is shaping business, capital, culture, and community.</pre>
         <button type="button" class="secondary copy" data-copy="draft-boiler">Copy</button>
       </div>
     </section>
@@ -146,7 +124,7 @@ Learn more: https://ssuite.org/</pre>
     </section>
   </section>
 </main>
-<script src="./partner-portal.js?v=20261005a"></script>
+<script src="./partner-portal.js?v=20260924a"></script>
 
 <footer class="site-footer">
   <div class="footer-inner">
