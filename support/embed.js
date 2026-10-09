@@ -38,6 +38,7 @@
       return turnstilePromise;
     }
     async function donationToken(){
+      if(location.hostname === 'www.salute.community' || location.hostname === 'salute.community') return '';
       const api = await loadTurnstile();
       if(donationWidget === undefined){
         donationWidget = api.render(document.getElementById('donation-turnstile'), {sitekey:'0x4AAAAAAEdV18cDQPUcfZOG', action:'donation'});
