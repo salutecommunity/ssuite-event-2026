@@ -760,5 +760,33 @@ document.addEventListener("ssuite:invitation-applied", function () {
   fix(); setTimeout(fix, 800); setTimeout(fix, 2500);
 });
 </script>
+<script>
+/* Show the invitation-rate total ($300 per seat) from first load, before checkout opens. Display only; the server-verified rate is what is charged. */
+(function () {
+  function cents() {
+    var live = window.SSuiteLive, st = live && live.partnerState && live.partnerState();
+    if (st && Number.isInteger(st.amountCents) && st.amountCents > 0) return st.amountCents;
+    var p = document.querySelector(".seat-card .price");
+    var v = p ? parseInt((p.textContent || "").replace(/[^0-9]/g, ""), 10) : NaN;
+    return v > 0 ? v * 100 : null;
+  }
+  function fix() {
+    var t = document.getElementById("ticket-total"), q = document.getElementById("ticket-quantity"), c = cents();
+    if (!t || !c) return;
+    var n = q ? parseInt(q.value || "1", 10) : 1;
+    var want = "$" + (c * (n >= 1 ? n : 1) / 100).toLocaleString("en-US");
+    if (t.textContent !== want) t.textContent = want;
+  }
+  function start() {
+    fix();
+    var t = document.getElementById("ticket-total");
+    if (t && window.MutationObserver) new MutationObserver(fix).observe(t, { childList: true, characterData: true, subtree: true });
+    var q = document.getElementById("ticket-quantity");
+    if (q) q.addEventListener("change", function () { setTimeout(fix, 0); });
+    [300, 1000, 2500].forEach(function (d) { setTimeout(fix, d); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();
+</script>
 </body>
 </html>
