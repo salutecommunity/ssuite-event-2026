@@ -137,7 +137,7 @@
     notice($("form-status"), "Saving…");
     try {
       const body = { action: "save_profile", recognition_preference: selectedPreference() };
-      for (const name of ["recognition_name", "organization_bio", "website_url", "linkedin_url", "contact_name", "contact_email", "contact_phone"]) {
+      for (const name of ["recognition_name", "organization_bio", "website_url", "linkedin_url", "contact_name", "contact_email", "contact_phone", "posts_approval_required", "approval_contact_name", "approval_contact_email", "approval_guidelines"]) {
         body[name] = form.elements[name].value.trim();
       }
       const payload = await call(body);
