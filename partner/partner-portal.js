@@ -76,7 +76,7 @@
     const filled = Number(partner.seats_filled || 0);
     const total = Number(partner.seat_count || 0);
     $("table-headline").textContent = partner.table_name || "Your table";
-    $("table-summary").textContent = `${filled} of ${total} seats confirmed. Name your table and invite your guests from your table page, where you can also edit their details until November 13, 2026.`;
+    $("table-summary").textContent = `${filled} of ${total} seats confirmed. Name your table and invite your guests from your table page. Each guest completes their own registration and preferences.`;
     $("table-link").href = `../table-portal.html#token=${token}`;
 
     const profile = partner.profile || {};
@@ -168,6 +168,8 @@
         filename: file.name, content_type: file.type || "", size_bytes: file.size,
       });
       render(payload);
+      document.querySelector('input[name="recognition_preference"][value="logo"]').checked = true;
+      $("logo-block").hidden = false;
       $("logo-filename").textContent = file.name;
       notice($("logo-status"), "Received. Thank you.", "ok");
     } catch (e) {
