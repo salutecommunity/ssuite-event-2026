@@ -25,7 +25,7 @@
   function showPartnerLink() {
     const link = document.getElementById("partner-link");
     if (!link || !tableToken) return;
-    link.href = `./partner/#token=${tableToken}`;
+    link.href = `./partner/?v=20261011e#token=${tableToken}`;
     link.hidden = false;
   }
 
@@ -63,10 +63,10 @@
     if (changesOpen()) {
       if (mine) parts.push(`You can invite guests and rename this table until ${mine}.`);
       if (theirs) parts.push(`Your guests can change their own details until ${theirs}.`);
-      if (mine) parts.push("After that, email ssuite@salute.community and the S.Suite team can still make changes.");
+      if (mine) parts.push("After that, email shama@salute.community and the S.Suite team can still make changes.");
     } else {
       parts.push(mine ? `Table changes closed on ${mine}.` : "Table changes are closed.");
-      parts.push("You can still resend an invitation to a guest. For any other change, email ssuite@salute.community and the S.Suite team can help.");
+      parts.push("You can still resend an invitation to a guest. For any other change, email shama@salute.community and the S.Suite team can help.");
     }
     node.textContent = parts.join(" ");
     node.className = changesOpen() ? "notice" : "notice error";
@@ -113,7 +113,7 @@
     event.preventDefault();
     const form = event.currentTarget;
     const name = form.elements.table_name.value.trim();
-    if (!changesOpen()) { setNameEditor(false); render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community for a late change.` : "Table changes are closed.", "error"); }
+    if (!changesOpen()) { setNameEditor(false); render(); return status(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email shama@salute.community for a late change.` : "Table changes are closed.", "error"); }
     if (!name || name.length > tableNameLimit || invalidTableNameCharacters.test(name)) {
       return status("Enter a table name between 1 and 200 characters.", "error");
     }
@@ -138,13 +138,13 @@
   }
   async function invite(event) {
     event.preventDefault(); const form = event.currentTarget; const recipient = form.elements.recipient_email.value.trim().toLowerCase(), seat = Number(form.elements.seat_number.value), note = form.elements.personal_note.value.trim();
-    if (!changesOpen()) { render(); return inviteStatus(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email ssuite@salute.community to add a guest.` : "Table changes are closed.", "error"); }
+    if (!changesOpen()) { render(); return inviteStatus(changesCutoff() ? `Table changes closed on ${changesCutoff()}. Email shama@salute.community to add a guest.` : "Table changes are closed.", "error"); }
     if (!email.test(recipient) || !Number.isInteger(seat) || seat < 1 || seat > 10 || note.length > 2000) return inviteStatus("Enter your guest's email address and choose an open seat.", "error");
     const button = form.querySelector("button[type=submit]"); button.disabled = true;
-    try { inviteStatus("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); inviteStatus("Invitation is on its way. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { inviteStatus("This invitation could not be queued. Please check your connection and try again, or write to ssuite@salute.community.", "error"); } finally { button.disabled = false; }
+    try { inviteStatus("Sending the invitation…"); await call({ action: "create_invitation", recipient_email: recipient, seat_number: seat, personal_note: note, idempotency_key: randomKey() }); form.reset(); await load(""); inviteStatus("Invitation is on its way. It sends within about a minute — this page will show it as sent once it has gone out.", "success"); } catch { inviteStatus("This invitation could not be queued. Please check your connection and try again, or write to shama@salute.community.", "error"); } finally { button.disabled = false; }
   }
   async function resendInvitation(invitationId) {
-    try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend is on its way. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to ssuite@salute.community.", "error"); }
+    try { status("Resending…"); await call({ action: "resend_invitation", invitation_id: invitationId, idempotency_key: randomKey() }); await load(""); status("Resend is on its way. Your guest keeps the same link, and it sends again within about a minute.", "success"); } catch { status("This resend could not be queued. Please try again, or write to shama@salute.community.", "error"); }
   }
   async function revoke() {
     if (!confirm("Turn off this link? Your table page will stop opening from the link in your email, and you will need to ask us for a new one.")) return;
@@ -155,7 +155,7 @@
   $("cancel-table-name").addEventListener("click", () => setNameEditor(false));
   $("table-name-form").addEventListener("submit", renameTable);
   $("invite-form").addEventListener("submit", invite); $("revoke-access").addEventListener("click", revoke);
-  if (!tableToken) status("This link is missing or incomplete. Please open the private link from your table email, or write to ssuite@salute.community and we will send you a new one.", "error");
-  else if (!base()) status("Your table page is temporarily unavailable. Please try again shortly, or write to ssuite@salute.community.", "error");
+  if (!tableToken) status("This link is missing or incomplete. Please open the private link from your table email, or write to shama@salute.community and we will send you a new one.", "error");
+  else if (!base()) status("Your table page is temporarily unavailable. Please try again shortly, or write to shama@salute.community.", "error");
   else load().catch(() => status("This private table link is unavailable or has expired.", "error"));
 })();
