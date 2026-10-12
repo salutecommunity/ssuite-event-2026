@@ -66,6 +66,16 @@
 #guide>.small{text-align:center;max-width:none;margin:20px 0 0}
 #guide .help{text-align:center;margin-top:30px}
 @media(max-width:760px){#guide{padding:38px 22px}#guide .guide-introduction{margin-bottom:28px}#guide .partner-details{grid-template-columns:1fr;gap:20px}#guide .partner-rate{padding:0}#guide .share-box{padding:24px}#guide .steps{grid-template-columns:1fr;gap:0;margin-top:30px}#guide .steps>div{display:flex;gap:22px;padding:24px 0}#guide .steps>div>span{min-width:34px;margin:0}#guide .steps h3{font-size:24px}}
+
+/* Compact, readable guest note; other tabs unchanged. */
+#note{max-width:900px}
+#note .note{white-space:normal;line-height:1.6;padding:24px 28px;margin:18px 0}
+#note .note p{white-space:pre-line;max-width:none;margin:0 0 14px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+#note .note p:last-child{margin-bottom:0}
+#note h2{margin-bottom:16px}
+#note .subject{margin:18px 0 0}
+#note>.primary{width:auto;padding:12px 22px}
+@media(max-width:700px){#note .note{padding:20px}#note>.primary{width:100%}}
 </style></head><body>
 <select id="organization" hidden aria-hidden="true"></select>
 <header><a href="https://salute.community" target="_blank" rel="noopener"><img src="/assets/salute-wordmark-hires.png" alt="SALUTE"></a><span>Community partner guide</span></header>
@@ -159,29 +169,20 @@ organizations.forEach(name=>{
   const option=document.createElement('option');
   option.textContent=name;option.value=name;orgSelect.appendChild(option);
 });
-function invitation(name){return `Dear [Name],
+function invitation(name){return `Hi [Name],
 
-On behalf of ${name}, we would love to invite you to SALUTE’s inaugural S.SUITE Honors Ceremony on Friday, November 20, in New York City.
+We’d love to have you join us at SALUTE’s inaugural S.SUITE Honors on Friday, November 20, at 6:30 p.m. at the Prince George Ballroom in New York City.
 
-We are sharing this invitation with our community because S.SUITE offers an opportunity to celebrate South Asian leadership and connect with people from across the organizations supporting our community. Through its community partnerships, SALUTE is extending a partner rate so our members can take part in this inaugural evening.
+As a community partner, ${name} is sharing a special invitation with people in our community who would enjoy an evening of meaningful connections and celebrating South Asian women leaders and the allies who champion them. You don’t need to be a South Asian woman to join us.
 
-Guests do not need to be South Asian women—we welcome people who appreciate the community and share in celebrating the leaders being honored. The evening is also a fundraising opportunity for SALUTE, supporting its ongoing community-building and leadership work.
+The evening includes dinner, the honors ceremony, and a fireside conversation between lifetime achievement honoree Indra Nooyi and Anu Aiyengar. It is also a fundraising evening supporting SALUTE’s ongoing community-building and leadership work.
 
-SALUTE is a private, professional network whose mission is to expand access, visibility, and connection for South Asian women and allies. S.SUITE is its honors platform, celebrating South Asian women leaders and allies across business, capital, culture, and community.
+Our invited guests can purchase tickets at a special partner rate of $300 each, with up to nine tickets available through our organization.
 
-The evening includes dinner, the honors ceremony, and a keynote fireside conversation. Indra Nooyi will receive The S.SUITE Chair, SALUTE’s lifetime achievement honor, and join Anu Aiyengar, Global Chair of Investment Banking at J.P. Morgan, in conversation.
-
-Friday, November 20, 2026 · 6:30 p.m. Eastern
-Prince George Ballroom · New York City
-
-As a community partner, ${name} is pleased to extend a partner ticket rate of $300 per ticket to our invited guests.
-
-View your invitation and register here:
+View the evening and register here:
 https://event.ssuite.org/i/culture-tree/
 
-Please use our invitation page to complete your attendee details and payment. Your ticket is confirmed once payment is completed.
-
-We would be delighted to have you join us for this evening of recognition and connection.
+Please register and pay directly through the invitation page; your seat is confirmed once payment is complete. We’d be delighted to see you there!
 
 Warmly,
 [Your name]
@@ -189,7 +190,7 @@ ${name}`}
 function update(){
   document.getElementById('partner-name').textContent=orgSelect.value;
   document.querySelectorAll('.partner-inline').forEach(el=>el.textContent=orgSelect.value);
-  document.getElementById('note-copy').textContent=invitation(orgSelect.value);
+  const note=document.getElementById('note-copy'); note.replaceChildren(); invitation(orgSelect.value).split('\n\n').forEach(text=>{const p=document.createElement('p');p.textContent=text;note.appendChild(p);});
   document.getElementById('note-subject').textContent='An invitation from '+orgSelect.value+' | S.SUITE';
   const guestPath='guest-'+orgSelect.value.toLowerCase().replace(/^the /,'').replaceAll(' ','-')+'.html';
   document.getElementById('guest-open').href='https://event.ssuite.org/i/culture-tree/';
@@ -203,7 +204,7 @@ function activate(id){
 document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>activate(button.dataset.tab)));
 document.getElementById('copy').addEventListener('click',async()=>{
   try{
-    await navigator.clipboard.writeText('Subject: '+document.getElementById('note-subject').textContent+'\n\n'+document.getElementById('note-copy').textContent);
+    await navigator.clipboard.writeText('Subject: '+document.getElementById('note-subject').textContent+'\n\n'+invitation(orgSelect.value));
     document.getElementById('copy-status').textContent='Copied. Add the guest’s name and your signature before sharing.';
   }catch{
     const selection=window.getSelection(),range=document.createRange();
