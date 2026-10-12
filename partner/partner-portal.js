@@ -70,29 +70,28 @@
     const host = [partner.host_first_name, partner.host_last_name].filter(Boolean).join(" ");
 
     $("tier-eyebrow").textContent = tier.label;
-    $("headline").textContent = partner.host_email?.toLowerCase() === "mamta.rodrigues@tp.com" ? "Thank you, Teleperformance." : host ? `Thank you, ${partner.host_first_name}.` : "Your partnership.";
+    $("headline").textContent = host ? `Thank you, ${partner.host_first_name}.` : "Your partnership.";
     $("intro").textContent = `You are recognized as an S.SUITE ${tier.label} for the evening of Friday, November 20, 2026. Everything below is yours to complete whenever you are ready — your details save as you go.`;
 
     const filled = Number(partner.seats_filled || 0);
     const total = Number(partner.seat_count || 0);
     $("table-headline").textContent = partner.table_name || "Your table";
-    $("table-summary").textContent = `${filled} of ${total} seats confirmed. Name your table and invite your guests from your table page. Each guest completes their own registration and preferences.`;
+    $("table-summary").textContent = `${filled} of ${total} seats confirmed. Name your table and invite your guests from your table page, where you can also edit their details until November 13, 2026.`;
     $("table-link").href = `../table-portal.html#token=${token}`;
 
     const profile = partner.profile || {};
     const form = $("partner-form");
-    for (const name of ["recognition_name", "organization_bio", "website_url", "linkedin_url", "contact_name", "contact_email", "contact_phone", "posts_approval_required", "approval_contact_name", "approval_contact_email", "approval_guidelines"]) {
+    for (const name of ["recognition_name", "organization_name", "organization_bio", "website_url", "linkedin_url", "contact_name", "contact_email", "contact_phone"]) {
       const field = form.elements[name];
       if (field && !field.value) field.value = profile[name] || "";
     }
+    if (!form.elements.organization_name.value && partner.host_company) form.elements.organization_name.value = partner.host_company;
     if (!form.elements.contact_name.value && host) form.elements.contact_name.value = host;
     if (!form.elements.contact_email.value && partner.host_email) form.elements.contact_email.value = partner.host_email;
 
-    const preference = ["name", "logo"].includes(profile.recognition_preference) ? profile.recognition_preference : "name";
+    const preference = profile.recognition_preference || "undecided";
     for (const radio of document.querySelectorAll('input[name="recognition_preference"]')) radio.checked = radio.value === preference;
 
-    $("logo-block").hidden = preference === "name";
-    updateApproval();
     const hasLogo = !!profile.has_logo;
     $("logo-current").hidden = !hasLogo;
     if (hasLogo) {
@@ -120,13 +119,13 @@
       status("");
       $("portal").hidden = false;
     } catch (e) {
-      status(`${e.message} If this link no longer works, write to shama@salute.community and we will send a new one.`, "warn");
+      status(`${e.message} If this link no longer works, write to ssuite@salute.community and we will send a new one.`, "warn");
     }
   }
 
   function selectedPreference() {
     const chosen = document.querySelector('input[name="recognition_preference"]:checked');
-    return chosen ? chosen.value : "name";
+    return chosen ? chosen.value : "undecided";
   }
 
   $("partner-form").addEventListener("submit", async (event) => {
@@ -137,7 +136,7 @@
     notice($("form-status"), "Saving…");
     try {
       const body = { action: "save_profile", recognition_preference: selectedPreference() };
-      for (const name of ["recognition_name", "organization_bio", "website_url", "linkedin_url", "contact_name", "contact_email", "contact_phone", "posts_approval_required", "approval_contact_name", "approval_contact_email", "approval_guidelines"]) {
+      for (const name of ["recognition_name", "organization_name", "organization_bio", "website_url", "linkedin_url", "contact_name", "contact_email", "contact_phone"]) {
         body[name] = form.elements[name].value.trim();
       }
       const payload = await call(body);
@@ -168,8 +167,6 @@
         filename: file.name, content_type: file.type || "", size_bytes: file.size,
       });
       render(payload);
-      document.querySelector('input[name="recognition_preference"][value="logo"]').checked = true;
-      $("logo-block").hidden = false;
       $("logo-filename").textContent = file.name;
       notice($("logo-status"), "Received. Thank you.", "ok");
     } catch (e) {
@@ -212,41 +209,5 @@
     });
   }
 
-  function updateApproval() {
-    const form = $("partner-form"); const yes = form.elements.posts_approval_required.value === "yes";
-    $("approval-fields").hidden = !yes;
-    form.elements.approval_contact_name.required = yes;
-    form.elements.approval_contact_email.required = yes;
-  }
-  $("partner-form").elements.posts_approval_required.addEventListener("change", updateApproval);
-  let documentId = null;
-  async function loadDocuments() {
-    try {
-      const r = await fetch(base()+"/functions/v1/partner-documents",{method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",credentials:"omit",body:JSON.stringify({action:"list",table_token:token})});
-      const d = await r.json(); if (!r.ok) throw Error(d.error || "Payment documents could not be loaded.");
-      const dl = $("payment-details"); dl.replaceChildren();
-      for (const [label,value] of [["Payment status",d.payment.status],["Total paid",d.payment.amount],["Balance due",d.payment.balance],["Date paid",d.payment.date]]) {
-        if(!value) continue; const row=document.createElement("div"),dt=document.createElement("dt"),dd=document.createElement("dd");dt.textContent=label;dd.textContent=value;row.append(dt,dd);dl.append(row);
-      }
-      documentId=d.documents?.[0]?.id || null;$("document-actions").hidden=!documentId;
-      notice($("documents-status"),documentId?"The receipt includes SALUTE’s EIN and the original payment receipt link.":d.message || "No receipt has been added yet. Please contact Shama for documentation.");
-    } catch(e) {notice($("documents-status"),e.message,"warn");}
-  }
-  async function openReceipt(download) {
-    if(!documentId)return;
-    const tab=download?null:window.open("about:blank","_blank");
-    $("receipt-view").disabled=$("receipt-download").disabled=true;
-    try {
-      const r=await fetch(base()+"/functions/v1/partner-documents",{method:"POST",headers:{"Content-Type":"application/json"},cache:"no-store",credentials:"omit",body:JSON.stringify({action:"download",table_token:token,document_id:documentId})});
-      if(!r.ok){const d=await r.json();throw Error(d.error || "Unable to open receipt.");}
-      const blob=await r.blob();if(blob.size<100 || blob.type!=="application/pdf")throw Error("The receipt file could not be loaded.");
-      const url=URL.createObjectURL(blob);
-      if(tab){tab.location.replace(url);}else{const a=document.createElement("a");a.href=url;a.download="SALUTE-Paid-Receipt.pdf";document.body.append(a);a.click();a.remove();}
-      setTimeout(()=>URL.revokeObjectURL(url),300000);
-    }catch(e){if(tab)tab.close();notice($("documents-status"),e.message,"warn");}
-    finally{$("receipt-view").disabled=$("receipt-download").disabled=false;}
-  }
-  $("receipt-view").addEventListener("click",()=>openReceipt(false));
-  $("receipt-download").addEventListener("click",()=>openReceipt(true));
-  load().then(()=>{if(partner)loadDocuments();});
+  load();
 })();
