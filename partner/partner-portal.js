@@ -70,7 +70,7 @@
     const host = [partner.host_first_name, partner.host_last_name].filter(Boolean).join(" ");
 
     $("tier-eyebrow").textContent = tier.label;
-    $("headline").textContent = host ? `Thank you, ${partner.host_first_name}.` : "Your partnership.";
+    $("headline").textContent = partner.host_email?.toLowerCase() === "mamta.rodrigues@tp.com" ? "Thank you, Teleperformance." : host ? `Thank you, ${partner.host_first_name}.` : "Your partnership.";
     $("intro").textContent = `You are recognized as an S.SUITE ${tier.label} for the evening of Friday, November 20, 2026. Everything below is yours to complete whenever you are ready — your details save as you go.`;
 
     const filled = Number(partner.seats_filled || 0);
