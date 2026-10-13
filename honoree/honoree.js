@@ -336,7 +336,7 @@ $('#gl-note').addEventListener('click',function(){copyText(guestNote(),$('#gl-ms
    same tab, which returns here. Not credited through the guest code, which would spend ten
    of the honoree's guest seats. */
 /* Honorees keep the $5,000 table rate with no end date: her private honoree_table code (from the portal API) prices the table. */
-var TABLE_CODE=null;
+var TABLE_CODE=null, TABLE_INCL_CODE=null; /* Oct 13: $4,500 honoree table includes her + complimentary guest; $5,000 is an additional table. */
 var CHECKOUT_API='https://iddzcbknnddkonrcwgpt.supabase.co/functions/v1/';
 var TS_KEY='0x4AAAAAAEdV18cDQPUcfZOG', tsWidget=null, tsLoading=null;
 var POLICY={terms:'ssuite-event-terms-2026-08-25',privacy:'ssuite-event-privacy-2026-08-25',media:'ssuite-media-release-2026-08-25'};
@@ -372,7 +372,8 @@ function prefillTable(){
 function tableView(){
   var done=$('#table-done'), paid=TABLE_STATUS==='paid';
   $('#table-buy').hidden=paid; if(paid){$('#table-form').hidden=true}
-  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent='Your table for ten is reserved. Thank you.';done.appendChild(b);
+  var kg=$('#table-kind-grp');if(kg)kg.hidden=paid;
+  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent=(val('tableKind')==='honoree'?'Your honoree table for ten is reserved, including your seat and your complimentary guest’s. Thank you.':val('tableKind')==='additional'?'Your additional table for ten is reserved. Thank you.':'Your table for ten is reserved. Thank you.');done.appendChild(b);
     done.appendChild(document.createTextNode(' Your receipt and table link are on their way by email'+(TABLE_REF?' (order '+TABLE_REF+')':'')+'. You can add your guests’ names from that link.'));done.hidden=false}
   else if(TABLE_STATUS==='canceled'){done.textContent='Checkout was canceled. No payment was taken. You can try again whenever you like.';done.hidden=false}
   else if(TABLE_STATUS==='pending'){done.textContent='Your payment is still being recorded. Your receipt will arrive by email shortly.';done.hidden=false}
@@ -390,12 +391,14 @@ $('#table-pay').addEventListener('click',function(){
   var miss=[];
   if(!t.first)miss.push('first name');if(!t.last)miss.push('last name');if(!EMAIL.test(t.email))miss.push('a valid email');
   if(t.phone.replace(/\D/g,'').length<7)miss.push('a mobile phone number');if(!t.title)miss.push('title');if(!t.org)miss.push('organization');if(!t.meal)miss.push('meal');
+  var kind=val('tableKind');
+  if(!kind){tableErr('Please choose your honoree table ($4,500) or an additional table ($5,000).');return}
   if(miss.length){tableErr('Please add '+miss.join(', ')+'.');return}
   if(!$('#t-agree').checked){tableErr('Please agree to the Event Terms, Privacy Notice and Media Release to continue.');return}
   tableErr('');btn.disabled=true;var lbl=btn.firstChild.textContent;btn.firstChild.textContent='Preparing secure checkout… ';
   tsToken().then(function(tok){
     var o=location.origin+'/honoree/';
-    var body={ticket_type_code:'full_table',order_type:'table',quantity:1,guest_quantity:0,member_code:TABLE_CODE||undefined,
+    var body={ticket_type_code:'full_table',order_type:'table',quantity:1,guest_quantity:0,member_code:(kind==='honoree'?TABLE_INCL_CODE:TABLE_CODE)||undefined,
       purchaser:{first_name:t.first,last_name:t.last,email:t.email,phone:t.phone},member_attestation:false,
       how_heard:'S.Suite community or event',
       attendees:[{first_name:t.first,last_name:t.last,email:t.email,phone:t.phone,job_title:t.title,company:t.org,meal_preference:t.meal,has_dietary_or_allergy_needs:false,has_accessibility_needs:false}],
@@ -491,7 +494,7 @@ wireListUpload('inv-file','inviteList','inv-file-msg','guest');
 wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal'];
+var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal','tableKind'];
 var BOOLS=['guest'];
 function collect(){
   var r={};
@@ -568,7 +571,7 @@ function renderReview(){
     sec('Guests',3,[
       ivd.length?['Guests to invite',plural(ivd.length,'guest')+' at $300 each']:null,
       ivd.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null,
-      TABLE_STATUS==='paid'?['Table of ten','Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
+      TABLE_STATUS==='paid'?[(val('tableKind')==='honoree'?'Honoree table ($4,500)':val('tableKind')==='additional'?'Additional table ($5,000)':'Table of ten'),'Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
     ]);
     sec('Support SALUTE',4,[
       sv0.length?['People to reach out to',plural(sv0.length,'person')]:null,
@@ -594,7 +597,7 @@ function renderReview(){
   sec('Guests',3,[
     iv.length?['Additional guests',plural(iv.length,'guest')+' at $300 each']:null,
     iv.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null,
-    TABLE_STATUS==='paid'?['Table of ten','Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
+    TABLE_STATUS==='paid'?[(val('tableKind')==='honoree'?'Honoree table ($4,500)':val('tableKind')==='additional'?'Additional table ($5,000)':'Table of ten'),'Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
   ]);
   sec('Support SALUTE',4,[
     sv.length?['People to reach out to',plural(sv.length,'person')]:null,
@@ -626,7 +629,7 @@ $('#submit').addEventListener('click',function(){
   submitting=true;clearTimeout(saveTimer);
   var btn=$('#submit');btn.disabled=true;btn.firstChild.textContent='Submitting… ';
   api({action:'submit',response:collect()}).then(function(r){
-    STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;if(r.table_code)TABLE_CODE=r.table_code;dirty=false;
+    STATE=r.status;SUBMITTED_AT=r.submitted_at;GUEST_URL=r.guest_page_url||null;GUEST_CODE=r.guest_code||null;if(r.table_code)TABLE_CODE=r.table_code;if(r.table_incl_code)TABLE_INCL_CODE=r.table_incl_code;dirty=false;
     for(var i=0;i<=LAST;i++) if(!(declined()&&(i===1||i===2))) done[i]=true;
     submitted=true;showConfirm();statusBar();showGuestLink();saveState('Submitted');
   }).catch(function(e){
@@ -661,7 +664,7 @@ $('#c-invite').addEventListener('click',toInvite);
 /* ── Boot ────────────────────────────────────────── */
 if(!token){gate('This private invitation link is incomplete. Please open it again from your email, or write to ssuite@salute.community.');return}
 api({action:'get'}).then(function(d){
-  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;HS=d.headshot||null;
+  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;TABLE_INCL_CODE=d.table_incl_code||null;HS=d.headshot||null;
   bind();
   var saved=d.response&&Object.keys(d.response).length?d.response:null;
   restore(saved,H.prefill);

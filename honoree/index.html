@@ -808,7 +808,14 @@ a{color:inherit}
           <div class="panel" id="table-panel">
             <p class="panel-k">Host a table <span class="opt">optional</span></p>
             <h3 class="panel-t">A table of ten</h3>
-            <p class="grp-d"><span id="table-price">$5,000 at our honoree rate (regular $7,500).</span> You choose who sits with you.</p>
+            <p class="grp-d" id="table-price">Two options at our honoree rate (regular $7,500). You choose who sits with you.</p>
+            <fieldset class="sub" id="table-kind-grp" style="margin-top:10px">
+              <legend class="lbl sr">Which table?</legend>
+              <div class="choices">
+                <label class="choice"><input type="radio" name="tableKind" value="honoree"><span><b>Your honoree table · $4,500</b><small>Ten seats, including you and your complimentary guest, plus eight more for guests you choose.</small></span></label>
+                <label class="choice"><input type="radio" name="tableKind" value="additional"><span><b>An additional table · $5,000</b><small>Ten more seats for guests you choose, in addition to your two complimentary seats.</small></span></label>
+              </div>
+            </fieldset>
             <div id="table-done" class="tdone" role="status" hidden></div>
             <button type="button" class="btn btn-line" id="table-buy" aria-expanded="false" aria-controls="table-form">Host a table</button>
             <div class="tform" id="table-form" hidden>
@@ -927,6 +934,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261006v18"></script>
+<script src="/honoree/honoree.js?v=20261013v19"></script>
 </body>
 </html>
