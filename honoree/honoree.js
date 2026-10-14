@@ -33,16 +33,33 @@ var H=null, STATE=null, SUBMITTED_AT=null, GUEST_URL=null, GUEST_CODE=null;
 function first(){return (H&&H.first_name)||''}
 function fmtDate(iso){if(!iso)return '';var d=new Date(iso+(iso.length===10?'T12:00:00':''));return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
 function fmtWhen(iso){var d=new Date(iso);return d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
+function isChair(){return !!(H&&H.honor==='Chair')}
+function chairCopy(){
+  var r=$('#recog');if(r)r.textContent='You’ve been recognized with SALUTE’s lifetime achievement honor.';
+  var c=$('#cohort-card');
+  if(c){c.innerHTML='<figure><img src="/honoree/assets/p/6ecd4fa0ae9c88f5.jpg" alt="Portrait of Anu Aiyengar" loading="lazy"></figure><div><p class="eyebrow">Your Fireside Conversation</p><h3 class="indra-name">Anu <em>Aiyengar</em></h3><p>Anu Aiyengar, Global Chair of Investment Banking at J.P. Morgan and the inaugural S.SUITE Capital Honoree, will moderate your fireside conversation.</p></div>';}
+  var pg=$('#program-text');if(pg)pg.textContent='Introductions, dinner and S.SUITE Honors, your fireside conversation moderated by Anu Aiyengar, and time to continue the connections begun around the table.';
+  var pf=$('#portal-fireside');if(pf)pf.innerHTML='The evening includes a seated dinner and the honors presentation, followed by your fireside conversation, moderated by <b>Anu Aiyengar</b>, Global Chair of Investment Banking at J.P. Morgan.';
+  var rl=$('#resp-lead');if(rl)rl.innerHTML='We are honored to present you with the S.SUITE Chair, SALUTE’s lifetime achievement honor.<span id="deadline-line"></span>';
+}
 function bind(){
-  var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:H.honor+' Honoree',honor:H.honor};
+  var CH=isChair();
+  var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:CH?'The S.SUITE Chair':H.honor+' Honoree',honor:H.honor};
   $$('[data-b]').forEach(function(el){var v=map[el.dataset.b];if(v!=null)el.textContent=v});
   document.title='S.SUITE · A private invitation for '+H.full_name;
   var p=$('#portrait');
   if(H.portrait_url){p.src=H.portrait_url;p.alt='Portrait of '+H.full_name;p.style.objectPosition=H.portrait_position||'50% 18%'}else{p.closest('figure').hidden=true}
   var b=$('#honor-blurb');b.textContent='';
+  if(CH){
+    b.appendChild(document.createTextNode('It is our honor and privilege to confirm that you will receive '));
+    var sc=document.createElement('strong');sc.textContent='the S.Suite Chair';b.appendChild(sc);
+    b.appendChild(document.createTextNode(', '+(H.honor_blurb||'')));
+    chairCopy();
+  }else{
   b.appendChild(document.createTextNode('It is our honor and privilege to share that you have been nominated as the inaugural S.Suite '));
   var st=document.createElement('strong');st.textContent=H.honor+' Honoree';b.appendChild(st);
   b.appendChild(document.createTextNode('. '+(H.honor_blurb||'')));
+  }
   if(H.response_deadline) $('#deadline-line').textContent=' Please respond by '+fmtDate(H.response_deadline)+'.';
   if(!$('#view-invite').hidden) return;
 }
@@ -320,7 +337,7 @@ function copyText(txt,msgEl,ok){
 }
 function guestNote(){
   if(val('response')!=='accept') return 'SALUTE (South Asian Leaders Unite to Empower) is hosting S.SUITE, its inaugural honors evening celebrating South Asian women leaders and allies, on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City. The evening includes a fireside conversation with Indra Nooyi, moderated by Anu Aiyengar.\n\nI think you would be a wonderful addition to the room. SALUTE has extended a special guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+H.full_name;
-  return 'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE, and I would love for you to join me on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\nI hope you can join me.\n\n'+H.full_name;
+  return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+' and I would love for you to join me on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\nI hope you can join me.\n\n'+H.full_name;
 }
 function showGuestLink(){
   if(!GUEST_URL) return;
@@ -638,11 +655,11 @@ $('#submit').addEventListener('click',function(){
 });
 function showConfirm(){
   var dec=STATE==='declined';
-  $('#c-eyebrow').textContent=dec?'Response received':'Nomination accepted';
+  $('#c-eyebrow').textContent=dec?'Response received':(isChair()?'Honor confirmed':'Nomination accepted');
   $('#c-h').textContent='Thank you, '+first()+'.';
   $('#c-lede').textContent=dec
     ?'Thank you for considering the nomination. We are grateful for the time you took, and the SALUTE team will be in touch personally.'
-    :'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20. The SALUTE team will be in touch personally to confirm your seats and announcement timing.';
+    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+' The SALUTE team will be in touch personally to confirm your seats and announcement timing.';
   $('#c-stamp').textContent=SUBMITTED_AT?'Received '+fmtWhen(SUBMITTED_AT):'';
   $('#c-gl-desc').textContent=dec?'Share it with anyone you think should be in the room. They pay the $300 rate (regular $400).':'For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).';
   var showGl=!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
