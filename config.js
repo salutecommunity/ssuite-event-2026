@@ -42,5 +42,7 @@ window.SSUITE_CONFIG = Object.freeze({
   // expected-action secret is provisioned, so this string is a label for
   // observability rather than something the server matches. Origin and
   // Turnstile hostname checks still apply, and the token is still verified.
-  memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" })
+  memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" }),
+  // Keep Ambassador intake enabled alongside the other live request flows.
+  ambassador: Object.freeze({ enabled: true, turnstileAction: "ambassador-interest", privacyUrl: "https://event.ssuite.org/event-privacy.html" })
 });
