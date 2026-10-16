@@ -1028,6 +1028,44 @@
       });
     });
   }
+  /* Someone who followed an invitation link should see, on the page itself,
+   * that the code was recognized -- before opening anything. The server is
+   * asked once; the note only ever repeats what it answered. */
+  async function announceLinkedCode(tile) {
+    const base = apiBase();
+    if (!tile || !base || !linkedPartnerCode) return;
+    let note = byId("linked-code-note");
+    if (!note) {
+      note = document.createElement("p");
+      note.id = "linked-code-note";
+      note.className = "member-note";
+      note.setAttribute("role", "status");
+      note.setAttribute("aria-live", "polite");
+      tile.insertAdjacentElement("afterend", note);
+    }
+    let state = null;
+    try {
+      const response = await fetch(`${base}/functions/v1/event-pricing?code=${encodeURIComponent(linkedPartnerCode)}`, {
+        method: "GET", mode: "cors", credentials: "omit", cache: "no-store",
+      });
+      const payload = response.ok ? await response.json().catch(() => null) : null;
+      state = payload && typeof payload === "object" ? payload.access_code : null;
+    } catch { state = null; }
+    if (state && state.result === "ok" && Number.isInteger(state.amount_cents) && state.amount_cents > 0) {
+      const org = text(state.organization);
+      note.textContent = `\u2713 Your ${org ? `${org} ` : ""}invitation code is applied \u2014 ${money(state.amount_cents)} per seat. Choose \u201c${INVITED_LABEL}\u201d to register.`;
+    } else if (state && state.result === "exhausted") {
+      note.textContent = "Every seat on this invitation code has been taken. Please write to ssuite@salute.community.";
+    } else if (state && (state.result === "unknown" || state.result === "member_code")) {
+      note.textContent = state.result === "member_code"
+        ? "That link carries a SALUTE member code. Choose the SALUTE Member ticket to use it."
+        : "The invitation code in this link is not recognized. Please check your link, or write to ssuite@salute.community.";
+    } else {
+      note.hidden = true;
+      return;
+    }
+    note.hidden = false;
+  }
   function init() {
     policyLinks();
     const params = new URLSearchParams(location.search);
@@ -1043,6 +1081,7 @@
       // drawer opens, and an unusable code is still told so there.
       const invited = document.querySelector(`.choose[data-ticket-code="${PARTNER_HOST_TIER}"]`);
       if (invited) invited.dataset.gatedLabel = INVITED_LABEL;
+      announceLinkedCode(invited).catch(() => {});
     }
     tableInvitation = readTableInvitation();
     applyLiveLabels();

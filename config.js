@@ -43,6 +43,4 @@ window.SSUITE_CONFIG = Object.freeze({
   // observability rather than something the server matches. Origin and
   // Turnstile hostname checks still apply, and the token is still verified.
   memberCode: Object.freeze({ enabled: true, turnstileAction: "member-code-request" }),
-  // Keep Ambassador intake enabled alongside the other live request flows.
-  ambassador: Object.freeze({ enabled: true, turnstileAction: "ambassador-interest", privacyUrl: "https://event.ssuite.org/event-privacy.html" })
-});
+  /
