@@ -52,28 +52,39 @@
    * The address stays on the control as a no-JavaScript fallback and is never
    * followed while this file is running.
    */
-  const tableChoose = document.querySelector('.choose[data-ticket-code="full_table"]');
+  // Both table tiers open here: a full table (ten seats) or a half (five).
+  const TABLE_TIERS = {
+    full_table: { link: "table-invitation", label: "Full table (10 seats)", note: "Full table registration" },
+    half_table: { link: "half-table-invitation", label: "Half table (5 seats)", note: "Half table registration" },
+  };
+  const tierChoose = (code) => document.querySelector('.choose[data-ticket-code="' + code + '"]');
+  let tableCode = "full_table";
+  let tableChoose = tierChoose(tableCode);
   const tableOptions = document.querySelector(".table-options");
-  // "invitation" (seats at the host's rate) or "table" (ten seats, one tier).
+  // "invitation" (seats at the host's rate) or "table" (one table tier).
   let mode = "invitation";
   const activeChoose = () => (mode === "table" && tableChoose ? tableChoose : choose);
 
   function syncTableLink() {
-    const link = document.getElementById("table-invitation");
+    Object.keys(TABLE_TIERS).forEach(wireTableLink);
+  }
+  function wireTableLink(code) {
+    const link = document.getElementById(TABLE_TIERS[code].link);
     if (!link || link.dataset.wired === "true") return;
     link.dataset.wired = "true";
     link.addEventListener("click", (event) => {
-      if (!tableChoose || !tableOptions) return;       // fall through to the address
+      const control = tierChoose(code);
+      if (!control || !tableOptions) return;       // fall through to the address
       // A tier that is not open for sale must not be opened as though it were.
       // The shared chain settles that on this same control, so the reader is
       // told nothing this page cannot honour.
-      if (tableChoose.disabled) {
+      if (control.disabled) {
         event.preventDefault();
         notify("Tables are not available for purchase right now.");
         return;
       }
       event.preventDefault();
-      openTable();
+      openTable(code);
     });
   }
   syncTableLink();
@@ -291,7 +302,9 @@
    * describe a table rather than a set of seats -- and makes sure nothing from
    * the invitation path follows it across.
    */
-  function openTable() {
+  function openTable(code) {
+    tableCode = TABLE_TIERS[code] ? code : "full_table";
+    tableChoose = tierChoose(tableCode);
     if (!tableChoose || !tableOptions) return;
     mode = "table";
     const live = window.SSuiteLive;
@@ -318,9 +331,9 @@
     qty.value = "1";
     tableChoose.click();
     const name = document.getElementById("ticket-name");
-    if (name) name.textContent = String(tableChoose.dataset.ticket || "Table for ten");
+    if (name) name.textContent = TABLE_TIERS[tableCode].label;
     const note = document.getElementById("selection-note");
-    if (note) note.textContent = "Full table registration";
+    if (note) note.textContent = TABLE_TIERS[tableCode].note;
     window.renderGuests();
     window.updateTotal();
     showDrawer();
