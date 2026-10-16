@@ -292,6 +292,8 @@ function renderInvitationRequests(host, payload) {
     const tr = document.createElement("tr");
     for (const value of [`${text(request.first_name)} ${text(request.last_name)}`, text(request.email), text(request.job_title), text(request.company), text(request.referral_source) || "—", text(request.note) || "—"]) tr.append(element("td", "", value));
     const statusCell = document.createElement("td"); statusCell.append(chip(request.status));
+    // Kept even though the browser could not pass the anti-spam check; review before approving.
+    if (request.security_check === "unverified") statusCell.append(element("small", "", "Unverified — security check did not complete"));
     if (request.status === "approved") {
       const detail = element("div", "invitation-code"); detail.append(element("strong", "", `Code: ${text(request.display_code)}`));
       if (request.seats_approved !== null && request.seats_approved !== undefined) detail.append(element("small", "", `Seats used: ${Number(request.seats_used) || 0} of ${text(request.seats_approved)}`));

@@ -62,7 +62,18 @@
         <button type="button" class="secondary" id="cancel-details">Cancel</button>
       </div>
     </form>
-    <p class="receipt-help" id="registered-help">Can no longer attend? Email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will take care of it.</p>
+    <p class="receipt-help" id="registered-help">Need to change anything? Email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will take care of it.</p>
+  </section>
+
+  <section id="decline" class="card" hidden>
+    <h2>Can no longer attend?</h2>
+    <p class="lede" id="decline-lede">Let your table host know, and your seat will be released so they can invite someone else. Your host and the S.Suite team will be notified by email.</p>
+    <div class="actions" id="decline-start"><button type="button" class="secondary" id="decline-open">I can no longer attend</button></div>
+    <div id="decline-confirm" hidden>
+      <p class="notice">Are you sure? This releases your seat right away. To come back later, you would need a new invitation from your table host.</p>
+      <div class="actions"><button type="button" id="decline-yes">Yes, release my seat</button><button type="button" class="secondary" id="decline-no">Keep my seat</button></div>
+    </div>
+    <p class="notice" id="decline-status" role="status" aria-live="polite" hidden></p>
   </section>
 
   <section id="registration" class="card" hidden>
@@ -92,7 +103,7 @@
   </section>
 
 </main>
-<script src="./guest-registration.js?v=20260912a"></script>
+<script src="./guest-registration.js?v=20261016a"></script>
 
 <footer class="site-footer">
   <div class="footer-inner">

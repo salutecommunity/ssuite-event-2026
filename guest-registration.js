@@ -160,11 +160,11 @@
     $("edit-actions").hidden = !editing;
     const help = $("registered-help");
     if (canEdit && cutoffDisplay) {
-      help.textContent = `You can change these details yourself until ${cutoffDisplay}. Can no longer attend? Email ssuite@salute.community and we will take care of it.`;
+      help.textContent = `You can change these details yourself until ${cutoffDisplay}. Need help? Email ssuite@salute.community.`;
     } else if (!canEdit && cutoffDisplay) {
-      help.textContent = `Guest details were final on ${cutoffDisplay}, so this list can no longer be edited here. If something needs to change, or you can no longer attend, email ssuite@salute.community and we will take care of it.`;
+      help.textContent = `Guest details were final on ${cutoffDisplay}, so this list can no longer be edited here. If something needs to change, email ssuite@salute.community and we will take care of it.`;
     } else {
-      help.textContent = "Need to change anything, or can no longer attend? Email ssuite@salute.community and we will take care of it.";
+      help.textContent = "Need to change anything? Email ssuite@salute.community and we will take care of it.";
     }
   }
 
@@ -209,7 +209,7 @@
 
   const UNAVAILABLE = {
     invalid: "This invitation link is not valid. Ask your table host to send it to you again.",
-    revoked: "This invitation was withdrawn by your table host. Please contact them directly.",
+    revoked: "This seat has been released. If that is unexpected, please contact your table host or ssuite@salute.community.",
     expired: "This invitation has expired. Ask your table host to send you a new one.",
     unavailable: "This invitation is not open. Email ssuite@salute.community and we will help."
   };
@@ -222,9 +222,10 @@
     const context = result.body; lastContext = context;
     if (!result.ok || !context || typeof context.state !== "string") { status("We could not check your invitation right now. Please refresh in a moment.", "error"); return; }
     if (context.state !== "invalid") renderContext(context);
-    if (context.state === "completed") { renderRegistered(context.guest, context); status("You are registered. You can return to this page whenever you like.", "success"); return; }
+    if (context.state === "completed") { renderRegistered(context.guest, context); status("You are registered. You can return to this page whenever you like.", "success"); $("decline").hidden = false; return; }
     if (context.state !== "open") { status(UNAVAILABLE[context.state] || UNAVAILABLE.unavailable, "error"); return; }
     openForm(context);
+    $("decline").hidden = false;
   }
 
   function data(form) {
@@ -316,6 +317,26 @@
     } finally { button.disabled = false; }
   }
 
+
+  /* "I can no longer attend": two clicks, then the database releases the seat and emails the
+     table host and staff. Nothing on this page claims it worked until the server says so. */
+  function declineStatus(message, tone) { const el = $("decline-status"); el.textContent = message; el.className = `notice ${tone || ""}`; el.hidden = !message; }
+  $("decline-open").addEventListener("click", () => { $("decline-start").hidden = true; $("decline-confirm").hidden = false; declineStatus(""); });
+  $("decline-no").addEventListener("click", () => { $("decline-confirm").hidden = true; $("decline-start").hidden = false; });
+  $("decline-yes").addEventListener("click", async () => {
+    const yes = $("decline-yes"); yes.disabled = true; declineStatus("Releasing your seat…", "working");
+    let result;
+    try { result = await api({ action: "decline", confirm: true }); } catch { result = null; }
+    if (!result || !result.ok || !result.body || result.body.declined !== true) {
+      yes.disabled = false;
+      declineStatus((result && result.body && result.body.error) || "We could not record that right now. Please try again, or write to ssuite@salute.community.", "error");
+      return;
+    }
+    $("registered").hidden = true; $("registration").hidden = true;
+    $("decline-confirm").hidden = true; $("decline-start").hidden = true;
+    $("decline-lede").textContent = "Thank you for letting us know. Your seat has been released, and your table host and the S.Suite team have been notified. We hope to see you at a future SALUTE gathering.";
+    declineStatus(""); status("Your seat has been released.", "success");
+  });
   $("registered-form").addEventListener("submit", saveDetails);
   $("edit-details").addEventListener("click", () => { editing = true; renderRows(); regStatus("Nothing is saved until you select save changes."); });
   $("cancel-details").addEventListener("click", () => { editing = false; renderRows(); regStatus(""); });

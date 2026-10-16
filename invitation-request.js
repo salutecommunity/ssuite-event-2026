@@ -81,11 +81,12 @@
     widgetId = api.render(slot, {
       sitekey: text(cfg.turnstileSiteKey),
       action: text(invitationConfig().turnstileAction),
-      "error-callback": () => status("The security check could not complete in this browser. This is usually a VPN, a work network, or a privacy extension blocking it. Please try your phone, or another browser — or write to ssuite@salute.community and we will take it from there.", "error"),
+      "error-callback": () => { checkFailed = true; },
       "expired-callback": () => status("The security check expired. Please retry.", "error"),
     });
     return widgetId;
   }
+  let checkFailed = false;
   async function token() {
     const api = await loadTurnstile();
     const id = await warm();
@@ -94,13 +95,14 @@
     for (;;) {
       const value = api.getResponse(id);
       if (value) return value;
-      if (Date.now() >= deadline) {
+      if (checkFailed || Date.now() >= deadline) {
         throw new Error("The security check could not complete in this browser. This is usually a VPN, a work network, or a privacy extension blocking it. Please try your phone, or another browser — or write to ssuite@salute.community and we will take it from there.");
       }
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
   function resetTurnstile() {
+    checkFailed = false;
     if (widgetId !== undefined && window.turnstile) window.turnstile.reset(widgetId);
   }
 
@@ -247,8 +249,11 @@
         // Nothing is sent for them, so nothing is recorded for them either.
         referral_source: referral(form) || undefined,
         note: details(form) || undefined,
-        turnstile_token: await token(),
       };
+      // If the security check cannot finish in this browser, the request is still
+      // sent and kept for staff review rather than lost.
+      try { body.turnstile_token = await token(); }
+      catch { body.security_check_failed = true; }
       const response = await fetch(`${apiBase()}/functions/v1/invitation-request`, {
         method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
         headers: { "Content-Type": "application/json" },
