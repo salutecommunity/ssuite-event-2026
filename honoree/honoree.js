@@ -36,6 +36,7 @@ function fmtWhen(iso){var d=new Date(iso);return d.toLocaleDateString('en-US',{m
 function isChair(){return !!(H&&H.honor==='Chair')}
 /* Neha, Oct 17: some honorees (Anu) receive one complimentary table; set prefill.comp_table=true on her row. Only the additional $5,000 table is offered to her. */
 function compTable(){return !!(H&&H.prefill&&H.prefill.comp_table)}
+function tableKindVal(){return compTable()?'additional':val('tableKind')}
 function compTableCopy(){
   var tp=$('#table-price');if(tp)tp.textContent='With our thanks, your table is complimentary. If you’d like to host another, an additional table is available at our honoree rate (regular $7,500).';
   var hr=document.querySelector('input[name="tableKind"][value="honoree"]');
@@ -401,7 +402,7 @@ function tableView(){
   var done=$('#table-done'), paid=TABLE_STATUS==='paid';
   $('#table-buy').hidden=paid; if(paid){$('#table-form').hidden=true}
   var kg=$('#table-kind-grp');if(kg)kg.hidden=paid;
-  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent=(val('tableKind')==='honoree'?'Your honoree table for ten is reserved, including your seat and your complimentary guest’s. Thank you.':val('tableKind')==='additional'?'Your additional table for ten is reserved'+(compTable()?', alongside your complimentary table':'')+'. Thank you.':'Your table for ten is reserved. Thank you.');done.appendChild(b);
+  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent=(tableKindVal()==='honoree'?'Your honoree table for ten is reserved, including your seat and your complimentary guest’s. Thank you.':tableKindVal()==='additional'?'Your additional table for ten is reserved'+(compTable()?', alongside your complimentary table':'')+'. Thank you.':'Your table for ten is reserved. Thank you.');done.appendChild(b);
     done.appendChild(document.createTextNode(' Your receipt and table link are on their way by email'+(TABLE_REF?' (order '+TABLE_REF+')':'')+'. You can add your guests’ names from that link.'));done.hidden=false}
   else if(TABLE_STATUS==='canceled'){done.textContent='Checkout was canceled. No payment was taken. You can try again whenever you like.';done.hidden=false}
   else if(TABLE_STATUS==='pending'){done.textContent='Your payment is still being recorded. Your receipt will arrive by email shortly.';done.hidden=false}
@@ -529,6 +530,7 @@ function collect(){
   FIELDS.forEach(function(k){r[k]=val(k)});
   BOOLS.forEach(function(k){r[k]=chk(k)});
   r.invitees=parseList(r.inviteList).items;r.supporters=parseList(r.supportList).items;
+  if(compTable())r.tableKind='additional';
   r.tableStatus=TABLE_STATUS;r.tableRef=TABLE_REF;
   r.step=cur;r.done=Object.keys(done).filter(function(k){return done[k]}).map(Number);
   return r;
@@ -536,6 +538,7 @@ function collect(){
 function setField(k,v){
   var e=F.namedItem(k);if(!e||v==null)return;
   if(e.length&&!e.tagName){Array.prototype.forEach.call(e,function(x){x.checked=(x.value===v)})}
+  else if(e.type==='radio'||e.type==='checkbox'){if(e.type==='radio')e.checked=(e.value===v)}
   else e.value=v;
 }
 function restore(r,prefill){
@@ -599,7 +602,7 @@ function renderReview(){
     sec('Guests',3,[
       ivd.length?['Guests to invite',plural(ivd.length,'guest')+' at $300 each']:null,
       ivd.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null,
-      TABLE_STATUS==='paid'?[(val('tableKind')==='honoree'?'Honoree table ($4,500)':val('tableKind')==='additional'?'Additional table ($5,000)':'Table of ten'),'Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
+      TABLE_STATUS==='paid'?[(tableKindVal()==='honoree'?'Honoree table ($4,500)':tableKindVal()==='additional'?'Additional table ($5,000)':'Table of ten'),'Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
     ]);
     sec('Support SALUTE',4,[
       sv0.length?['People to reach out to',plural(sv0.length,'person')]:null,
@@ -625,7 +628,7 @@ function renderReview(){
   sec('Guests',3,[
     iv.length?['Additional guests',plural(iv.length,'guest')+' at $300 each']:null,
     iv.length?['Invitations',val('inviteMode')==='salute'?'SALUTE emails them on my behalf, copying me':(val('inviteMode')==='self'?'I’ll email them myself':'')]:null,
-    TABLE_STATUS==='paid'?[(val('tableKind')==='honoree'?'Honoree table ($4,500)':val('tableKind')==='additional'?'Additional table ($5,000)':'Table of ten'),'Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
+    TABLE_STATUS==='paid'?[(tableKindVal()==='honoree'?'Honoree table ($4,500)':tableKindVal()==='additional'?'Additional table ($5,000)':'Table of ten'),'Reserved'+(TABLE_REF?' · order '+TABLE_REF:'')]:null
   ]);
   sec('Support SALUTE',4,[
     sv.length?['People to reach out to',plural(sv.length,'person')]:null,
