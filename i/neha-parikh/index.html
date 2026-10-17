@@ -338,6 +338,11 @@
   .seat-card .button:disabled{opacity:.42;cursor:not-allowed}
   .seat-card .sale-window-note{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:#4a4a4a;text-align:left}
 
+  .seat-card .table-paths{margin:22px 0 0;padding-top:18px;border-top:1px solid #e3e3e3}
+  .seat-card .table-paths .micro{margin:0 0 10px}
+  .seat-card .table-path{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 0;padding:13px 16px;border:1px solid #111;color:#111;text-decoration:none;font-size:14px;transition:background .2s,color .2s}
+  .seat-card .table-path:hover,.seat-card .table-path:focus-visible{background:#111;color:#fff}
+  .seat-card .table-path-price strong{font-weight:600}
   .seat-card .sale-window-note{display:none!important}
   .seat-card .rate-note{font-size:13px;color:#6b6b6b;margin:6px 0 0}
 </style>
@@ -399,6 +404,11 @@
       <p class="sale-window-note" hidden></p>
       <p class="fineprint" id="attend-sales-note">Registration is completed through secure checkout.</p>
       <noscript><p class="fineprint">Accepting needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p></noscript>
+      <div class="table-paths" aria-label="Host a table">
+        <p class="micro">Bringing more guests? Host a table</p>
+        <a class="table-path" id="half-table-invitation" href="/tables/"><span><strong>Half table</strong> · 5 seats</span><span class="table-path-price" data-live-price-wrap hidden><strong data-live-price="half_table"></strong></span></a>
+        <a class="table-path" id="table-invitation" href="/?table=1"><span><strong>Full table</strong> · 10 seats</span><span class="table-path-price" data-live-price-wrap hidden><strong data-live-price="full_table"></strong></span></a>
+      </div>
       <p class="card-from">Invitation extended by <strong>Neha Parikh</strong></p>
     </aside>
   </section>
@@ -719,6 +729,24 @@
   <form id="registration-form">
     <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">WHO’S COMING<select id="ticket-quantity" aria-label="How many seats, including your own"><option value="1">Just me</option><option value="2">Me and 1 guest</option><option value="3">Me and 2 guests</option><option value="4">Me and 3 guests</option></select></label></div>
         <div id="guest-fields"></div>
+<!-- The table tier.
+     An invitation page shows no tiers -- it makes one offer, to one person, at
+     one price -- so this control is never seen. It exists because the shared
+     chain identifies a tier by its buy control: live-pricing.js keeps this
+     price in step with the database and applies the October rollover, and
+     live-chain.js reads the tier, the sale state and the ten-seat rules from
+     it. Deliberately outside the seat card, whose price display it would
+     otherwise overwrite with the price of a table. -->
+<button class="choose" type="button" id="half-table-choose" hidden aria-hidden="true" tabindex="-1"
+  data-ticket-code="half_table" data-ticket="Half table (5 seats)" data-public-sale-open="true"
+  data-live-label="Host a half table" data-withheld-label="Opening soon"
+  data-price="2500" data-early-price="2500" data-regular-price="3750"
+  data-price-cutover="2026-10-15T04:00:00Z" disabled aria-disabled="true">Host a half table</button>
+<button class="choose" type="button" id="table-choose" hidden aria-hidden="true" tabindex="-1"
+  data-ticket-code="full_table" data-ticket="Table for ten" data-public-sale-open="true"
+  data-live-label="Host a table" data-withheld-label="Opening soon"
+  data-price="5000" data-early-price="5000" data-regular-price="7500"
+  data-price-cutover="2026-10-01T04:00:00Z" disabled aria-disabled="true">Host a table</button>
     <section class="table-options" hidden>
       <div class="form-section-head"><p class="micro" id="table-head-eyebrow">TABLE MANAGEMENT</p><h3 id="table-head-title">Set up your table.</h3><p id="table-head-note">After your payment is verified, you will receive a private link to manage your table: name it, assign each of your seats, invite your guests by email, and resend or revoke a link at any time.</p></div>
       <!-- No table name is asked for here. The box that used to stand in this
@@ -741,7 +769,7 @@
 <div class="toast" role="status" aria-live="polite"></div>
 <script src="/config.js?v=20260910a"></script>
 <script src="/guest-card.js?v=20260911h"></script>
-<script src="/invitation-checkout.js?v=20260916a"></script>
+<script src="/invitation-checkout.js?v=20261016a"></script>
 <script src="/live-chain.js?v=20260916b"></script>
 <script src="/live-pricing.js?v=20260916a"></script>
 <script>
@@ -753,6 +781,7 @@ document.addEventListener("ssuite:invitation-applied", function () {
   if (p) p.textContent = "$" + (st.amountCents / 100).toLocaleString("en-US");
   /* Show the invitation-rate total from the start, not the Community placeholder. */
   var fix = function () {
+    var tn = document.getElementById("ticket-name"); if (tn && /table/i.test(tn.textContent || "")) return;
     var t = document.getElementById("ticket-total"), q = document.getElementById("ticket-quantity");
     var n = q ? parseInt(q.value || "1", 10) : 1;
     if (t && n >= 1) t.textContent = "$" + (st.amountCents * n / 100).toLocaleString("en-US");
@@ -771,6 +800,7 @@ document.addEventListener("ssuite:invitation-applied", function () {
     return v > 0 ? v * 100 : null;
   }
   function fix() {
+    var tn = document.getElementById("ticket-name"); if (tn && /table/i.test(tn.textContent || "")) return;
     var t = document.getElementById("ticket-total"), q = document.getElementById("ticket-quantity"), c = cents();
     if (!t || !c) return;
     var n = q ? parseInt(q.value || "1", 10) : 1;
