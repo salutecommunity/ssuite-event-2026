@@ -781,6 +781,7 @@ document.addEventListener("ssuite:invitation-applied", function () {
   if (p) p.textContent = "$" + (st.amountCents / 100).toLocaleString("en-US");
   /* Show the invitation-rate total from the start, not the Community placeholder. */
   var fix = function () {
+    var tn = document.getElementById("ticket-name"); if (tn && /table/i.test(tn.textContent || "")) return;
     var t = document.getElementById("ticket-total"), q = document.getElementById("ticket-quantity");
     var n = q ? parseInt(q.value || "1", 10) : 1;
     if (t && n >= 1) t.textContent = "$" + (st.amountCents * n / 100).toLocaleString("en-US");
@@ -789,7 +790,7 @@ document.addEventListener("ssuite:invitation-applied", function () {
 });
 </script>
 <script>
-/* Show the invitation-rate total ($300 per seat) from first load, before checkout opens. Display only; the server-verified rate is what is charged. */
+/* Show the invitation-rate total ($300 per seat) from first load, before checkout opens. Display only; the server-verified rate is what is charged. Table checkouts keep their own total. */
 (function () {
   function cents() {
     var live = window.SSuiteLive, st = live && live.partnerState && live.partnerState();
@@ -799,6 +800,7 @@ document.addEventListener("ssuite:invitation-applied", function () {
     return v > 0 ? v * 100 : null;
   }
   function fix() {
+    var tn = document.getElementById("ticket-name"); if (tn && /table/i.test(tn.textContent || "")) return;
     var t = document.getElementById("ticket-total"), q = document.getElementById("ticket-quantity"), c = cents();
     if (!t || !c) return;
     var n = q ? parseInt(q.value || "1", 10) : 1;
