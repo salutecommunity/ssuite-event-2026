@@ -538,7 +538,7 @@ function collect(){
 function setField(k,v){
   var e=F.namedItem(k);if(!e||v==null)return;
   if(e.length&&!e.tagName){Array.prototype.forEach.call(e,function(x){x.checked=(x.value===v)})}
-  else if(e.type==='radio'||e.type==='checkbox'){if(e.type==='radio')e.checked=(e.value===v)}
+  else if(e.type==='radio'||e.type==='checkbox'){if(e.type==='radio')e.checked=(k==='tableKind'&&compTable())?true:(e.value===v)}
   else e.value=v;
 }
 function restore(r,prefill){
