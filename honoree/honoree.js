@@ -34,6 +34,16 @@ function first(){return (H&&H.first_name)||''}
 function fmtDate(iso){if(!iso)return '';var d=new Date(iso+(iso.length===10?'T12:00:00':''));return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
 function fmtWhen(iso){var d=new Date(iso);return d.toLocaleDateString('en-US',{month:'long',day:'numeric'})+' at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}
 function isChair(){return !!(H&&H.honor==='Chair')}
+/* Neha, Oct 17: some honorees (Anu) receive one complimentary table; set prefill.comp_table=true on her row. Only the additional $5,000 table is offered to her. */
+function compTable(){return !!(H&&H.prefill&&H.prefill.comp_table)}
+function compTableCopy(){
+  var tp=$('#table-price');if(tp)tp.textContent='With our thanks, your table is complimentary. If you’d like to host another, an additional table is available at our honoree rate (regular $7,500).';
+  var hr=document.querySelector('input[name="tableKind"][value="honoree"]');
+  if(hr){var lab=hr.closest('label');var d=document.createElement('div');d.className='choice comp-table';d.innerHTML='<span><b>Your complimentary table · Included</b><small>One table of ten, with our thanks. Our team will coordinate your guest list with you directly. Nothing to purchase here.</small></span>';lab.parentNode.replaceChild(d,lab);}
+  var ar=document.querySelector('input[name="tableKind"][value="additional"]');
+  if(ar){ar.checked=true;var sm=ar.closest('label').querySelector('small');if(sm)sm.textContent='Ten more seats for guests you choose, in addition to your complimentary table.';}
+  var tb=$('#table-buy');if(tb)tb.textContent='Host an additional table';
+}
 function chairCopy(){
   var r=$('#recog');if(r)r.textContent='You’ve been recognized with SALUTE’s lifetime achievement honor.';
   var c=$('#cohort-card');
@@ -44,6 +54,7 @@ function chairCopy(){
 }
 function bind(){
   var CH=isChair();
+  if(compTable())compTableCopy();
   var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:CH?'The S.SUITE Chair':H.honor+' Honoree',honor:H.honor};
   $$('[data-b]').forEach(function(el){var v=map[el.dataset.b];if(v!=null)el.textContent=v});
   document.title='S.SUITE · A private invitation for '+H.full_name;
@@ -390,7 +401,7 @@ function tableView(){
   var done=$('#table-done'), paid=TABLE_STATUS==='paid';
   $('#table-buy').hidden=paid; if(paid){$('#table-form').hidden=true}
   var kg=$('#table-kind-grp');if(kg)kg.hidden=paid;
-  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent=(val('tableKind')==='honoree'?'Your honoree table for ten is reserved, including your seat and your complimentary guest’s. Thank you.':val('tableKind')==='additional'?'Your additional table for ten is reserved. Thank you.':'Your table for ten is reserved. Thank you.');done.appendChild(b);
+  if(paid){done.innerHTML='';var b=document.createElement('b');b.textContent=(val('tableKind')==='honoree'?'Your honoree table for ten is reserved, including your seat and your complimentary guest’s. Thank you.':val('tableKind')==='additional'?'Your additional table for ten is reserved'+(compTable()?', alongside your complimentary table':'')+'. Thank you.':'Your table for ten is reserved. Thank you.');done.appendChild(b);
     done.appendChild(document.createTextNode(' Your receipt and table link are on their way by email'+(TABLE_REF?' (order '+TABLE_REF+')':'')+'. You can add your guests’ names from that link.'));done.hidden=false}
   else if(TABLE_STATUS==='canceled'){done.textContent='Checkout was canceled. No payment was taken. You can try again whenever you like.';done.hidden=false}
   else if(TABLE_STATUS==='pending'){done.textContent='Your payment is still being recorded. Your receipt will arrive by email shortly.';done.hidden=false}
@@ -408,7 +419,7 @@ $('#table-pay').addEventListener('click',function(){
   var miss=[];
   if(!t.first)miss.push('first name');if(!t.last)miss.push('last name');if(!EMAIL.test(t.email))miss.push('a valid email');
   if(t.phone.replace(/\D/g,'').length<7)miss.push('a mobile phone number');if(!t.title)miss.push('title');if(!t.org)miss.push('organization');if(!t.meal)miss.push('meal');
-  var kind=val('tableKind');
+  var kind=compTable()?'additional':val('tableKind');
   if(!kind){tableErr('Please choose your honoree table ($4,500) or an additional table ($5,000).');return}
   if(miss.length){tableErr('Please add '+miss.join(', ')+'.');return}
   if(!$('#t-agree').checked){tableErr('Please agree to the Event Terms, Privacy Notice and Media Release to continue.');return}
