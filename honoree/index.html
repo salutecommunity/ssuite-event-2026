@@ -646,15 +646,31 @@ a{color:inherit}
           </div>
           <div class="must" role="note">
             <p class="eyebrow">Please note</p>
-            <p>To accept, honorees must attend in person on <b>Friday, November 20, 2026, at 6:30 p.m.</b> at the Prince George Ballroom in New York City. Accepting does not require any purchase, sponsorship or donation.</p>
+            <p id="must-text">To accept, honorees must attend in person on <b>Friday, November 20, 2026, at 6:30 p.m.</b> at the Prince George Ballroom in New York City. Accepting does not require any purchase, sponsorship or donation.</p>
           </div>
           <fieldset class="grp">
             <legend>Your decision</legend>
             <div class="choices">
               <label class="choice"><input type="radio" name="response" value="accept"><span><b>I’m honored to accept</b><small>I will attend in person on November 20.</small></span></label>
+              <label class="choice" id="proxy-choice" hidden><input type="radio" name="response" value="proxy"><span><b>I’m honored to accept, and someone will accept on my behalf</b><small>I can’t attend on November 20, so I’ll send someone in my place.</small></span></label>
               <label class="choice"><input type="radio" name="response" value="decline"><span><b>Respectfully decline</b><small>With gratitude, I’m unable to accept at this time.</small></span></label>
             </div>
           </fieldset>
+          <div id="proxy-box" hidden>
+            <fieldset class="grp">
+              <legend>Who will accept on your behalf</legend>
+              <p class="grp-d">They’ll accept the honor for you on the evening and take your complimentary seat. We’ll be in touch with them about the details.</p>
+              <div class="row2">
+                <label class="fld"><span class="lbl">First name</span><input type="text" name="rFirst" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Last name</span><input type="text" name="rLast" autocomplete="off"></label>
+              </div>
+              <label class="fld"><span class="lbl">Email</span><input type="email" name="rEmail" inputmode="email" autocomplete="off"></label>
+              <div class="row2">
+                <label class="fld"><span class="lbl">Title</span><input type="text" name="rTitle" autocomplete="off"></label>
+                <label class="fld"><span class="lbl">Organization</span><input type="text" name="rOrg" autocomplete="off"></label>
+              </div>
+            </fieldset>
+          </div>
           <div id="decline-box" hidden>
             <label class="fld"><span class="lbl">A note to the SALUTE team <span class="opt">optional</span></span>
               <textarea name="declineNote" rows="4"></textarea></label>
@@ -727,17 +743,17 @@ a{color:inherit}
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
           <fieldset class="grp">
-            <legend>Your meal</legend>
-            <p class="grp-d">For you.</p>
+            <legend id="diet-legend">Your meal</legend>
+            <p class="grp-d" id="diet-d">For you.</p>
             <div class="choices compact" id="diet">
               <label class="choice"><input type="radio" name="diet" value="Vegetarian"><span><b>Vegetarian</b></span></label>
               <label class="choice"><input type="radio" name="diet" value="Non-vegetarian"><span><b>Non-vegetarian</b></span></label>
             </div>
-            <label class="fld" style="margin-top:18px"><span class="lbl">Your allergies or dietary needs <span class="opt">optional</span></span><textarea name="access" rows="2"></textarea></label>
+            <label class="fld" style="margin-top:18px"><span class="lbl"><span id="access-lbl">Your allergies or dietary needs</span> <span class="opt">optional</span></span><textarea name="access" rows="2"></textarea></label>
           </fieldset>
           <fieldset class="grp" id="guest-grp">
             <legend>Your guest</legend>
-            <p class="grp-d">Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.</p>
+            <p class="grp-d" id="guest-d">Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.</p>
             <div class="choices"><label class="choice"><input type="checkbox" name="guest"><span><b>I’ll bring a guest</b></span></label></div>
             <div class="reveal-box" id="guest-box" hidden>
               <div class="row2">
@@ -935,6 +951,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261017v23"></script>
+<script src="/honoree/honoree.js?v=20261018proxy"></script>
 </body>
 </html>

@@ -36,6 +36,12 @@ function fmtWhen(iso){var d=new Date(iso);return d.toLocaleDateString('en-US',{m
 function isChair(){return !!(H&&H.honor==='Chair')}
 /* Neha, Oct 17: some honorees (Anu) receive one complimentary table; set prefill.comp_table=true on her row. Only the additional $5,000 table is offered to her. */
 function compTable(){return !!(H&&H.prefill&&H.prefill.comp_table)}
+/* Neha, Oct 18: some honorees (Bing) can't attend and will send someone to accept on their behalf; set prefill.allow_proxy=true on the row. */
+function proxyOK(){return !!(H&&H.prefill&&H.prefill.allow_proxy)}
+function proxyCopy(){
+  var pc=$('#proxy-choice');if(pc)pc.hidden=false;
+  var mt=$('#must-text');if(mt)mt.innerHTML='Honorees are invited to attend in person on <b>Friday, November 20, 2026, at 6:30 p.m.</b> at the Prince George Ballroom in New York City. If you can’t be there, you’re welcome to send someone to accept the honor on your behalf. Accepting does not require any purchase, sponsorship or donation.';
+}
 function tableKindVal(){return compTable()?'additional':val('tableKind')}
 function compTableCopy(){
   var tp=$('#table-price');if(tp)tp.textContent='With our thanks, your table is complimentary. If you’d like to host another, an additional table is available at our honoree rate (regular $7,500).';
@@ -56,6 +62,7 @@ function chairCopy(){
 function bind(){
   var CH=isChair();
   if(compTable())compTableCopy();
+  if(proxyOK())proxyCopy();
   var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:CH?'The S.SUITE Chair':H.honor+' Honoree',honor:H.honor};
   $$('[data-b]').forEach(function(el){var v=map[el.dataset.b];if(v!=null)el.textContent=v});
   document.title='S.SUITE · A private invitation for '+H.full_name;
@@ -120,6 +127,9 @@ var cur=0,done={},submitted=false;
 function val(n){var e=F.namedItem(n);return e&&typeof e.value==='string'?e.value.trim():''}
 function chk(n){var e=F.namedItem(n);return !!(e&&e.checked)}
 function declined(){return val('response')==='decline'}
+function proxy(){return val('response')==='proxy'&&proxyOK()}
+function accepting(){return val('response')==='accept'||proxy()}
+function repName(){return [val('rFirst'),val('rLast')].join(' ').trim()}
 function measureHead(){var h=$('#p-top').offsetHeight;document.documentElement.style.setProperty('--hh',h+'px')}
 window.addEventListener('resize',measureHead);
 
@@ -225,6 +235,14 @@ function validate(i){
   function push(n,m){var x=F.namedItem(n);e.push({el:x&&x.length&&!x.tagName?x[0]:x,msg:m})}
   if(i===0){
     if(!val('response')) push('response','Choose whether to accept or respectfully decline.');
+    if(proxy()){
+      if(!val('rFirst')) push('rFirst','Add their first name.');
+      if(!val('rLast')) push('rLast','Add their last name.');
+      if(!val('rEmail')) push('rEmail','Add their email.');
+      else if(!EMAIL.test(val('rEmail'))) push('rEmail','Enter a valid email for them.');
+      if(!val('rTitle')) push('rTitle','Add their title.');
+      if(!val('rOrg')) push('rOrg','Add their organization.');
+    }
   }
   if(i===1){
     if(!val('pubName')) push('pubName','Add the name you’d like to appear publicly.');
@@ -243,7 +261,7 @@ function validate(i){
       if(!val('gMeal')) push('gMeal','Choose your guest’s meal.');
       if(!val('gMode')) push('gMode','Choose who should send your guest the details.');
     }
-    if(!val('diet')) push('diet','Choose a vegetarian or non-vegetarian meal.');
+    if(!val('diet')) push('diet',proxy()?'Choose a meal for the person accepting on your behalf.':'Choose a vegetarian or non-vegetarian meal.');
   }
   if(i===3){
     var iv=parseList(val('inviteList'));
@@ -281,6 +299,12 @@ function listSummary(id,text,noun){
 /* conditional reveals */
 function syncReveals(){
   $('#decline-box').hidden=!declined();
+  var px=proxy(),rn=repName();
+  $('#proxy-box').hidden=!px;
+  $('#diet-legend').textContent=px?'Their meal':'Your meal';
+  $('#diet-d').textContent=px?'For '+(rn||'the person accepting on your behalf')+'.':'For you.';
+  $('#access-lbl').textContent=px?'Their allergies or dietary needs':'Your allergies or dietary needs';
+  $('#guest-d').innerHTML=px?'Tickets for '+(rn?esc(rn):'the person accepting on your behalf')+' and <b>one</b> guest are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.':'Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.';
   $('#guest-box').hidden=!chk('guest');
   listSummary('#invite-sum',val('inviteList'),'guest');
   $('#guests-lead').firstChild.innerHTML=declined()?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them. Each guest pays the honoree rate of <b>$300 per ticket</b> (regular $400).':'Additional guests are not complimentary. Beyond your one complimentary guest, each person you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
@@ -289,7 +313,8 @@ function syncReveals(){
   listSummary('#support-sum',val('supportList'),'person');
   updateNav();
 }
-pf.addEventListener('input',function(e){if(e.target.name==='inviteList'||e.target.name==='supportList')syncReveals()});
+pf.addEventListener('input',function(e){if(e.target.name==='inviteList'||e.target.name==='supportList'||e.target.name==='rFirst'||e.target.name==='rLast')syncReveals()});
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 pf.addEventListener('change',syncReveals);
 pf.addEventListener('submit',function(e){e.preventDefault()});
 
@@ -348,8 +373,8 @@ function copyText(txt,msgEl,ok){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){msgEl.textContent=ok||'Link copied.'},fb)}else fb();
 }
 function guestNote(){
-  if(val('response')!=='accept') return 'SALUTE (South Asian Leaders Unite to Empower) is hosting S.SUITE, its inaugural honors evening celebrating South Asian women leaders and allies, on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City. The evening includes a fireside conversation with Indra Nooyi, moderated by Anu Aiyengar.\n\nI think you would be a wonderful addition to the room. SALUTE has extended a special guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+H.full_name;
-  return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+' and I would love for you to join me on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\nI hope you can join me.\n\n'+H.full_name;
+  if(!accepting()) return 'SALUTE (South Asian Leaders Unite to Empower) is hosting S.SUITE, its inaugural honors evening celebrating South Asian women leaders and allies, on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City. The evening includes a fireside conversation with Indra Nooyi, moderated by Anu Aiyengar.\n\nI think you would be a wonderful addition to the room. SALUTE has extended a special guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+H.full_name;
+  return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+(proxy()?' and I would love for you to join the celebration on Friday, November 20, 2026,':' and I would love for you to join me on Friday, November 20, 2026,')+' at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+(proxy()?'I hope you can be there.':'I hope you can join me.')+'\n\n'+H.full_name;
 }
 function showGuestLink(){
   if(!GUEST_URL) return;
@@ -523,7 +548,7 @@ wireListUpload('inv-file','inviteList','inv-file-msg','guest');
 wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal','tableKind'];
+var FIELDS=['response','declineNote','rFirst','rLast','rEmail','rTitle','rOrg','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal','tableKind'];
 var BOOLS=['guest'];
 function collect(){
   var r={};
@@ -593,7 +618,8 @@ function renderReview(){
     });
     s.appendChild(dl);secs.appendChild(s);
   }
-  var rr=[['Nomination',resp==='accept'?'Accepted · I will attend in person on November 20':(resp==='decline'?'Respectfully declined':noneSpan('No response yet'))]];
+  var rr=[['Nomination',resp==='accept'?'Accepted · I will attend in person on November 20':(proxy()?'Accepted · someone will accept on my behalf':(resp==='decline'?'Respectfully declined':noneSpan('No response yet')))]];
+  if(proxy()) rr.push(['Accepting on my behalf',[repName(),val('rEmail'),[val('rTitle'),val('rOrg')].filter(Boolean).join(', ')].filter(Boolean).join(' · ')]);
   if(dec&&val('declineNote')) rr.push(['Note to the team',val('declineNote')]);
   sec('Response',0,rr);
   var sv0=parseList(val('supportList')).items;
@@ -618,8 +644,8 @@ function renderReview(){
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   sec('Evening',2,[
-    ['Your meal',val('diet')],
-    val('access')?['Your allergies or dietary needs',val('access')]:null,
+    [proxy()?'Their meal':'Your meal',val('diet')],
+    val('access')?[proxy()?'Their allergies or dietary needs':'Your allergies or dietary needs',val('access')]:null,
     ['Complimentary guest',chk('guest')?[[val('gFirst'),val('gLast')].join(' ').trim(),val('gEmail'),[val('gTitle'),val('gOrg')].filter(Boolean).join(', '),val('gMeal')].filter(Boolean).join(' · '):'No guest'],
     chk('guest')&&val('gAccess')?['Guest’s allergies or dietary needs',val('gAccess')]:null,
     chk('guest')&&val('gMode')?['Guest details',val('gMode')==='salute'?'SALUTE emails my guest, copying me':'I’ll share them myself']:null
@@ -673,7 +699,7 @@ function showConfirm(){
   $('#c-h').textContent='Thank you, '+first()+'.';
   $('#c-lede').textContent=dec
     ?'Thank you for considering the nomination. We are grateful for the time you took, and the SALUTE team will be in touch personally.'
-    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+' The SALUTE team will be in touch personally to confirm your seats and announcement timing.';
+    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+(proxy()&&repName()?' We look forward to welcoming '+repName()+' on your behalf.':'')+' The SALUTE team will be in touch personally to confirm your seats and announcement timing.';
   $('#c-stamp').textContent=SUBMITTED_AT?'Received '+fmtWhen(SUBMITTED_AT):'';
   $('#c-gl-desc').textContent=dec?'Share it with anyone you think should be in the room. They pay the $300 rate (regular $400).':'For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).';
   var showGl=!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
