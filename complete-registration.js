@@ -250,7 +250,7 @@
     if (secondary && !emailPattern.test(secondary)) throw new Error("Please enter a valid secondary email address, or leave that field blank.");
     if (dietary && !get("dietary_or_allergy_details")) throw new Error("Please tell us about your dietary or allergy needs.");
     if (accessibility && !get("accessibility_details")) throw new Error("Please tell us what you need us to arrange.");
-    return { first_name: get("first_name"), last_name: get("last_name"), email: own, secondary_email: secondary && secondary !== own ? secondary : undefined, job_title: get("job_title"), company: get("company"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
+    return { first_name: get("first_name"), last_name: get("last_name"), email: own, secondary_email: secondary && secondary !== own ? secondary : undefined, job_title: get("job_title"), company: get("company"), phone: get("phone"), meal_preference: get("meal_preference"), has_dietary_or_allergy_needs: dietary, dietary_or_allergy_details: dietary ? get("dietary_or_allergy_details") : undefined, has_accessibility_needs: accessibility, accessibility_details: accessibility ? get("accessibility_details") : undefined };
   }
 
   async function submit(event) {
