@@ -38,6 +38,27 @@ function isChair(){return !!(H&&H.honor==='Chair')}
 function compTable(){return !!(H&&H.prefill&&H.prefill.comp_table)}
 /* Neha, Oct 18: some honorees (Bing) can't attend and will send someone to accept on their behalf; set prefill.allow_proxy=true on the row. */
 function proxyOK(){return !!(H&&H.prefill&&H.prefill.allow_proxy)}
+/* Neha, Oct 20: some honorees (Indra) have already accepted and SALUTE already has their bio and headshot; set prefill.on_file=true. The portal skips the decision and the bio/headshot requests. */
+function onFile(){return !!(H&&H.prefill&&H.prefill.on_file)}
+function submitLabel(){return onFile()?'Send my details ':'Submit my response '}
+function onFileCopy(){
+  NAMES[0]='Welcome';
+  var nb=document.querySelector('.p-step[data-i="0"] .t');if(nb)nb.textContent='Welcome';
+  var t0=$('#t0');if(t0)t0.textContent='Welcome';
+  var rl=$('#resp-lead');if(rl)rl.textContent=isChair()?'Thank you for accepting the S.SUITE Chair, SALUTE’s lifetime achievement honor.':'Thank you for accepting your S.SUITE '+H.honor+' honor.';
+  var acc=document.querySelector('input[name="response"][value="accept"]');
+  if(acc){acc.checked=true;var fs=acc.closest('fieldset');if(fs)fs.hidden=true}
+  var mu=document.querySelector('.step[data-step="0"] .must');
+  if(mu){var ey=mu.querySelector('.eyebrow');if(ey)ey.textContent='Confirmed'}
+  var mt=$('#must-text');if(mt)mt.innerHTML='Your honor is confirmed, and we already have your bio and headshot. The next pages cover the rest: how you’d like to be listed, your meal and guest, your table, and anyone you’d like to invite. Everything saves as you go.';
+  var pl=document.querySelector('.step[data-step="1"] .ps-lead');if(pl)pl.textContent='Please confirm how you’d like to be listed in the program.';
+  var bl=F.namedItem('bio');if(bl){var lb=bl.closest('label');if(lb)lb.hidden=true}
+  var hf=$('#hs').closest('fieldset');
+  if(hf){hf.hidden=true;var d=document.createElement('div');d.className='must';d.setAttribute('role','note');d.id='onfile-note';
+    d.innerHTML='<p class="eyebrow">Bio and headshot</p><p>We have both on file, so there’s nothing to upload. If you’d like us to use an updated version, your team can send it to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>';
+    hf.parentNode.insertBefore(d,hf)}
+  var sb=$('#submit');if(sb)sb.firstChild.textContent=submitLabel();
+}
 function proxyCopy(){
   var pc=$('#proxy-choice');if(pc)pc.hidden=false;
   var mt=$('#must-text');if(mt)mt.innerHTML='Honorees are invited to attend in person on <b>Friday, November 20, 2026, at 6:30 p.m.</b> at the Prince George Ballroom in New York City. If you can’t be there, you’re welcome to send someone to accept the honor on your behalf. Accepting does not require any purchase, sponsorship or donation.';
@@ -63,6 +84,7 @@ function bind(){
   var CH=isChair();
   if(compTable())compTableCopy();
   if(proxyOK())proxyCopy();
+  if(onFile())onFileCopy();
   var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:CH?'The S.SUITE Chair':H.honor+' Honoree',honor:H.honor};
   $$('[data-b]').forEach(function(el){var v=map[el.dataset.b];if(v!=null)el.textContent=v});
   document.title='S.SUITE · A private invitation for '+H.full_name;
@@ -247,7 +269,7 @@ function validate(i){
   if(i===1){
     if(!val('pubName')) push('pubName','Add the name you’d like to appear publicly.');
     if(words(val('bio'))>250) push('bio','Please keep your bio to 250 words or fewer.');
-    if(!HS) push('headshot','Please upload a headshot.');
+    if(!HS&&!onFile()) push('headshot','Please upload a headshot.');
     if(val('teamEmail')&&!EMAIL.test(val('teamEmail'))) push('teamEmail','Enter a valid email for your team contact.');
   }
   if(i===2){
@@ -576,6 +598,7 @@ function restore(r,prefill){
     if(typeof r.step==='number') cur=Math.max(0,Math.min(LAST,r.step));
     TABLE_STATUS=r.tableStatus||'';TABLE_REF=r.tableRef||'';
   }
+  if(onFile())setField('response','accept');
   bioCount();syncReveals();
 }
 var saveTimer=null,saving=false,dirty=false,ready=false;
@@ -618,10 +641,10 @@ function renderReview(){
     });
     s.appendChild(dl);secs.appendChild(s);
   }
-  var rr=[['Nomination',resp==='accept'?'Accepted · I will attend in person on November 20':(proxy()?'Accepted · someone will accept on my behalf':(resp==='decline'?'Respectfully declined':noneSpan('No response yet')))]];
+  var rr=onFile()?[['Honor','Confirmed']]:[['Nomination',resp==='accept'?'Accepted · I will attend in person on November 20':(proxy()?'Accepted · someone will accept on my behalf':(resp==='decline'?'Respectfully declined':noneSpan('No response yet')))]];
   if(proxy()) rr.push(['Accepting on my behalf',[repName(),val('rEmail'),[val('rTitle'),val('rOrg')].filter(Boolean).join(', ')].filter(Boolean).join(' · ')]);
   if(dec&&val('declineNote')) rr.push(['Note to the team',val('declineNote')]);
-  sec('Response',0,rr);
+  sec(onFile()?'Welcome':'Response',0,rr);
   var sv0=parseList(val('supportList')).items;
   if(dec){
     var ivd=parseList(val('inviteList')).items;
@@ -639,8 +662,8 @@ function renderReview(){
   var bw=words(val('bio'));
   sec('Profile',1,[
     ['Listed as',[val('pubName'),val('pubTitle'),val('pubOrg')].filter(Boolean).join(' · ')],
-    bw?['Bio','Provided · '+plural(bw,'word')]:null,
-    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:null,
+    bw?['Bio','Provided · '+plural(bw,'word')]:(onFile()?['Bio','On file with SALUTE']:null),
+    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:(onFile()?['Headshot','On file with SALUTE']:null),
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   sec('Evening',2,[
@@ -691,15 +714,15 @@ $('#submit').addEventListener('click',function(){
     submitted=true;showConfirm();statusBar();showGuestLink();saveState('Submitted');
   }).catch(function(e){
     showSubmitErrors(e.errors&&e.errors.length?e.errors:[e.message||'Your response could not be submitted. Please try again.'],null);
-  }).then(function(){submitting=false;btn.disabled=false;btn.firstChild.textContent='Submit my response '});
+  }).then(function(){submitting=false;btn.disabled=false;btn.firstChild.textContent=submitLabel()});
 });
 function showConfirm(){
   var dec=STATE==='declined';
-  $('#c-eyebrow').textContent=dec?'Response received':(isChair()?'Honor confirmed':'Nomination accepted');
+  $('#c-eyebrow').textContent=dec?'Response received':(onFile()?'Details received':(isChair()?'Honor confirmed':'Nomination accepted'));
   $('#c-h').textContent='Thank you, '+first()+'.';
   $('#c-lede').textContent=dec
     ?'Thank you for considering the nomination. We are grateful for the time you took, and the SALUTE team will be in touch personally.'
-    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+(proxy()&&repName()?' We look forward to welcoming '+repName()+' on your behalf.':'')+' The SALUTE team will be in touch personally to confirm your seats and announcement timing.';
+    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+(proxy()&&repName()?' We look forward to welcoming '+repName()+' on your behalf.':'')+(onFile()?' Thank you for sharing your details. The SALUTE team will be in touch personally to confirm your seats and the evening’s plans.':' The SALUTE team will be in touch personally to confirm your seats and announcement timing.');
   $('#c-stamp').textContent=SUBMITTED_AT?'Received '+fmtWhen(SUBMITTED_AT):'';
   $('#c-gl-desc').textContent=dec?'Share it with anyone you think should be in the room. They pay the $300 rate (regular $400).':'For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).';
   var showGl=!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
@@ -712,7 +735,7 @@ function showConfirm(){
 function statusBar(){
   var sb=$('#statusbar');
   if(!SUBMITTED_AT){sb.hidden=true;return}
-  sb.textContent=(STATE==='accepted'?'You accepted your nomination on ':'You responded on ')+fmtWhen(SUBMITTED_AT)+'. You can update any answer and submit again; the SALUTE team will see your changes.';
+  sb.textContent=(onFile()?'You shared your details on ':(STATE==='accepted'?'You accepted your nomination on ':'You responded on '))+fmtWhen(SUBMITTED_AT)+'. You can update any answer and submit again; the SALUTE team will see your changes.';
   sb.hidden=false;
 }
 $('#c-review').addEventListener('click',function(){goto(LAST)});
