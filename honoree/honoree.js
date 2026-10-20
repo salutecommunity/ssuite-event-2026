@@ -45,7 +45,7 @@ function onFileCopy(){
   NAMES[0]='Welcome';
   var nb=document.querySelector('.p-step[data-i="0"] .t');if(nb)nb.textContent='Welcome';
   var t0=$('#t0');if(t0)t0.textContent='Welcome';
-  var rl=$('#resp-lead');if(rl)rl.textContent=isChair()?'Thank you for accepting the S.SUITE Chair, SALUTE’s lifetime achievement honor.':'Thank you for accepting your S.SUITE '+H.honor+' honor.';
+  var rl=$('#resp-lead');if(rl)rl.innerHTML=(isChair()?'Thank you for accepting the S.SUITE Chair, SALUTE’s lifetime achievement honor.':'Thank you for accepting your S.SUITE '+esc(H.honor)+' honor.')+'<span id="deadline-line"></span>';
   var acc=document.querySelector('input[name="response"][value="accept"]');
   if(acc){acc.checked=true;var fs=acc.closest('fieldset');if(fs)fs.hidden=true}
   var mu=document.querySelector('.step[data-step="0"] .must');
@@ -84,7 +84,6 @@ function bind(){
   var CH=isChair();
   if(compTable())compTableCopy();
   if(proxyOK())proxyCopy();
-  if(onFile())onFileCopy();
   var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:CH?'The S.SUITE Chair':H.honor+' Honoree',honor:H.honor};
   $$('[data-b]').forEach(function(el){var v=map[el.dataset.b];if(v!=null)el.textContent=v});
   document.title='S.SUITE · A private invitation for '+H.full_name;
@@ -101,7 +100,8 @@ function bind(){
   var st=document.createElement('strong');st.textContent=H.honor+' Honoree';b.appendChild(st);
   b.appendChild(document.createTextNode('. '+(H.honor_blurb||'')));
   }
-  if(H.response_deadline) $('#deadline-line').textContent=' Please respond by '+fmtDate(H.response_deadline)+'.';
+  if(onFile())onFileCopy();
+  else if(H.response_deadline) $('#deadline-line').textContent=' Please respond by '+fmtDate(H.response_deadline)+'.';
   if(!$('#view-invite').hidden) return;
 }
 
