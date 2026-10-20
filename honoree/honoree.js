@@ -270,7 +270,6 @@ function validate(i){
   if(i===1){
     if(!val('pubName')) push('pubName','Add the name you’d like to appear publicly.');
     if(words(val('bio'))>250) push('bio','Please keep your bio to 250 words or fewer.');
-    if(!HS&&!onFile()) push('headshot','Please upload a headshot.');
     if(val('teamEmail')&&!EMAIL.test(val('teamEmail'))) push('teamEmail','Enter a valid email for your team contact.');
   }
   if(i===2){
@@ -361,7 +360,7 @@ function hsRender(){
   }else{
     t.hidden=true;t.removeAttribute('src');
     $('#hs-name').textContent='No file selected';
-    $('#hs-meta').textContent='High resolution, kept private.';
+    $('#hs-meta').textContent='Optional. If the upload doesn’t work on your network, email it to ssuite@salute.community.';
     $('#hs-remove').hidden=true;$('#hs-btn').textContent='Choose image';
   }
 }
@@ -380,7 +379,7 @@ hsIn.addEventListener('change',function(){
       return api({action:'headshot_recorded',object_path:p.object_path,filename:f.name,content_type:type,size_bytes:f.size});
     });
   }).then(function(r){HS=r.headshot;if(HS&&!HS.url)HS.url=local;hsRender()})
-  .catch(function(e){hsRender();$('#hs-meta').textContent=e.message||'The image could not be uploaded. Please try again.'})
+  .catch(function(e){hsRender();$('#hs-meta').textContent='The upload didn’t go through, which can happen on some company networks. You can continue without it and email the headshot to ssuite@salute.community.'})
   .then(function(){hsBusy=false});
 });
 $('#hs-remove').addEventListener('click',function(){
@@ -664,7 +663,7 @@ function renderReview(){
   sec('Profile',1,[
     ['Listed as',[val('pubName'),val('pubTitle'),val('pubOrg')].filter(Boolean).join(' · ')],
     bw?['Bio','Provided · '+plural(bw,'word')]:(onFile()?['Bio','On file with SALUTE']:null),
-    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:(onFile()?['Headshot','On file with SALUTE']:null),
+    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:(onFile()?['Headshot','On file with SALUTE']:['Headshot','Not uploaded · you can email it to ssuite@salute.community']),
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   sec('Evening',2,[

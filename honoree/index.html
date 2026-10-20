@@ -703,13 +703,13 @@ a{color:inherit}
               <textarea name="bio" rows="8"></textarea></label>
           </fieldset>
           <fieldset class="grp">
-            <legend>Headshot</legend>
-            <p class="grp-d">For the program and announcement. A high-resolution image works best.</p>
+            <legend>Headshot <span class="opt">optional</span></legend>
+            <p class="grp-d">For the program. A high-resolution image works best. If you’d rather, email it to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> instead.</p>
             <div class="upload" id="hs">
               <img class="thumb" id="hs-thumb" alt="" hidden>
               <div class="up-info" id="hs-info">
                 <p class="up-name" id="hs-name">No file selected</p>
-                <p class="up-meta" id="hs-meta" role="status">JPG, PNG or HEIC.</p>
+                <p class="up-meta" id="hs-meta" role="status">Optional. JPG, PNG or HEIC.</p>
               </div>
               <input class="sr" type="file" id="hs-input" name="headshot" accept="image/*" aria-describedby="hs-meta">
               <label class="btn btn-line btn-sm up-btn" for="hs-input" id="hs-btn">Choose image</label>
@@ -951,6 +951,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261020onfile3"></script>
+<script src="/honoree/honoree.js?v=20261020hsopt"></script>
 </body>
 </html>
