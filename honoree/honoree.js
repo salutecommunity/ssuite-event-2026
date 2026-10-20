@@ -58,6 +58,7 @@ function onFileCopy(){
     d.innerHTML='<p class="eyebrow">Bio and headshot</p><p>We have both on file, so there’s nothing to upload. If you’d like us to use an updated version, your team can send it to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>';
     hf.parentNode.insertBefore(d,hf)}
   var sb=$('#submit');if(sb)sb.firstChild.textContent=submitLabel();
+  var cs=$('#c-small');if(cs)cs.innerHTML='Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.';
 }
 function proxyCopy(){
   var pc=$('#proxy-choice');if(pc)pc.hidden=false;
