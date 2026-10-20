@@ -287,12 +287,10 @@ function validate(i){
   }
   if(i===3){
     var iv=parseList(val('inviteList'));
-    if(iv.bad.length) push('inviteList','Add a valid email for: '+iv.bad.slice(0,3).join('; ')+(iv.bad.length>3?' …':''));
     if(iv.items.length&&!val('inviteMode')) push('inviteMode','Choose how the invitations should go out.');
   }
   if(i===4){
     var sv=parseList(val('supportList'));
-    if(sv.bad.length) push('supportList','Add a valid email for: '+sv.bad.slice(0,3).join('; ')+(sv.bad.length>3?' …':''));
     if(sv.items.length&&!val('supportMode')) push('supportMode','Choose how SALUTE should reach out.');
   }
   return e;
@@ -314,7 +312,7 @@ function parseList(text){
 function listSummary(id,text,noun){
   var r=parseList(text),el=$(id),out='';
   if(r.items.length) out=plural(r.items.length,noun)+' added.';
-  if(r.bad.length) out+=(out?' ':'')+plural(r.bad.length,'line')+' still need'+(r.bad.length===1?'s':'')+' an email.';
+  if(r.bad.length) out+=(out?' ':'')+(r.bad.length===1?'One line has':plural(r.bad.length,'line')+' have')+' no email, so we’ll pass '+(r.bad.length===1?'it':'them')+' to the SALUTE team as a note.';
   el.textContent=out;
   return r;
 }
