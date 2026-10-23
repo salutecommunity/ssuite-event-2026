@@ -1100,6 +1100,13 @@
     // and check it, so her rate is settled before she types a single field. The
     // link proves nothing on its own -- the server checks the code again, and
     // checks it once more before any payment is taken.
+    // A member link without a code: open the member ticket and let the server
+    // check the purchaser email against the member list. Nothing is filled in,
+    // so a forwarded link grants no rate on its own.
+    if (!memberLinkCode && params.get("ticket") === "member" && !params.get("checkout")) {
+      const memberTile = document.querySelector('.choose[data-ticket-code="salute_member"]');
+      if (memberTile && !memberTile.disabled) memberTile.click();
+    }
     if (memberLinkCode && !params.get("checkout")) {
       const memberTile = document.querySelector('.choose[data-ticket-code="salute_member"]');
       if (memberTile && !memberTile.disabled) {
