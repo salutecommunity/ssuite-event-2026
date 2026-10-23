@@ -41,7 +41,7 @@ assert(!Object.keys(payload.record.host).some(k=>k.startsWith('allocated_')));
 assert.throws(()=>context.allocatedHostOperation({...record.host,provenance:'pre_existing_paid',allocated_seat_count:'5'}));
 const api=read('operations/manual-guests/admin-api/index.ts');
 assert(api.includes('db.auth.getUser(token)') && api.includes('APPROVED_ADMIN_EMAIL'));
-assert(api.includes('Self-service and registration emails are disabled'));
+assert(api.includes('manual_guest_email_send') && api.includes('ssuite_admin_manual_guest_email'));
 const transpiler=new Bun.Transpiler({loader:'ts',target:'browser'});
 new Function(transpiler.transformSync(api).replace(/^import[^\n]+\n/gm,''));
 new Function(js.replace(/^import[^\n]+\n/gm,''));

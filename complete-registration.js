@@ -172,7 +172,8 @@
       help.hidden = false;
     } else {
       actions.hidden = true;
-      help.hidden = true;
+      help.textContent = role === "table_host" ? "Your table allocation is managed by the S.SUITE team. Email ssuite@salute.community to arrange guest details. This personal link does not grant table-management access." : "";
+      help.hidden = role !== "table_host";
     }
   }
 
@@ -183,7 +184,7 @@
     cutoffDisplay = text(ctx.details_cutoff_display);
     role = text(ctx.role) || role;
     editing = false;
-    $("registered-heading").textContent = role === "table_host" ? "Your registration is complete, and your table is open." : "Your registration is complete.";
+    $("registered-heading").textContent = role === "table_host" && portalUrl ? "Your registration is complete, and your table is open." : "Your registration is complete.";
     $("registered-lede").textContent = options && options.justFinished
       ? "This is what we now have on file for you."
       : "This is what we have on file for you. Nothing further is needed.";
@@ -204,7 +205,7 @@
     if (context.needs_how_heard === true) $("how-heard-field").hidden = false;
     const note = $("agreement-note");
     note.textContent = role === "table_host"
-      ? "Accepting covers you and the guests you seat at your table. Each guest you invite also accepts for themselves when they register."
+      ? "This agreement is yours alone. Each guest accepts personally when they complete their own registration."
       : "This agreement is yours alone.";
     note.hidden = false;
     $("registration").hidden = false;
@@ -276,7 +277,7 @@
         renderRegistered(confirmed.body.attendee, confirmed.body, { justFinished: true });
       } else renderRegistered(attendee, lastContext, { justFinished: true });
       formStatus("");
-      status(role === "table_host" ? "You are registered. Your table is open below." : "You are registered. You can return to this page whenever you like.", "success");
+      status(role === "table_host" && portalUrl ? "You are registered. Your table is open below." : "You are registered. You can return to this page whenever you like.", "success");
       /* The record replaces the form higher up the page, so bring it into view rather than leaving
          someone looking at the empty space where the button used to be. */
       $("registered").scrollIntoView({ block: "start", behavior: "smooth" });

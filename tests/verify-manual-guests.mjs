@@ -15,6 +15,7 @@ assert(sql.includes('private.require_ssuite_staff_permission'));
 assert(sql.includes('pg_advisory_xact_lock'));
 assert(sql.indexOf('return v_old.result',sql.indexOf('FUNCTION public.create_ssuite_admin_attendee')) < sql.indexOf('This guest already exists'));
 assert(sql.includes('lower(a.secondary_email)=v_email'));
-assert(!/insert into public.orders|queue_ssuite_email|table_management_tokens/i.test(sql));
+const creationSql=sql.split('-- Explicit staff action only:')[0];
+assert(!/insert into public.orders|queue_ssuite_email|table_management_tokens/i.test(creationSql));
 assert(read('admin/admin-config.js').includes('supabaseUrl: ""'));
 console.log('PASS: syntax, chooser, 5/10 claims, permissions, idempotency, duplicate guard, no order/mail/token creation, disconnected preview');

@@ -834,11 +834,6 @@ async function prepareCompletionLink(db: ReturnType<typeof client>, event: strin
   const attendee = await db.from("attendees").select("id,email,first_name,last_name,registration_status,is_table_lead,table_id")
     .eq("id", attendeeId).eq("event_id", event).maybeSingle();
   if (attendee.error || !attendee.data) fail("That person is not on the guest list");
-  if (attendee.data.table_id) {
-    const table = await db.from("event_tables").select("order_id").eq("id", attendee.data.table_id).eq("event_id", event).maybeSingle();
-    if (table.error || !table.data) fail("Table allocation could not be verified", 503);
-    if (!table.data.order_id) fail("This reserved table is staff-managed. Self-service and registration emails are disabled for its guests.", 409);
-  }
   if (attendee.data.registration_status === "complete") fail("That person has already completed their registration", 409);
   if (!attendee.data.email) fail("That person has no email address on file");
 
@@ -891,9 +886,23 @@ async function revealRegistrationCompletionLink(body: Json, user: User): Promise
  *  ordinary audited outbox. Deliberately a separate action from revealing the link: adding
  *  someone still sends nothing, and staff decide per person whether to email, copy, or do
  *  nothing. The queued row carries identifiers only; the link is rebuilt at send time. */
+async function manualGuestEmail(body: Json, user: User, send = false): Promise<Json> {
+  const attendeeId = uuid(body.attendee_id, "Invalid attendee");
+  const db = client(); const event = await eventId();
+  const inspect = await db.rpc("ssuite_admin_manual_guest_email", { p_actor_user_id: user.id, p_event_id: event, p_attendee_id: attendeeId, p_send: false });
+  if (inspect.error || !inspect.data) fail("This guest is not eligible for manual registration email or confirmation. Check active allocation and staff provenance.", 400);
+  if (!send) return { result: inspect.data };
+  if (inspect.data.registration_status === "pending") await prepareCompletionLink(db, event, attendeeId);
+  const queued = await db.rpc("ssuite_admin_manual_guest_email", { p_actor_user_id: user.id, p_event_id: event, p_attendee_id: attendeeId, p_send: true });
+  if (queued.error || !queued.data) fail("The email could not be queued. Refresh its status before trying again.", 400);
+  return { result: queued.data };
+}
+
 async function sendRegistrationCompletionEmail(body: Json, user: User): Promise<Json> {
   const attendeeId = uuid(body.attendee_id, "Invalid attendee");
   const db = client(); const event = await eventId();
+  const manual = await db.from("attendees").select("order_id,source").eq("id", attendeeId).eq("event_id", event).maybeSingle();
+  if (!manual.error && manual.data && !manual.data.order_id && ["complimentary", "staff"].includes(manual.data.source)) return await manualGuestEmail(body, user, true);
   const prepared = await prepareCompletionLink(db, event, attendeeId);
 
   const queued = await db.rpc("queue_ssuite_email", {
@@ -1076,6 +1085,8 @@ async function route(body: Json, origin: string | null, user: User): Promise<Res
   if (action === "attendee_photo_set") return json(await setAttendeePhoto(body, user), 200, origin);
   if (action === "eligible_paid_table_orders") return json(await eligiblePaidTableOrders(user), 200, origin);
   if (action === "admin_unseated_attendees") return json(await unseatedAdminAttendees(user), 200, origin);
+  if (action === "manual_guest_email_status") return json(await manualGuestEmail(body, user), 200, origin);
+  if (action === "manual_guest_email_send") return json(await manualGuestEmail(body, user, true), 200, origin);
   if (action === "admin_allocated_host_create") return json(await createAdminAllocatedHost(body, user), 200, origin);
   if (action === "admin_table_create") return json(await createAdminTable(body, user), 200, origin);
   if (action === "admin_attendee_create") return json(await createAdminAttendee(body, user), 200, origin);

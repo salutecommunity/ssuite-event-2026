@@ -558,7 +558,7 @@ function renderTables(host, payload) {
     heading.append(title, meta); card.append(heading);
     const controls = element("div", "table-controls"); const add = element("button", "quiet compact", "Add guest record"); add.type = "button"; add.addEventListener("click", () => { const open = (table.table_seats || []).find((seat) => !seat.attendee_id && !seat.locked); if (!open) return status("There is no open seat on this table.", "error"); attendeeCreateForm(table, open.seat_number); }); const editTable = element("button", "quiet compact", table.table_number ? "Change table number / name" : "Assign table number"); editTable.type = "button"; editTable.addEventListener("click", () => tableEditForm(table)); const leadButton = element("button", "quiet compact", "Set table host"); leadButton.type = "button"; leadButton.addEventListener("click", () => setLeadForm(table)); controls.append(editTable, add, leadButton); card.append(controls);
 
-    if (!table.order_id) card.append(element("p", "notice", "Staff-managed allocation. Host self-service is disabled; manage this table and its guests here. Nothing is emailed by adding guests."));
+    if (!table.order_id) card.append(element("p", "notice", "Staff-managed allocation. Table management is staff-only. You can explicitly send each guest a personal registration email, then their confirmation after completion. Nothing is emailed by adding guests."));
     const lead = (table.table_seats || []).find((seat) => seat.attendee?.is_table_lead)?.attendee;
     const access = table.lead_access; const accessDelivery = access?.delivery;
     let accessLabel = "No management credential";
@@ -567,6 +567,7 @@ function renderTables(host, payload) {
     const buyerLine = element("p", "buyer-line", buyer ? `Table purchaser: ${text(buyer.purchaser_first_name)} ${text(buyer.purchaser_last_name)} · ${text(buyer.purchaser_email)} · ${money(buyer.total_cents, buyer.currency)} paid ${date(buyer.paid_at)}` : "Table purchaser: No linked purchase — staff-reserved table");
     const leadLine = element("p", "lead-line", `Table host: ${lead ? `${text(lead.first_name)} ${text(lead.last_name)} · ${text(lead.email)}` : "Not assigned"} · ${accessLabel}`);
     card.append(buyerLine, leadLine);
+    if (!table.order_id && lead) card.append(manualGuestEmailControls(lead));
     if (table.order_id && lead && lead.registration_status !== "complete") {
       card.append(completionLinkControls({ ...lead, order_id: table.order_id }, "This host has not completed their own registration yet, so their table cannot open. The link below asks them for the missing details and their agreement — the one thing staff cannot enter for them. Their table opens for them the moment they finish."));
     }
@@ -668,12 +669,12 @@ function attendeeCreateForm(table = null, seatNumber = null, lockedProvenance = 
   if (table) { const details = element("p", "fineprint", `This guest will be added to Table ${table.table_number || "number not assigned"}, seat ${seatNumber}.`); form.append(details); }
   if (allocatedHost) {
     form.append(formField("Table number", "allocated_table_number", "", { required: true, type: "number", max: 4 }), formField("Table name", "allocated_table_name", "", { required: true, max: 300 }), selectField("Allocated seats (includes host)", "allocated_seat_count", [{ value: "5", label: "Half table · 5 seats" }, { value: "10", label: "Full table · 10 seats" }], "5"));
-    form.append(element("p", "notice", "Staff-managed allocation only. Host self-service and automatic registration emails are disabled for this flow. Staff can add and manage guests in Tables. No payment or receipt is recorded."));
+    form.append(element("p", "notice", "Staff-managed allocation only. Table management is staff-only. Registration and confirmation emails are optional explicit actions after save. Staff can add and manage guests in Tables. No payment or receipt is recorded."));
   }
   attendeeNeedsFields(form);
   recordTypeFields(form, paid ? "pre_existing_paid" : lockedProvenance);
   if (allocatedHost) form.querySelector('select[name="provenance"] option[value="pre_existing_paid"]').remove();
-  operationActions(form, allocatedHost ? "Add host and reserve seats" : "Create guest record", async (data) => { const photo = data.get("guest_photo"); const record = Object.fromEntries(data.entries()); delete record.guest_photo; record.needs = { meal_preference: data.get("meal_preference"), has_dietary_or_allergy_needs: data.has("has_dietary_or_allergy_needs"), dietary_or_allergy_details: data.has("has_dietary_or_allergy_needs") ? data.get("dietary_or_allergy_details") : null, has_accessibility_needs: data.has("has_accessibility_needs"), accessibility_details: data.has("has_accessibility_needs") ? data.get("accessibility_details") : null }; for (const key of ["meal_preference","has_dietary_or_allergy_needs","dietary_or_allergy_details","has_accessibility_needs","accessibility_details"]) delete record[key]; if (table) { record.table_id = table.id; record.seat_number = String(seatNumber); } const operation = allocatedHost ? allocatedHostOperation(record) : { action: "admin_attendee_create", record }; const payload = await call({ ...operation, request_id: requestId }); const attendeeId = payload?.result?.attendee_id; if (attendeeId && photo instanceof File && photo.size) await uploadAttendeePhoto(attendeeId, photo); if (attendeeId) status(allocatedHost ? "Host and allocated seats saved together. Manage guests in Tables. Self-service is disabled; nothing was sent." : "Guest record created. Registration is not complete and nothing was sent.", "success"); });
+  operationActions(form, allocatedHost ? "Add host and reserve seats" : "Create guest record", async (data) => { const photo = data.get("guest_photo"); const record = Object.fromEntries(data.entries()); delete record.guest_photo; record.needs = { meal_preference: data.get("meal_preference"), has_dietary_or_allergy_needs: data.has("has_dietary_or_allergy_needs"), dietary_or_allergy_details: data.has("has_dietary_or_allergy_needs") ? data.get("dietary_or_allergy_details") : null, has_accessibility_needs: data.has("has_accessibility_needs"), accessibility_details: data.has("has_accessibility_needs") ? data.get("accessibility_details") : null }; for (const key of ["meal_preference","has_dietary_or_allergy_needs","dietary_or_allergy_details","has_accessibility_needs","accessibility_details"]) delete record[key]; if (table) { record.table_id = table.id; record.seat_number = String(seatNumber); } const operation = allocatedHost ? allocatedHostOperation(record) : { action: "admin_attendee_create", record }; const payload = await call({ ...operation, request_id: requestId }); const attendeeId = payload?.result?.attendee_id; if (attendeeId && photo instanceof File && photo.size) await uploadAttendeePhoto(attendeeId, photo); if (attendeeId && !paid) { form.querySelector(".manual-email-controls")?.remove(); form.append(manualGuestEmailControls({ id: attendeeId, email: record.email, source: record.provenance === "complimentary" ? "complimentary" : "staff" })); } if (attendeeId) status(allocatedHost ? "Host and allocated seats saved together. Manage guests in Tables. Table management is staff-only; nothing was sent." : "Guest record created. Registration is not complete and nothing was sent.", "success"); });
   openOperation(allocatedHost ? "Add table host / allocated seats" : "Add guest record", allocatedHost ? "One protected save creates the table allocation, host in seat 1, and table-host assignment. Seats include the host; no separate seat is counted. Staff-managed only; no self-service link or email is created." : "This creates a staff-added guest record only. Registration and personal consent remain incomplete until the guest completes them.", () => form);
 }
 function tableCreateForm() {
@@ -717,8 +718,31 @@ function formField(labelText, name, value = "", options = {}) {
    arrived outside the site, or anyone staff added by hand. This hands staff the private link
    that lets that person finish it themselves. Issuing a link sends nothing: delivery stays a
    separate, deliberate act, so nobody is emailed by the act of being added. */
+function manualGuestEmailControls(attendee) {
+  const box = element("section", "manual-email-controls"); box.append(element("h3", "", "Optional guest email"));
+  const note = element("p", "notice", "Checking recipient and delivery status…"); note.setAttribute("role", "status");
+  const send = element("button", "quiet compact", "Send email"); send.type = "button"; send.disabled = true;
+  const refresh = element("button", "quiet compact", "Refresh email status"); refresh.type = "button";
+  let current = null;
+  function show(result) {
+    current = result;
+    const pending = result.requires_personal_completion;
+    send.textContent = pending ? "Send registration email" : "Send normal guest confirmation";
+    send.disabled = result.status !== "not_queued";
+    note.textContent = "To: " + result.recipient + " · " + (pending ? "Registration email" : "Guest confirmation") + " · Status: " + String(result.status).replaceAll("_", " ") + (result.held_until ? " · Compliance hold until " + date(result.held_until) : "") + (result.delivered_at ? " · Delivered " + date(result.delivered_at) : "") + ". " + (pending ? "They must personally complete registration before a confirmation can be sent. Refresh after they finish." : "Uses the normal guest confirmation, without a payment receipt.") + " No table-management access is granted. Queued or accepted is not delivered. Repeated clicks reuse the same email; failed or suppressed messages need staff review.";
+  }
+  async function load() { send.disabled = true; try { const payload = await call({ action: "manual_guest_email_status", attendee_id: attendee.id }); show(payload.result); } catch (error) { note.textContent = error.message; } }
+  send.addEventListener("click", async () => {
+    if (!current || !confirm("Send " + (current.requires_personal_completion ? "the personal registration email" : "the guest confirmation") + " to " + current.recipient + "? No receipt or payment claim will be sent.")) return;
+    send.disabled = true;
+    try { const payload = await call({ action: "manual_guest_email_send", attendee_id: attendee.id }); show(payload.result); }
+    catch (error) { note.textContent = error.message + " Refresh status before retrying; the same email is never duplicated."; }
+  });
+  refresh.addEventListener("click", load); box.append(note, send, refresh); load(); return box;
+}
+
 function completionLinkControls(attendee, note) {
-  if (attendee.table_id && !attendee.order_id) return element("p", "notice", "Staff-managed reserved table: self-service links and registration emails are disabled. Staff can manage this guest in the dashboard; personal consent remains unrecorded.");
+  if (!attendee.order_id && (attendee.table_id || ["complimentary", "staff"].includes(attendee.source))) return manualGuestEmailControls(attendee);
   const box = element("div", "completion-controls");
   box.append(element("p", "fineprint", note));
   const send = element("button", "button dark compact", "Send finish-registration email"); send.type = "button";
@@ -819,7 +843,8 @@ function renderAttendeeDetail(payload, message = "") {
     : orderConsent.map((c) => `${payload.attendee?.is_purchaser ? "Accepted at checkout by this attendee" : `Accepted at checkout by ${purchaser || "the purchaser"}, for the guests on this registration`} · ${date(c.accepted_at)} · ${versions(c)}`);
   consent.append(element("p", "", consentLines.length ? consentLines.join("\n") : "Nothing on record yet. Staff cannot accept the terms, privacy notice or media release for anyone — this is recorded when the attendee completes their own registration."));
   host.append(consent);
-  if (a.registration_status !== "complete") {
+  if (!a.order_id && ["complimentary", "staff"].includes(a.source)) host.append(manualGuestEmailControls(a));
+  else if (a.registration_status !== "complete") {
     const section = element("section", "detail-section");
     section.append(element("h3", "", "Finish their registration"));
     section.append(completionLinkControls(a, "Adding someone here sends nothing. This private link opens their own record, asks only for what is missing, and takes their agreement in their own hands — staff can enter every factual detail for them, but never the agreement."));
