@@ -216,7 +216,9 @@
       if (payload.reason === "invalid") throw new Error("Please review your answers and try again.");
       if (!response.ok || payload.accepted !== true) throw new Error("We could not record your interest. Please try again shortly — your answers are saved on this page.");
       clearDraft();
+      setStatus("", "");
       form.hidden = true;
+      form.style.display = "none";
       success.hidden = false;
       success.focus();
     } catch (error) {
