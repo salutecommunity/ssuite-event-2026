@@ -22,6 +22,64 @@
     statusEl.textContent = message;
     statusEl.dataset.kind = kind;
     statusEl.hidden = !message;
+    if (kind !== "error") hideFallback();
+  }
+
+  // ---- Draft preservation: a failed attempt or reload never loses what someone typed. ----
+  // sessionStorage stays in this browser tab only and is cleared on success.
+  const DRAFT_KEY = "ssuite-ambassador-draft-v1";
+  function saveDraft() {
+    try {
+      const data = {};
+      for (const name of ["first_name", "last_name", "email", "job_title", "company", "salute_relationship"]) data[name] = value(name);
+      data.motivations = selectedMotivations();
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(data));
+    } catch { /* storage unavailable: nothing to preserve */ }
+  }
+  function restoreDraft() {
+    try {
+      const data = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || "null");
+      if (!data || typeof data !== "object") return;
+      for (const [name, v] of Object.entries(data)) {
+        if (name === "motivations" || typeof v !== "string") continue;
+        const field = form.elements.namedItem(name);
+        if (field && !field.value) field.value = v;
+      }
+      if (Array.isArray(data.motivations)) {
+        form.querySelectorAll('input[name="motivations"]').forEach((box) => { if (data.motivations.includes(box.value)) box.checked = true; });
+      }
+    } catch { /* ignore a malformed draft */ }
+  }
+  function clearDraft() { try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* ignore */ } }
+
+  // ---- Fallback: if the form cannot submit, interest can still reach the team by email. ----
+  const fallback = document.createElement("p");
+  fallback.className = "fineprint";
+  fallback.hidden = true;
+  statusEl.insertAdjacentElement("afterend", fallback);
+  function hideFallback() { fallback.hidden = true; }
+  function showFallback() {
+    const lines = [
+      "I'd like to express my interest in serving as an S.Suite Ambassador.",
+      "",
+      `Name: ${value("first_name")} ${value("last_name")}`.trim(),
+      `Email: ${value("email")}`,
+      `Title: ${value("job_title")}`,
+      `Company: ${value("company")}`,
+      `Connection to SALUTE: ${form.elements.namedItem("salute_relationship")?.selectedOptions?.[0]?.textContent || ""}`
+    ];
+    const href = `mailto:ssuite@salute.community?subject=${encodeURIComponent("S.Suite Ambassador Interest")}&body=${encodeURIComponent(lines.join("\n"))}`;
+    fallback.textContent = "";
+    fallback.append("Still having trouble? ");
+    const link = document.createElement("a");
+    link.href = href;
+    link.textContent = "Email your interest to ssuite@salute.community";
+    fallback.append(link, " and we will follow up.");
+    fallback.hidden = false;
+  }
+  function fail(message) {
+    setStatus(message, "error");
+    showFallback();
   }
 
   let turnstileLoad;
@@ -65,13 +123,13 @@
         "error-callback": () => {
           challengeError = "The security check failed. Please try again, and allow challenges.cloudflare.com if you use a content blocker.";
           needsReset = true;
-          setStatus(challengeError, "error");
+          fail(challengeError);
         },
         "expired-callback": () => { needsReset = true; },
         "timeout-callback": () => {
           challengeError = "The security check timed out. Please try again and complete the security check below.";
           needsReset = true;
-          setStatus(challengeError, "error");
+          fail(challengeError);
         }
       });
     }
@@ -128,13 +186,15 @@
     try {
       const token = await turnstileToken();
       setStatus("Submitting your interest…", "working");
-      const response = await fetch(`${apiBase}/functions/v1/ambassador-interest`, {
-        method: "POST",
-        mode: "cors",
-        credentials: "omit",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      let response;
+      try {
+        response = await fetch(`${apiBase}/functions/v1/ambassador-interest`, {
+          method: "POST",
+          mode: "cors",
+          credentials: "omit",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
           first_name: value("first_name"),
           last_name: value("last_name"),
           email,
@@ -145,16 +205,22 @@
           consent_accepted: form.elements.namedItem("consent")?.checked === true,
           privacy_version: text(ambassadorCfg.privacyUrl) || cfg.policy?.privacyVersion || "",
           turnstile_token: token
-        })
-      });
+          })
+        });
+      } catch {
+        throw new Error("We couldn't reach our server. Please check your connection and submit again — your answers are saved on this page.");
+      }
       const payload = await response.json().catch(() => ({}));
       if (response.status === 429) throw new Error("Too many requests from this connection. Please wait a few minutes and try again.");
-      if (!response.ok || payload.accepted !== true) throw new Error("We could not record your interest. Please try again shortly, or contact ssuite@salute.community.");
+      if (payload.reason === "security_check") throw new Error("The security check expired before we could confirm it. Please complete the check below again, then submit — your answers are saved.");
+      if (payload.reason === "invalid") throw new Error("Please review your answers and try again.");
+      if (!response.ok || payload.accepted !== true) throw new Error("We could not record your interest. Please try again shortly — your answers are saved on this page.");
+      clearDraft();
       form.hidden = true;
       success.hidden = false;
       success.focus();
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "We could not record your interest. Please try again shortly.", "error");
+      fail(error instanceof Error ? error.message : "We could not record your interest. Please try again shortly.");
       needsReset = true;
       submitButton.disabled = false;
     } finally {
@@ -164,6 +230,9 @@
 
   const ready = ambassadorCfg.enabled === true && apiBase && text(cfg.turnstileSiteKey);
   if (ready) {
+    restoreDraft();
+    form.addEventListener("input", saveDraft);
+    form.addEventListener("change", saveDraft);
     submitButton.textContent = "Submit My Interest";
     submitButton.disabled = false;
     submitButton.removeAttribute("aria-disabled");
