@@ -26,6 +26,9 @@
 
   let turnstileLoad;
   let widgetId;
+  let challengeError = "";
+  let needsReset = false;
+  let submitting = false;
   function loadTurnstile() {
     if (window.turnstile) return Promise.resolve(window.turnstile);
     if (turnstileLoad) return turnstileLoad;
@@ -34,10 +37,20 @@
       script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
       script.async = true;
       script.defer = true;
-      script.onload = () => window.turnstile ? resolve(window.turnstile) : reject(new Error("The security check could not load. Please refresh and try again."));
-      script.onerror = () => reject(new Error("The security check could not load. Please refresh and try again."));
+      const fail = () => {
+        clearTimeout(timer);
+        script.remove();
+        reject(new Error("The security check could not load. Check your connection or content blocker, then try again."));
+      };
+      const timer = setTimeout(fail, 20000);
+      script.onload = () => {
+        clearTimeout(timer);
+        if (window.turnstile) resolve(window.turnstile);
+        else fail();
+      };
+      script.onerror = fail;
       document.head.appendChild(script);
-    });
+    }).catch((error) => { turnstileLoad = undefined; throw error; });
     return turnstileLoad;
   }
 
@@ -48,8 +61,18 @@
       widgetId = api.render(slot, {
         sitekey: text(cfg.turnstileSiteKey),
         action: text(ambassadorCfg.turnstileAction) || "ambassador-interest",
-        "error-callback": () => setStatus("The security check failed. Please retry.", "error"),
-        "expired-callback": () => setStatus("The security check expired. Please retry.", "error")
+        callback: () => { challengeError = ""; needsReset = false; },
+        "error-callback": () => {
+          challengeError = "The security check failed. Please try again, and allow challenges.cloudflare.com if you use a content blocker.";
+          needsReset = true;
+          setStatus(challengeError, "error");
+        },
+        "expired-callback": () => { needsReset = true; },
+        "timeout-callback": () => {
+          challengeError = "The security check timed out. Please try again and complete the security check below.";
+          needsReset = true;
+          setStatus(challengeError, "error");
+        }
       });
     }
     return widgetId;
@@ -58,13 +81,20 @@
   async function turnstileToken() {
     const api = await loadTurnstile();
     const id = await warmTurnstile();
-    const deadline = Date.now() + 15000;
+    if (needsReset) {
+      challengeError = "";
+      needsReset = false;
+      api.reset(id);
+    }
+    const deadline = Date.now() + 90000;
     while (Date.now() < deadline) {
+      if (challengeError) throw new Error(challengeError);
       const value = api.getResponse(id);
       if (value) return value;
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    throw new Error("The security check has not cleared. Please refresh and try again, or contact ssuite@salute.community.");
+    needsReset = true;
+    throw new Error("The security check has not cleared. Please try again and complete the security check below, or contact ssuite@salute.community.");
   }
 
   function value(name) {
@@ -77,6 +107,7 @@
   }
 
   async function submit() {
+    if (submitting) return;
     setStatus("", "");
     if (!form.reportValidity()) return;
     const email = value("email").toLowerCase();
@@ -91,9 +122,12 @@
       return;
     }
 
+    submitting = true;
     submitButton.disabled = true;
-    setStatus("Submitting your interest…", "working");
+    setStatus("Completing the security check… Please complete any challenge shown below.", "working");
     try {
+      const token = await turnstileToken();
+      setStatus("Submitting your interest…", "working");
       const response = await fetch(`${apiBase}/functions/v1/ambassador-interest`, {
         method: "POST",
         mode: "cors",
@@ -110,7 +144,7 @@
           motivations,
           consent_accepted: form.elements.namedItem("consent")?.checked === true,
           privacy_version: text(ambassadorCfg.privacyUrl) || cfg.policy?.privacyVersion || "",
-          turnstile_token: await turnstileToken()
+          turnstile_token: token
         })
       });
       const payload = await response.json().catch(() => ({}));
@@ -121,8 +155,10 @@
       success.focus();
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "We could not record your interest. Please try again shortly.", "error");
-      if (widgetId !== undefined && window.turnstile) window.turnstile.reset(widgetId);
+      needsReset = true;
       submitButton.disabled = false;
+    } finally {
+      submitting = false;
     }
   }
 
@@ -131,7 +167,17 @@
     submitButton.textContent = "Submit My Interest";
     submitButton.disabled = false;
     submitButton.removeAttribute("aria-disabled");
-    form.addEventListener("focusin", () => loadTurnstile().catch(() => {}), { once: true });
+    const prepare = () => warmTurnstile().catch((error) => setStatus(error.message, "error"));
+    form.addEventListener("focusin", prepare);
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          observer.disconnect();
+          prepare();
+        }
+      }, { rootMargin: "200px" });
+      observer.observe(form);
+    }
   } else {
     submitButton.textContent = "Interest form unavailable";
     setStatus("The interest form is unavailable right now. Please contact ssuite@salute.community.", "error");
