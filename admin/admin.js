@@ -558,6 +558,7 @@ function renderTables(host, payload) {
     heading.append(title, meta); card.append(heading);
     const controls = element("div", "table-controls"); const add = element("button", "quiet compact", "Add guest record"); add.type = "button"; add.addEventListener("click", () => { const open = (table.table_seats || []).find((seat) => !seat.attendee_id && !seat.locked); if (!open) return status("There is no open seat on this table.", "error"); attendeeCreateForm(table, open.seat_number); }); const editTable = element("button", "quiet compact", table.table_number ? "Change table number / name" : "Assign table number"); editTable.type = "button"; editTable.addEventListener("click", () => tableEditForm(table)); const leadButton = element("button", "quiet compact", "Set table host"); leadButton.type = "button"; leadButton.addEventListener("click", () => setLeadForm(table)); controls.append(editTable, add, leadButton); card.append(controls);
 
+    if (!table.order_id) card.append(element("p", "notice", "Staff-managed allocation. Host self-service is disabled; manage this table and its guests here. Nothing is emailed by adding guests."));
     const lead = (table.table_seats || []).find((seat) => seat.attendee?.is_table_lead)?.attendee;
     const access = table.lead_access; const accessDelivery = access?.delivery;
     let accessLabel = "No management credential";
@@ -566,10 +567,10 @@ function renderTables(host, payload) {
     const buyerLine = element("p", "buyer-line", buyer ? `Table purchaser: ${text(buyer.purchaser_first_name)} ${text(buyer.purchaser_last_name)} · ${text(buyer.purchaser_email)} · ${money(buyer.total_cents, buyer.currency)} paid ${date(buyer.paid_at)}` : "Table purchaser: No linked purchase — staff-reserved table");
     const leadLine = element("p", "lead-line", `Table host: ${lead ? `${text(lead.first_name)} ${text(lead.last_name)} · ${text(lead.email)}` : "Not assigned"} · ${accessLabel}`);
     card.append(buyerLine, leadLine);
-    if (lead && lead.registration_status !== "complete") {
-      card.append(completionLinkControls(lead, "This host has not completed their own registration yet, so their table cannot open. The link below asks them for the missing details and their agreement — the one thing staff cannot enter for them. Their table opens for them the moment they finish."));
+    if (table.order_id && lead && lead.registration_status !== "complete") {
+      card.append(completionLinkControls({ ...lead, order_id: table.order_id }, "This host has not completed their own registration yet, so their table cannot open. The link below asks them for the missing details and their agreement — the one thing staff cannot enter for them. Their table opens for them the moment they finish."));
     }
-    if (lead && lead.registration_status === "complete") {
+    if (table.order_id && lead && lead.registration_status === "complete") {
       const reveal = element("button", "quiet compact", "Show / copy management link"); reveal.type = "button";
       const linkBox = element("div", "management-link-box"); linkBox.hidden = true;
       reveal.addEventListener("click", async () => {
@@ -649,19 +650,31 @@ function addGuestChoice() {
   openOperation("Add guest", "Choose an individual complimentary attendee or reserve seats for a table host. Nothing is emailed automatically.", () => {
     const box = element("div", "dialog-actions");
     const comp = element("button", "button dark", "Complimentary individual"); comp.type = "button"; comp.addEventListener("click", () => attendeeCreateForm(null, null, "complimentary"));
-    const host = element("button", "button outline", "Table host / allocated seats"); host.type = "button"; host.addEventListener("click", () => tableCreateForm());
+    const host = element("button", "button outline", "Table host / allocated seats"); host.type = "button"; host.addEventListener("click", () => attendeeCreateForm(null, null, "", true));
     box.append(comp, host); return box;
   });
 }
-function attendeeCreateForm(table = null, seatNumber = null, lockedProvenance = "") {
+function allocatedHostOperation(record) {
+  const host = { ...record }; const count = Number(host.allocated_seat_count);
+  if (![5, 10].includes(count) || !["complimentary", "sponsor", "honoree", "staff"].includes(host.provenance)) throw new Error("Choose five or ten reserved seats and a non-paid record type.");
+  const table = { table_number: host.allocated_table_number, name: host.allocated_table_name, seat_count: count, provenance: host.provenance, reason: host.reason, approver: host.approver };
+  delete host.allocated_table_number; delete host.allocated_table_name; delete host.allocated_seat_count;
+  return { action: "admin_allocated_host_create", record: { table, host } };
+}
+function attendeeCreateForm(table = null, seatNumber = null, lockedProvenance = "", allocatedHost = false) {
   const requestId = crypto.randomUUID(); const paid = Boolean(table?.order_id); const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid");
   grid.append(formField("First name", "first_name", "", { required: true, max: 200 }), formField("Last name", "last_name", "", { required: true, max: 200 }), formField("Email", "email", "", { required: true, type: "email", max: 320 }), formField("Secondary email (optional)", "secondary_email", "", { type: "email", max: 320 }), formField("Phone (optional)", "phone", "", { type: "tel", max: 100 }), formField("Job title", "job_title", "", { required: true, max: 300 }), formField("Company", "company", "", { required: true, max: 300 }), formField("Pronunciation (optional)", "pronunciation", "", { max: 300 }), formField("LinkedIn profile (optional)", "linkedin_url", "", { type: "url", max: 500 })); form.append(grid);
   form.append(photoField(), formField("Bio (optional)", "bio", "", { multiline: true, max: 5000 }), formField("Relationship notes (optional)", "relationship_notes", "", { multiline: true, max: 2000 }));
   if (table) { const details = element("p", "fineprint", `This guest will be added to Table ${table.table_number || "number not assigned"}, seat ${seatNumber}.`); form.append(details); }
+  if (allocatedHost) {
+    form.append(formField("Table number", "allocated_table_number", "", { required: true, type: "number", max: 4 }), formField("Table name", "allocated_table_name", "", { required: true, max: 300 }), selectField("Allocated seats (includes host)", "allocated_seat_count", [{ value: "5", label: "Half table · 5 seats" }, { value: "10", label: "Full table · 10 seats" }], "5"));
+    form.append(element("p", "notice", "Staff-managed allocation only. Host self-service and automatic registration emails are disabled for this flow. Staff can add and manage guests in Tables. No payment or receipt is recorded."));
+  }
   attendeeNeedsFields(form);
   recordTypeFields(form, paid ? "pre_existing_paid" : lockedProvenance);
-  operationActions(form, "Create guest record", async (data) => { const photo = data.get("guest_photo"); const record = Object.fromEntries(data.entries()); delete record.guest_photo; record.needs = { meal_preference: data.get("meal_preference"), has_dietary_or_allergy_needs: data.has("has_dietary_or_allergy_needs"), dietary_or_allergy_details: data.has("has_dietary_or_allergy_needs") ? data.get("dietary_or_allergy_details") : null, has_accessibility_needs: data.has("has_accessibility_needs"), accessibility_details: data.has("has_accessibility_needs") ? data.get("accessibility_details") : null }; for (const key of ["meal_preference","has_dietary_or_allergy_needs","dietary_or_allergy_details","has_accessibility_needs","accessibility_details"]) delete record[key]; if (table) { record.table_id = table.id; record.seat_number = String(seatNumber); } const payload = await call({ action: "admin_attendee_create", request_id: requestId, record }); const attendeeId = payload?.result?.attendee_id; if (attendeeId && photo instanceof File && photo.size) await uploadAttendeePhoto(attendeeId, photo); if (attendeeId) status("Guest record created. Registration is not complete and nothing was sent.", "success"); });
-  openOperation("Add guest record", "This creates a staff-added guest record only. Registration and personal consent remain incomplete until the guest completes them.", () => form);
+  if (allocatedHost) form.querySelector('select[name="provenance"] option[value="pre_existing_paid"]').remove();
+  operationActions(form, allocatedHost ? "Add host and reserve seats" : "Create guest record", async (data) => { const photo = data.get("guest_photo"); const record = Object.fromEntries(data.entries()); delete record.guest_photo; record.needs = { meal_preference: data.get("meal_preference"), has_dietary_or_allergy_needs: data.has("has_dietary_or_allergy_needs"), dietary_or_allergy_details: data.has("has_dietary_or_allergy_needs") ? data.get("dietary_or_allergy_details") : null, has_accessibility_needs: data.has("has_accessibility_needs"), accessibility_details: data.has("has_accessibility_needs") ? data.get("accessibility_details") : null }; for (const key of ["meal_preference","has_dietary_or_allergy_needs","dietary_or_allergy_details","has_accessibility_needs","accessibility_details"]) delete record[key]; if (table) { record.table_id = table.id; record.seat_number = String(seatNumber); } const operation = allocatedHost ? allocatedHostOperation(record) : { action: "admin_attendee_create", record }; const payload = await call({ ...operation, request_id: requestId }); const attendeeId = payload?.result?.attendee_id; if (attendeeId && photo instanceof File && photo.size) await uploadAttendeePhoto(attendeeId, photo); if (attendeeId) status(allocatedHost ? "Host and allocated seats saved together. Manage guests in Tables. Self-service is disabled; nothing was sent." : "Guest record created. Registration is not complete and nothing was sent.", "success"); });
+  openOperation(allocatedHost ? "Add table host / allocated seats" : "Add guest record", allocatedHost ? "One protected save creates the table allocation, host in seat 1, and table-host assignment. Seats include the host; no separate seat is counted. Staff-managed only; no self-service link or email is created." : "This creates a staff-added guest record only. Registration and personal consent remain incomplete until the guest completes them.", () => form);
 }
 function tableCreateForm() {
   const requestId = crypto.randomUUID(); const form = element("form", "attendee-edit"); const grid = element("div", "edit-grid"); grid.append(formField("Table number", "table_number", "", { required: true, type: "number", max: 4 }), formField("Table name", "name", "", { required: true, max: 300 })); form.append(grid); form.append(selectField("Allocated seats (includes host)", "seat_count", [{ value: "5", label: "Half table · 5 seats" }, { value: "10", label: "Full table · 10 seats" }], "5")); recordTypeFields(form);
@@ -705,6 +718,7 @@ function formField(labelText, name, value = "", options = {}) {
    that lets that person finish it themselves. Issuing a link sends nothing: delivery stays a
    separate, deliberate act, so nobody is emailed by the act of being added. */
 function completionLinkControls(attendee, note) {
+  if (attendee.table_id && !attendee.order_id) return element("p", "notice", "Staff-managed reserved table: self-service links and registration emails are disabled. Staff can manage this guest in the dashboard; personal consent remains unrecorded.");
   const box = element("div", "completion-controls");
   box.append(element("p", "fineprint", note));
   const send = element("button", "button dark compact", "Send finish-registration email"); send.type = "button";
