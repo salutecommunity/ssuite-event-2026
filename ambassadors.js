@@ -219,8 +219,17 @@
       setStatus("", "");
       form.hidden = true;
       form.style.display = "none";
+      // Replace the whole card's "Express your interest / Tell us about you" header with the
+      // confirmation, so the page never shows the request and the receipt at the same time.
+      const card = form.closest(".form-card");
+      if (card) {
+        card.querySelectorAll(":scope > .eyebrow, :scope > h2, :scope > .form-intro").forEach((el) => { el.hidden = true; el.style.display = "none"; });
+        const heading = success.querySelector("h2");
+        if (heading) { heading.id = heading.id || "ambassador-success-title"; card.setAttribute("aria-labelledby", heading.id); }
+      }
       success.hidden = false;
       success.focus();
+      success.scrollIntoView({ block: "start", behavior: "smooth" });
     } catch (error) {
       fail(error instanceof Error ? error.message : "We could not record your interest. Please try again shortly.");
       needsReset = true;
