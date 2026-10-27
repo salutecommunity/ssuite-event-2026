@@ -125,7 +125,7 @@
     if (w.token) return w.token;
     return await new Promise((resolve, reject) => {
       w.waiters.push(resolve);
-      setTimeout(() => reject(new Error("The security check did not complete. Please try again, or write to ssuite@salute.community.")), 30000);
+      setTimeout(() => reject(new Error("Please complete the security check above, then press the button again. If it will not complete, write to ssuite@salute.community.")), 30000);
     });
   }
   function resetTurnstile(slotId) {
