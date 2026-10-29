@@ -77,7 +77,7 @@
         original.append(label, document.createTextNode(usd(compareAtCents)));
       }
     }
-    if (note) { note.textContent = earlyBirdActive ? "Early-bird price" : "Regular price"; note.hidden = false; }
+    if (note) { note.textContent = card.dataset.partnerPriceLabel || (earlyBirdActive ? "Early-bird price" : "Regular price"); note.hidden = false; }
     if (eyebrow) {
       const base = String(eyebrow.textContent || "").trim().replace(/^EARLY BIRD\s*\/\s*/i, "");
       if (base) eyebrow.textContent = earlyBirdActive ? `EARLY BIRD / ${base}` : base;
