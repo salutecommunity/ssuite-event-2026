@@ -288,6 +288,9 @@ a{color:inherit}
 .upload .up-meta{font-size:13px;color:var(--mute);margin-top:3px}
 .up-btn:focus-within{outline:2px solid var(--black);outline-offset:3px}
 .up-btn{cursor:pointer}
+.vid-bar{height:3px;background:var(--line);margin-top:12px;overflow:hidden}
+.vid-bar span{display:block;height:100%;width:0;background:var(--black);transition:width .2s}
+.vid-spec{margin:14px 0 4px;padding:0 0 0 18px;font-size:15px;line-height:1.6}
 /* contacts */
 .cm{margin-top:10px}
 .cm-h{font:400 26px/1.1 var(--serif);letter-spacing:-.03em;margin:34px 0 14px}
@@ -653,13 +656,42 @@ a{color:inherit}
             <div class="choices">
               <label class="choice"><input type="radio" name="response" value="accept"><span><b>I’m honored to accept</b><small>I will attend in person on November 20.</small></span></label>
               <label class="choice" id="proxy-choice" hidden><input type="radio" name="response" value="proxy"><span><b>I’m honored to accept, and someone will accept on my behalf</b><small>I can’t attend on November 20, so I’ll send someone in my place.</small></span></label>
+              <label class="choice" id="virtual-choice" hidden><input type="radio" name="response" value="virtual"><span><b>I’m honored to accept virtually</b><small>I can’t attend on November 20, so I’ll share a recorded video acceptance.</small></span></label>
               <label class="choice"><input type="radio" name="response" value="decline"><span><b>Respectfully decline</b><small>With gratitude, I’m unable to accept at this time.</small></span></label>
             </div>
           </fieldset>
+          <div id="virtual-box" hidden>
+            <fieldset class="grp" id="video-grp">
+              <legend>Your video acceptance</legend>
+              <p class="grp-d">Please share your recorded acceptance by <b>Sunday, November 15, 2026</b>. It will be shown on screen during the honors presentation, in the room only, and will not be posted, shared or used for any other purpose.</p>
+              <ul class="vid-spec">
+                <li>MP4 preferred (MOV also works)</li>
+                <li>Landscape (16:9), 1920 × 1080 or higher</li>
+              </ul>
+              <div class="upload" id="vid">
+                <div class="up-info">
+                  <p class="up-name" id="vid-name">No video uploaded yet</p>
+                  <p class="up-meta" id="vid-meta" role="status">MP4 or MOV, up to 800 MB. Only the SALUTE team can see it.</p>
+                  <div class="vid-bar" id="vid-bar" hidden><span id="vid-fill"></span></div>
+                </div>
+                <input class="sr" type="file" id="vid-input" accept="video/mp4,video/quicktime,video/x-m4v,.mp4,.mov,.m4v" aria-describedby="vid-meta">
+                <label class="btn btn-line btn-sm up-btn" for="vid-input" id="vid-btn">Upload video</label>
+                <button type="button" class="textbtn" id="vid-remove" hidden>Remove</button>
+              </div>
+              <label class="fld" style="margin-top:18px"><span class="lbl">Or share a download link <span class="opt">optional</span></span>
+                <span class="hint">WeTransfer, Box, Dropbox, Google Drive or similar. Please make sure it won’t expire before November 20.</span>
+                <input type="url" name="videoLink" inputmode="url" autocomplete="off"></label>
+              <p class="grp-d">You can submit your response now and add the video any time before November 15.</p>
+            </fieldset>
+            <fieldset class="grp">
+              <legend>Someone attending on your behalf <span class="opt">optional</span></legend>
+              <div class="choices"><label class="choice"><input type="checkbox" name="repAttend"><span><b>Someone will attend in person on my behalf</b><small>They’ll take your complimentary seat on the evening.</small></span></label></div>
+            </fieldset>
+          </div>
           <div id="proxy-box" hidden>
             <fieldset class="grp">
-              <legend>Who will accept on your behalf</legend>
-              <p class="grp-d">They’ll accept the honor for you on the evening and take your complimentary seat. We’ll be in touch with them about the details.</p>
+              <legend id="proxy-legend">Who will accept on your behalf</legend>
+              <p class="grp-d" id="proxy-d">They’ll accept the honor for you on the evening and take your complimentary seat. We’ll be in touch with them about the details.</p>
               <div class="row2">
                 <label class="fld"><span class="lbl">First name</span><input type="text" name="rFirst" autocomplete="off"></label>
                 <label class="fld"><span class="lbl">Last name</span><input type="text" name="rLast" autocomplete="off"></label>
@@ -742,7 +774,11 @@ a{color:inherit}
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
-          <fieldset class="grp">
+          <div class="must" role="note" id="virt-eve" hidden>
+            <p class="eyebrow">Joining virtually</p>
+            <p>Since you’re accepting by video, there’s nothing to choose here. If someone will attend in person on your behalf, you can add them in step 1.</p>
+          </div>
+          <fieldset class="grp" id="diet-grp">
             <legend id="diet-legend">Your meal</legend>
             <p class="grp-d" id="diet-d">For you.</p>
             <div class="choices compact" id="diet">
@@ -951,6 +987,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261020listnote"></script>
+<script src="/honoree/honoree.js?v=20261029virtual"></script>
 </body>
 </html>

@@ -38,6 +38,8 @@ function isChair(){return !!(H&&H.honor==='Chair')}
 function compTable(){return !!(H&&H.prefill&&H.prefill.comp_table)}
 /* Neha, Oct 18: some honorees (Bing) can't attend and will send someone to accept on their behalf; set prefill.allow_proxy=true on the row. */
 function proxyOK(){return !!(H&&H.prefill&&H.prefill.allow_proxy)}
+/* Neha, Oct 29: some honorees (Leena) accept virtually with a recorded video; set prefill.virtual=true. */
+function virtualOK(){return !!(H&&H.prefill&&H.prefill.virtual)}
 /* Neha, Oct 20: some honorees (Indra) have already accepted and SALUTE already has their bio and headshot; set prefill.on_file=true. The portal skips the decision and the bio/headshot requests. */
 function onFile(){return !!(H&&H.prefill&&H.prefill.on_file)}
 function submitLabel(){return onFile()?'Send my details ':'Submit my response '}
@@ -64,6 +66,12 @@ function proxyCopy(){
   var pc=$('#proxy-choice');if(pc)pc.hidden=false;
   var mt=$('#must-text');if(mt)mt.innerHTML='Honorees are invited to attend in person on <b>Friday, November 20, 2026, at 6:30 p.m.</b> at the Prince George Ballroom in New York City. If you can’t be there, you’re welcome to send someone to accept the honor on your behalf. Accepting does not require any purchase, sponsorship or donation.';
 }
+function virtualCopy(){
+  var vc=$('#virtual-choice');if(vc)vc.hidden=false;
+  var acc=document.querySelector('input[name="response"][value="accept"]');if(acc){var l=acc.closest('label');if(l)l.hidden=true}
+  var pc=$('#proxy-choice');if(pc)pc.hidden=true;
+  var mt=$('#must-text');if(mt)mt.innerHTML='We’re so glad you can join us virtually. Your recorded acceptance will be shown during the honors presentation on <b>Friday, November 20, 2026</b>, at the Prince George Ballroom in New York City. Accepting does not require any purchase, sponsorship or donation.';
+}
 function tableKindVal(){return compTable()?'additional':val('tableKind')}
 function compTableCopy(){
   var tp=$('#table-price');if(tp)tp.textContent='With our thanks, your table is complimentary. If you’d like to host another, an additional table is available at our honoree rate (regular $7,500).';
@@ -85,6 +93,7 @@ function bind(){
   var CH=isChair();
   if(compTable())compTableCopy();
   if(proxyOK())proxyCopy();
+  if(virtualOK())virtualCopy();
   var map={full_name:H.full_name,headline_title:H.headline_title||'',honor_label:CH?'The S.SUITE Chair':H.honor+' Honoree',honor:H.honor};
   $$('[data-b]').forEach(function(el){var v=map[el.dataset.b];if(v!=null)el.textContent=v});
   document.title='S.SUITE · A private invitation for '+H.full_name;
@@ -102,7 +111,7 @@ function bind(){
   b.appendChild(document.createTextNode('. '+(H.honor_blurb||'')));
   }
   if(onFile())onFileCopy();
-  else if(H.response_deadline) $('#deadline-line').textContent=' Please respond by '+fmtDate(H.response_deadline)+'.';
+  else if(H.response_deadline&&!virtualOK()) $('#deadline-line').textContent=' Please respond by '+fmtDate(H.response_deadline)+'.';
   if(!$('#view-invite').hidden) return;
 }
 
@@ -151,7 +160,10 @@ function val(n){var e=F.namedItem(n);return e&&typeof e.value==='string'?e.value
 function chk(n){var e=F.namedItem(n);return !!(e&&e.checked)}
 function declined(){return val('response')==='decline'}
 function proxy(){return val('response')==='proxy'&&proxyOK()}
-function accepting(){return val('response')==='accept'||proxy()}
+function virt(){return val('response')==='virtual'&&virtualOK()}
+function repIn(){return proxy()||(virt()&&chk('repAttend'))}
+function noSeat(){return virt()&&!chk('repAttend')}
+function accepting(){return val('response')==='accept'||proxy()||virt()}
 function repName(){return [val('rFirst'),val('rLast')].join(' ').trim()}
 function measureHead(){var h=$('#p-top').offsetHeight;document.documentElement.style.setProperty('--hh',h+'px')}
 window.addEventListener('resize',measureHead);
@@ -258,7 +270,8 @@ function validate(i){
   function push(n,m){var x=F.namedItem(n);e.push({el:x&&x.length&&!x.tagName?x[0]:x,msg:m})}
   if(i===0){
     if(!val('response')) push('response','Choose whether to accept or respectfully decline.');
-    if(proxy()){
+    if(virt()&&val('videoLink')&&!/^(https?:\/\/)?[^\s\/.]+(\.[^\s\/.]+)+([\/?#]\S*)?$/i.test(val('videoLink'))) push('videoLink','Check the video link. It should be a web address.');
+    if(repIn()){
       if(!val('rFirst')) push('rFirst','Add their first name.');
       if(!val('rLast')) push('rLast','Add their last name.');
       if(!val('rEmail')) push('rEmail','Add their email.');
@@ -272,7 +285,7 @@ function validate(i){
     if(words(val('bio'))>250) push('bio','Please keep your bio to 250 words or fewer.');
     if(val('teamEmail')&&!EMAIL.test(val('teamEmail'))) push('teamEmail','Enter a valid email for your team contact.');
   }
-  if(i===2){
+  if(i===2&&!noSeat()){
     if(chk('guest')){
       if(!val('gFirst')) push('gFirst','Add your guest’s first name.');
       if(!val('gLast')) push('gLast','Add your guest’s last name.');
@@ -283,7 +296,7 @@ function validate(i){
       if(!val('gMeal')) push('gMeal','Choose your guest’s meal.');
       if(!val('gMode')) push('gMode','Choose who should send your guest the details.');
     }
-    if(!val('diet')) push('diet',proxy()?'Choose a meal for the person accepting on your behalf.':'Choose a vegetarian or non-vegetarian meal.');
+    if(!val('diet')) push('diet',repIn()?'Choose a meal for the person attending on your behalf.':'Choose a vegetarian or non-vegetarian meal.');
   }
   if(i===3){
     var iv=parseList(val('inviteList'));
@@ -319,21 +332,25 @@ function listSummary(id,text,noun){
 /* conditional reveals */
 function syncReveals(){
   $('#decline-box').hidden=!declined();
-  var px=proxy(),rn=repName();
+  var px=repIn(),rn=repName(),vt=virt();
   $('#proxy-box').hidden=!px;
+  $('#virtual-box').hidden=!vt;
+  $('#proxy-legend').textContent=vt?'Who will attend on your behalf':'Who will accept on your behalf';
+  $('#proxy-d').textContent=vt?'They’ll attend the evening for you and take your complimentary seat. We’ll be in touch with them about the details.':'They’ll accept the honor for you on the evening and take your complimentary seat. We’ll be in touch with them about the details.';
+  var ns=noSeat();$('#virt-eve').hidden=!ns;$('#diet-grp').hidden=ns;$('#guest-grp').hidden=ns;
   $('#diet-legend').textContent=px?'Their meal':'Your meal';
   $('#diet-d').textContent=px?'For '+(rn||'the person accepting on your behalf')+'.':'For you.';
   $('#access-lbl').textContent=px?'Their allergies or dietary needs':'Your allergies or dietary needs';
   $('#guest-d').innerHTML=px?'Tickets for '+(rn?esc(rn):'the person accepting on your behalf')+' and <b>one</b> guest are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.':'Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.';
   $('#guest-box').hidden=!chk('guest');
   listSummary('#invite-sum',val('inviteList'),'guest');
-  $('#guests-lead').firstChild.innerHTML=declined()?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them. Each guest pays the honoree rate of <b>$300 per ticket</b> (regular $400).':'Additional guests are not complimentary. Beyond your one complimentary guest, each person you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
+  $('#guests-lead').firstChild.innerHTML=(declined()||noSeat())?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them. Each guest pays the honoree rate of <b>$300 per ticket</b> (regular $400).':'Additional guests are not complimentary. Beyond your one complimentary guest, each person you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
   if(GUEST_URL) showGuestLink();
   $('#support-lead').firstChild.textContent=declined()?'We’re grateful you considered it. If you’d still like to support SALUTE’s work, here’s how. ':'Your recognition never depends on a contribution. ';
   listSummary('#support-sum',val('supportList'),'person');
   updateNav();
 }
-pf.addEventListener('input',function(e){if(e.target.name==='inviteList'||e.target.name==='supportList'||e.target.name==='rFirst'||e.target.name==='rLast')syncReveals()});
+pf.addEventListener('input',function(e){if(e.target.name==='inviteList'||e.target.name==='supportList'||e.target.name==='rFirst'||e.target.name==='rLast'||e.target.name==='videoLink')syncReveals()});
 function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 pf.addEventListener('change',syncReveals);
 pf.addEventListener('submit',function(e){e.preventDefault()});
@@ -386,6 +403,57 @@ $('#hs-remove').addEventListener('click',function(){
   .catch(function(e){$('#hs-meta').textContent=e.message}).then(function(){hsBusy=false});
 });
 
+/* ── Video acceptance upload (private bucket; prefill.virtual only) ── */
+var vidIn=$('#vid-input'),VID=null,vidBusy=false;
+var VTYPES={mp4:'video/mp4',mov:'video/quicktime',m4v:'video/x-m4v'};
+function vidRender(){
+  var bar=$('#vid-bar');if(bar)bar.hidden=true;
+  if(VID){
+    $('#vid-name').textContent=VID.filename||'Video';
+    $('#vid-meta').textContent=(VID.size_bytes?fmtSize(VID.size_bytes)+' · ':'')+'Uploaded securely. Only the SALUTE team can see it.';
+    $('#vid-remove').hidden=false;$('#vid-btn').textContent='Replace video';
+  }else{
+    $('#vid-name').textContent='No video uploaded yet';
+    $('#vid-meta').textContent='MP4 or MOV, up to 800 MB. Only the SALUTE team can see it.';
+    $('#vid-remove').hidden=true;$('#vid-btn').textContent='Upload video';
+  }
+}
+function putWithProgress(url,type,file,onp){
+  return new Promise(function(res,rej){
+    var x=new XMLHttpRequest();x.open('PUT',url);x.setRequestHeader('Content-Type',type);
+    x.upload.onprogress=function(e){if(e.lengthComputable)onp(e.loaded/e.total)};
+    x.onload=function(){x.status>=200&&x.status<300?res():rej(new Error('upload '+x.status))};
+    x.onerror=function(){rej(new Error('network'))};
+    x.send(file);
+  });
+}
+vidIn.addEventListener('change',function(){
+  var f=vidIn.files&&vidIn.files[0];vidIn.value='';
+  if(!f||vidBusy) return;
+  var ext=(f.name.split('.').pop()||'').toLowerCase();
+  var type=VTYPES[ext]||f.type||'';
+  if(!/^video\/(mp4|quicktime|x-m4v)$/.test(type)){$('#vid-meta').textContent='Please choose an MP4 or MOV video.';return}
+  if(f.size>800*1024*1024){$('#vid-meta').textContent='That video is over 800 MB. Please share a download link below instead.';return}
+  vidBusy=true;$('#vid-name').textContent=f.name;$('#vid-meta').textContent='Uploading '+fmtSize(f.size)+'… Please keep this page open.';
+  var bar=$('#vid-bar'),fill=$('#vid-fill');bar.hidden=false;fill.style.width='0%';
+  function prog(q){var p=Math.min(100,Math.round(q*100));fill.style.width=p+'%';$('#vid-meta').textContent='Uploading '+fmtSize(f.size)+' · '+p+'%. Please keep this page open.'}
+  api({action:'video_upload_url',content_type:type,size_bytes:f.size}).then(function(p){
+    var sz=p.part_bytes,i=0,doneBytes=0;
+    function one(){
+      if(i>=p.parts.length) return api({action:'video_recorded',upload_id:p.upload_id,filename:f.name,content_type:type,size_bytes:f.size});
+      var part=p.parts[i],blob=f.slice(i*sz,Math.min(f.size,(i+1)*sz));
+      return putWithProgress(part.upload_url,type,blob,function(q){prog((doneBytes+q*blob.size)/f.size)}).then(function(){doneBytes+=blob.size;i++;return one()});
+    }
+    return one();
+  }).then(function(r){VID=r.video;vidRender()})
+  .catch(function(e){vidRender();$('#vid-meta').textContent='The upload didn’t go through, which can happen on some company networks. Please share a download link below instead, or email ssuite@salute.community.'})
+  .then(function(){vidBusy=false});
+});
+$('#vid-remove').addEventListener('click',function(){
+  if(vidBusy)return;vidBusy=true;
+  api({action:'video_remove'}).then(function(){VID=null;vidRender();vidIn.focus()})
+  .catch(function(e){$('#vid-meta').textContent=e.message}).then(function(){vidBusy=false});
+});
 
 /* ── Guest link ──────────────────────────────────── */
 function copyText(txt,msgEl,ok){
@@ -394,7 +462,7 @@ function copyText(txt,msgEl,ok){
 }
 function guestNote(){
   if(!accepting()) return 'SALUTE (South Asian Leaders Unite to Empower) is hosting S.SUITE, its inaugural honors evening celebrating South Asian women leaders and allies, on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City. The evening includes a fireside conversation with Indra Nooyi, moderated by Anu Aiyengar.\n\nI think you would be a wonderful addition to the room. SALUTE has extended a special guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+H.full_name;
-  return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+(proxy()?' and I would love for you to join the celebration on Friday, November 20, 2026,':' and I would love for you to join me on Friday, November 20, 2026,')+' at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+(proxy()?'I hope you can be there.':'I hope you can join me.')+'\n\n'+H.full_name;
+  return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+((proxy()||virt())?' and I would love for you to join the celebration on Friday, November 20, 2026,':' and I would love for you to join me on Friday, November 20, 2026,')+' at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+((proxy()||virt())?'I hope you can be there.':'I hope you can join me.')+'\n\n'+H.full_name;
 }
 function showGuestLink(){
   if(!GUEST_URL) return;
@@ -568,8 +636,8 @@ wireListUpload('inv-file','inviteList','inv-file-msg','guest');
 wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
-var FIELDS=['response','declineNote','rFirst','rLast','rEmail','rTitle','rOrg','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal','tableKind'];
-var BOOLS=['guest'];
+var FIELDS=['response','declineNote','videoLink','rFirst','rLast','rEmail','rTitle','rOrg','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal','tableKind'];
+var BOOLS=['guest','repAttend'];
 function collect(){
   var r={};
   FIELDS.forEach(function(k){r[k]=val(k)});
@@ -639,8 +707,9 @@ function renderReview(){
     });
     s.appendChild(dl);secs.appendChild(s);
   }
-  var rr=onFile()?[['Honor','Confirmed']]:[['Nomination',resp==='accept'?'Accepted · I will attend in person on November 20':(proxy()?'Accepted · someone will accept on my behalf':(resp==='decline'?'Respectfully declined':noneSpan('No response yet')))]];
-  if(proxy()) rr.push(['Accepting on my behalf',[repName(),val('rEmail'),[val('rTitle'),val('rOrg')].filter(Boolean).join(', ')].filter(Boolean).join(' · ')]);
+  var rr=onFile()?[['Honor','Confirmed']]:[['Nomination',virt()?'Accepted · joining virtually with a recorded video':resp==='accept'?'Accepted · I will attend in person on November 20':(proxy()?'Accepted · someone will accept on my behalf':(resp==='decline'?'Respectfully declined':noneSpan('No response yet')))]];
+  if(virt()) rr.push(['Video acceptance',VID?(VID.filename||'Video')+' · uploaded':(val('videoLink')?'Download link shared':noneSpan('Not yet · please share by November 15'))]);
+  if(repIn()) rr.push([virt()?'Attending on my behalf':'Accepting on my behalf',[repName(),val('rEmail'),[val('rTitle'),val('rOrg')].filter(Boolean).join(', ')].filter(Boolean).join(' · ')]);
   if(dec&&val('declineNote')) rr.push(['Note to the team',val('declineNote')]);
   sec(onFile()?'Welcome':'Response',0,rr);
   var sv0=parseList(val('supportList')).items;
@@ -664,9 +733,9 @@ function renderReview(){
     HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:(onFile()?['Headshot','On file with SALUTE']:['Headshot','Not uploaded · you can email it to ssuite@salute.community']),
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
-  sec('Evening',2,[
-    [proxy()?'Their meal':'Your meal',val('diet')],
-    val('access')?[proxy()?'Their allergies or dietary needs':'Your allergies or dietary needs',val('access')]:null,
+  if(noSeat()) sec('Evening',2,[['Evening','Joining virtually by video']]); else sec('Evening',2,[
+    [repIn()?'Their meal':'Your meal',val('diet')],
+    val('access')?[repIn()?'Their allergies or dietary needs':'Your allergies or dietary needs',val('access')]:null,
     ['Complimentary guest',chk('guest')?[[val('gFirst'),val('gLast')].join(' ').trim(),val('gEmail'),[val('gTitle'),val('gOrg')].filter(Boolean).join(', '),val('gMeal')].filter(Boolean).join(' · '):'No guest'],
     chk('guest')&&val('gAccess')?['Guest’s allergies or dietary needs',val('gAccess')]:null,
     chk('guest')&&val('gMode')?['Guest details',val('gMode')==='salute'?'SALUTE emails my guest, copying me':'I’ll share them myself']:null
@@ -720,7 +789,7 @@ function showConfirm(){
   $('#c-h').textContent='Thank you, '+first()+'.';
   $('#c-lede').textContent=dec
     ?'Thank you for considering the nomination. We are grateful for the time you took, and the SALUTE team will be in touch personally.'
-    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+(proxy()&&repName()?' We look forward to welcoming '+repName()+' on your behalf.':'')+(onFile()?' Thank you for sharing your details. The SALUTE team will be in touch personally to confirm your seats and the evening’s plans.':' The SALUTE team will be in touch personally to confirm your seats and announcement timing.');
+    :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+(virt()?' We look forward to sharing your video acceptance with the room.':'')+(repIn()&&repName()?' We look forward to welcoming '+repName()+' on your behalf.':'')+(onFile()?' Thank you for sharing your details. The SALUTE team will be in touch personally to confirm your seats and the evening’s plans.':' The SALUTE team will be in touch personally to confirm your seats and announcement timing.');
   $('#c-stamp').textContent=SUBMITTED_AT?'Received '+fmtWhen(SUBMITTED_AT):'';
   $('#c-gl-desc').textContent=dec?'Share it with anyone you think should be in the room. They pay the $300 rate (regular $400).':'For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).';
   var showGl=!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
@@ -742,11 +811,11 @@ $('#c-invite').addEventListener('click',toInvite);
 /* ── Boot ────────────────────────────────────────── */
 if(!token){gate('This private invitation link is incomplete. Please open it again from your email, or write to ssuite@salute.community.');return}
 api({action:'get'}).then(function(d){
-  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;TABLE_INCL_CODE=d.table_incl_code||null;HS=d.headshot||null;
+  H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;TABLE_INCL_CODE=d.table_incl_code||null;HS=d.headshot||null;VID=d.video||null;
   bind();
   var saved=d.response&&Object.keys(d.response).length?d.response:null;
   restore(saved,H.prefill);
-  hsRender();showGuestLink();statusBar();
+  hsRender();vidRender();showGuestLink();statusBar();
   $('#gate').hidden=true;views.invite.hidden=false;document.body.setAttribute('data-view','invite');
   startReveal();updateNav();onScroll();
   ready=true;
