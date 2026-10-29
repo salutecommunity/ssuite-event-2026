@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>An invitation from Kulture Khazana · S.Suite</title>
-<meta name="description" content="Kulture Khazana invites you to S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
+<meta name="description" content="Kulture Khazana is a community partner of S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
 <meta name="robots" content="noindex">
 <link rel="canonical" href="https://event.ssuite.org/i/kulture-khazana/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="S.Suite by SALUTE">
 <meta property="og:title" content="An invitation from Kulture Khazana · S.Suite">
-<meta property="og:description" content="Kulture Khazana invites you to S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
+<meta property="og:description" content="Kulture Khazana is a community partner of S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
 <meta property="og:url" content="https://event.ssuite.org/i/kulture-khazana/">
 <meta property="og:image" content="https://event.ssuite.org/assets/share-card.png?v=20260912a">
 <meta property="og:image:type" content="image/png">
@@ -19,7 +19,7 @@
 <meta property="og:image:alt" content="S.Suite — Friday, November 20, 2026, 6:30 p.m. — Prince George Ballroom, New York City">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="An invitation from Kulture Khazana · S.Suite">
-<meta name="twitter:description" content="Kulture Khazana invites you to S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
+<meta name="twitter:description" content="Kulture Khazana is a community partner of S.Suite, SALUTE's honors ceremony recognizing South Asian women leaders and allies across business, capital, and culture. Friday, November 20, 2026 · 6:30 p.m. · Prince George Ballroom · New York City.">
 <meta name="twitter:image" content="https://event.ssuite.org/assets/share-card.png?v=20260912a">
 <link rel="icon" href="/assets/favicon.png" sizes="any">
 <link rel="stylesheet" href="/i/invitation.css?v=20260912a">
@@ -91,11 +91,6 @@
      quietly, so a member does not pay $350 by simply trusting the card. The
      code itself is never printed here -- this page is forwardable. */
   .seat-card .member-line{margin:14px 0 0;font-size:12px;line-height:1.6;color:#7b7b7b}
-  .seat-card .table-paths{margin:22px 0 0;padding-top:18px;border-top:1px solid #e3e3e3}
-  .seat-card .table-paths .micro{margin:0 0 10px}
-  .seat-card .table-path{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:8px 0 0;padding:13px 16px;border:1px solid #111;color:#111;text-decoration:none;font-size:14px;transition:background .2s,color .2s}
-  .seat-card .table-path:hover,.seat-card .table-path:focus-visible{background:#111;color:#fff}
-  .seat-card .table-path-price strong{font-weight:600}
 
   /* The evening. Leads by explaining the night, then one block for the Chair.
      Anu sits inside that same block, under a hairline, at a smaller scale --
@@ -344,7 +339,7 @@
   .seat-card .sale-window-note{margin:14px 0 0;font-size:12.5px;line-height:1.5;color:#4a4a4a;text-align:left}
 </style>
 </head>
-<body data-invitation-code="SSUITE-KULTURE-KHAZANA-2026" data-invitation-label="Your invitation" data-host-name="Kulture Khazana">
+<body data-invitation-code="SSUITE-KULTURE-KHAZANA-2026" data-invitation-label="Partner rate" data-host-name="Kulture Khazana">
 
 
 <header class="invite-header">
@@ -380,16 +375,18 @@
       <p class="seat-lead">SALUTE’s honors ceremony recognizing South Asian women leaders and allies across business, capital, &amp; culture.</p>
       <p>S.Suite is our way of making visible the leaders SALUTE was built for — and the future we’re investing in.</p>
     </div>
-    <aside class="seat-card" data-price-display>
-      <p class="micro">Early bird / reserved seat</p>
-      <div class="price-row">
-        <p class="price">$350</p>
-        <p class="original-price"><span class="sr-only">Original price </span>$400</p>
+    <aside class="seat-card" data-price-locked data-partner-early-price="300" data-partner-regular-price="300" data-partner-cutover="2026-01-01T00:00:00Z">
+      <p class="micro">Reserved seat</p>
+      <div class="price-row" hidden>
+        <p class="price"></p>
+        <p class="original-price" hidden></p>
       </div>
-      <p class="price-note">Early-bird price</p>
+      <p class="price-note" hidden></p>
+      <p class="fineprint" id="org-rate-trouble" hidden>The partner rate cannot be shown in this browser right now. Please email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p>
       <ul>
         <li>Your seat at the S.Suite dinner and honors ceremony</li>
-        <li>Bring up to three guests — your invitation covers them, on one registration</li>
+        <li>Kulture Khazana partner rate, applied for you</li>
+        <li>One seat per person — 9 seats are held for Kulture Khazana, first come</li>
         <li>Arrival details and event communications</li>
       </ul>
       <button class="button button-dark choose" type="button"
@@ -397,19 +394,11 @@
         data-public-sale-open="true" data-access-code-required="true"
         data-live-label="Accept this invitation" data-gated-label="Accept this invitation"
         data-withheld-label="Registration opens soon"
-        data-price="350" data-early-price="350" data-regular-price="400"
-        data-price-cutover="2026-10-27T07:00:00Z"
         disabled aria-disabled="true">Accept this invitation</button>
       <p class="sale-window-note" hidden></p>
       <p class="fineprint" id="attend-sales-note">Registration is completed through secure checkout.</p>
       <noscript><p class="fineprint">Accepting needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p></noscript>
-      <p class="member-line" data-live-price-wrap hidden>Already a SALUTE member? Current and former members attend at <strong data-live-price="salute_member"></strong> — choose the member rate at checkout.</p>
-      <div class="table-paths" aria-label="Host a table">
-        <p class="micro">Bringing more guests? Host a table</p>
-        <a class="table-path" id="half-table-invitation" href="/tables/"><span><strong>Half table</strong> · 5 seats</span><span class="table-path-price" data-live-price-wrap hidden><strong data-live-price="half_table"></strong></span></a>
-        <a class="table-path" id="table-invitation" href="/?table=1"><span><strong>Full table</strong> · 10 seats</span><span class="table-path-price" data-live-price-wrap hidden><strong data-live-price="full_table"></strong></span></a>
-      </div>
-      <p class="card-from">Invitation extended by <strong>Kulture Khazana</strong></p>
+      <p class="card-from">Partner rate extended by <strong>Kulture Khazana</strong></p>
     </aside>
   </section>
 
@@ -730,32 +719,13 @@
   });
 })();
 </script>
-<!-- The table tier.
-     An invitation page shows no tiers -- it makes one offer, to one person, at
-     one price -- so this control is never seen. It exists because the shared
-     chain identifies a tier by its buy control: live-pricing.js keeps this
-     price in step with the database and applies the October rollover, and
-     live-chain.js reads the tier, the sale state and the ten-seat rules from
-     it. Deliberately outside the seat card, whose price display it would
-     otherwise overwrite with the price of a table. -->
-<button class="choose" type="button" id="half-table-choose" hidden aria-hidden="true" tabindex="-1"
-  data-ticket-code="half_table" data-ticket="Half table (5 seats)" data-public-sale-open="true"
-  data-live-label="Host a half table" data-withheld-label="Opening soon"
-  data-price="2500" data-early-price="2500" data-regular-price="3750"
-  data-price-cutover="2026-10-27T07:00:00Z" disabled aria-disabled="true">Host a half table</button>
-<button class="choose" type="button" id="table-choose" hidden aria-hidden="true" tabindex="-1"
-  data-ticket-code="full_table" data-ticket="Table for ten" data-public-sale-open="true"
-  data-live-label="Host a table" data-withheld-label="Opening soon"
-  data-price="5000" data-early-price="5000" data-regular-price="7500"
-  data-price-cutover="2026-10-27T07:00:00Z" disabled aria-disabled="true">Host a table</button>
 <div class="drawer-backdrop" hidden></div>
 <aside class="checkout-drawer" aria-hidden="true" aria-labelledby="checkout-title">
   <button class="close" aria-label="Close registration">×</button>
   <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p id="drawer-intro">Secure checkout is unavailable on this page right now. No registration or payment is created.</p></div>
   <form id="registration-form">
     <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">WHO’S COMING<select id="ticket-quantity" aria-label="How many seats, including your own"><option value="1">Just me</option><option value="2">Me and 1 guest</option><option value="3">Me and 2 guests</option><option value="4">Me and 3 guests</option></select></label></div>
-    <div class="member-guest-add" id="member-guest-note" hidden><label class="quantity-wrap" id="member-guest-wrap">BRINGING GUESTS<select id="member-guest-quantity" aria-label="Guest seats at the Community rate"><option value="0">No guests</option><option value="1">1 guest</option><option value="2">2 guests</option><option value="3">3 guests</option></select></label><p class="member-guest-note" id="member-guest-open-note">The member rate covers one seat, your own. You may add up to three guests at the Community rate of <span id="member-guest-rate">$350</span> each, on this same payment.</p><p class="member-guest-note" id="member-guest-closed" hidden>Guest seats at the Community rate are not available right now.</p></div>
-    <div id="guest-fields"></div>
+        <div id="guest-fields"></div>
     <section class="table-options" hidden>
       <div class="form-section-head"><p class="micro" id="table-head-eyebrow">TABLE MANAGEMENT</p><h3 id="table-head-title">Set up your table.</h3><p id="table-head-note">After your payment is verified, you will receive a private link to manage your table: name it, assign each of your seats, invite your guests by email, and resend or revoke a link at any time.</p></div>
       <!-- No table name is asked for here. The box that used to stand in this
@@ -778,10 +748,9 @@
 <div class="toast" role="status" aria-live="polite"></div>
 <script src="/config.js?v=20260910a"></script>
 <script src="/guest-card.js?v=20260911h"></script>
-<script src="/invitation-checkout.js?v=20261016a"></script>
-<dialog id="member-code-dialog"><button class="close dialog-close" aria-label="Close">×</button><p class="eyebrow">MEMBER RATE</p><h2>Send me my member code.</h2><p class="dialog-lede">Current and former SALUTE members attend at the member rate. Tell us who you are and we will send your code.</p><form method="dialog" id="member-code-request-form" novalidate><label>FIRST NAME<input name="first_name" type="text" autocomplete="given-name" maxlength="200" required></label><label>LAST NAME<input name="last_name" type="text" autocomplete="family-name" maxlength="200" required></label><label>EMAIL<input name="email" type="email" autocomplete="email" maxlength="320" required placeholder="you@example.com"></label><div id="member-code-turnstile" class="turnstile-slot" aria-live="polite"></div><p id="member-code-live-status" class="live-status" role="status" aria-live="polite" hidden></p><button class="button button-dark full" value="submit" id="member-code-submit-button" disabled aria-disabled="true">Unavailable</button><p class="fineprint" id="member-code-preview-note">This is not available yet. Nothing entered here is saved or sent.</p></form></dialog>
+<script src="/invitation-checkout.js?v=20260916a"></script>
 <script src="/live-chain.js?v=20260916b"></script>
 <script src="/live-pricing.js?v=20260916a"></script>
-<script src="/member-code-request.js?v=20260911k"></script>
+<script src="/org-invitation.js?v=20260916a"></script>
 </body>
 </html>
