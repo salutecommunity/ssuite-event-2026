@@ -61,7 +61,7 @@
     const node = $("changes-window"), mine = changesCutoff(), theirs = guestCutoff();
     const parts = [];
     if (changesOpen()) {
-      if (mine) parts.push(`You can invite guests and rename this table until ${mine}.`);
+      if (mine) parts.push(`You can add guests, edit their details, send invitations, and rename this table until ${mine}.`);
       if (theirs) parts.push(`Your guests can change their own details until ${theirs}.`);
       if (mine) parts.push("After that, email ssuite@salute.community and the S.Suite team can still make changes.");
     } else {
@@ -87,6 +87,15 @@
       else if (seat.attendee_id) detail.textContent = `${[seat.first_name, seat.last_name].filter(Boolean).join(" ") || "Guest"} — ${seat.registration_status === "complete" ? "registered" : "waiting on their details"}`;
       else { const invite = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["draft", "queued", "sent", "opened", "started"].includes(i.status)); detail.textContent = invite ? ({ draft: "Invitation not sent yet.", queued: "Invitation sending now.", sent: "Invitation sent — waiting on their details.", opened: "Invitation opened — waiting on their details.", started: "They have started — waiting on their details." }[invite.status] || "Invitation sent — waiting on their details.") : "Open seat."; }
       card.append(title, detail);
+      const activeInvite = (table.invitations || []).find(i => Number(i.seat_number) === Number(seat.seat_number) && ["draft","queued","sent","opened","started"].includes(i.status));
+      const guestEmail = seat.email || activeInvite?.recipient_email;
+      if (guestEmail) { const line = document.createElement("p"); line.textContent = guestEmail; line.style.overflowWrap = "anywhere"; card.append(line); }
+      if (seat.company || seat.job_title) { const line = document.createElement("p"); line.textContent = [seat.job_title,seat.company].filter(Boolean).join(" · "); card.append(line); }
+      if (!seat.locked && changesOpen()) {
+        const edit = document.createElement("button"); edit.type="button"; edit.className="secondary"; edit.textContent=seat.attendee_id?"Edit guest":"Add guest details";
+        edit.addEventListener("click",()=>openGuestEditor(seat,activeInvite,card)); card.append(edit);
+      }
+
       const invitation = (table.invitations || []).find((i) => Number(i.seat_number) === Number(seat.seat_number) && ["queued", "sent", "opened", "started"].includes(i.status));
       if (invitation) { const actions = document.createElement("div"); actions.className = "actions"; const resend = document.createElement("button"); resend.type = "button"; resend.className = "secondary"; resend.textContent = "Resend invitation"; resend.addEventListener("click", () => resendInvitation(invitation.id)); actions.append(resend); card.append(actions); }
       grid.append(card);
@@ -98,6 +107,42 @@
     $("edit-table-name").hidden = editingTableName || !changesOpen();
     renderChangeWindow();
   }
+
+  function openGuestEditor(seat, invitation, card) {
+    document.querySelectorAll(".host-guest-editor").forEach(node=>node.remove());
+    const form=document.createElement("form"); form.className="host-guest-editor invite-form";
+    const heading=document.createElement("h3"); heading.textContent=seat.attendee_id?"Edit guest details":"Add guest details"; form.append(heading);
+    const help=document.createElement("p"); help.textContent="Save the details you know. Guests still confirm their own agreement and personal requirements before registration is complete. Saving alone does not send an email.";form.append(help);
+    const fields=document.createElement("div");fields.className="fields";
+    const values={first_name:seat.first_name||"",last_name:seat.last_name||"",email:seat.email||invitation?.recipient_email||"",company:seat.company||"",job_title:seat.job_title||""};
+    for(const [name,label] of [["first_name","FIRST NAME"],["last_name","LAST NAME"],["email","EMAIL"],["company","COMPANY (optional until registration)"],["job_title","TITLE (optional until registration)"]]) {
+      const field=document.createElement("label");field.className="field";const caption=document.createElement("span");caption.textContent=label;
+      const input=document.createElement("input");input.name=name;input.type=name==="email"?"email":"text";input.value=values[name];input.maxLength=name==="email"?320:["first_name","last_name"].includes(name)?100:200;
+      input.required=["first_name","last_name","email"].includes(name)||seat.registration_status==="complete";
+      if(name==="email"&&(seat.registration_status==="complete"||seat.attendee_id===table.lead_attendee_id)) {input.readOnly=true;const note=document.createElement("small");note.textContent="Contact ssuite@salute.community to change this email.";field.append(note);}
+      field.append(caption,input);fields.append(field);
+    }
+    form.append(fields);
+    if(seat.registration_status!=="complete") {
+      const label=document.createElement("label"),checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.name="send_email";label.append(checkbox,document.createTextNode(" Send this guest an email link to finish registration"));form.append(label);
+    }
+    const feedback=document.createElement("p");feedback.className="notice";feedback.role="status";feedback.hidden=true;form.append(feedback);
+    const actions=document.createElement("div");actions.className="actions";const save=document.createElement("button"),cancel=document.createElement("button");save.type="submit";save.textContent="Save guest details";cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.addEventListener("click",()=>form.remove());actions.append(save,cancel);form.append(actions);
+    form.addEventListener("submit",async event=>{
+      event.preventDefault();if(!form.reportValidity())return;
+      const attendee={};for(const name of Object.keys(values))attendee[name]=form.elements[name].value.trim();
+      const send=!!form.elements.send_email?.checked;
+      const signature=JSON.stringify({attendee,send});if(form.dataset.signature!==signature){form.dataset.signature=signature;form.dataset.key=randomKey();}
+      save.disabled=true;cancel.disabled=true;feedback.hidden=false;feedback.textContent="Saving guest details…";
+      try {
+        await call({action:"save_guest",seat_number:Number(seat.seat_number),expected_attendee_id:seat.attendee_id||null,attendee,send_email:send,idempotency_key:form.dataset.key});
+        await load("");status(send?"Guest details saved. Their registration email is queued.":"Guest details saved. No email was sent.","success");
+      } catch(e) {feedback.textContent=e.message||"Could not save. Please try again.";feedback.className="notice error";reveal(feedback);}
+      finally{save.disabled=false;cancel.disabled=false;}
+    });
+    card.append(form);form.querySelector("input").focus();reveal(form);
+  }
+
   function setNameEditor(requested) {
     const open = requested && changesOpen();
     editingTableName = open;
