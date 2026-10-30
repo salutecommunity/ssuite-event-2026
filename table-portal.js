@@ -109,7 +109,8 @@
   }
 
   function openGuestEditor(seat, invitation, card) {
-    document.querySelectorAll(".host-guest-editor").forEach(node=>node.remove());
+    document.querySelectorAll(".host-guest-editor").forEach(node=>{node.parentElement.style.gridColumn="";node.remove();});
+    card.style.gridColumn="1 / -1";
     const form=document.createElement("form"); form.className="host-guest-editor invite-form";
     const heading=document.createElement("h3"); heading.textContent=seat.attendee_id?"Edit guest details":"Add guest details"; form.append(heading);
     const help=document.createElement("p"); help.textContent="Save the details you know. Guests still confirm their own agreement and personal requirements before registration is complete. Saving alone does not send an email.";form.append(help);
@@ -124,10 +125,10 @@
     }
     form.append(fields);
     if(seat.registration_status!=="complete") {
-      const label=document.createElement("label"),checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.name="send_email";label.append(checkbox,document.createTextNode(" Send this guest an email link to finish registration"));form.append(label);
+      const label=document.createElement("label"),checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.name="send_email";checkbox.style.width="auto";checkbox.style.marginRight="0.6em";label.append(checkbox,document.createTextNode(" Send this guest an email link to finish registration"));form.append(label);
     }
     const feedback=document.createElement("p");feedback.className="notice";feedback.role="status";feedback.hidden=true;form.append(feedback);
-    const actions=document.createElement("div");actions.className="actions";const save=document.createElement("button"),cancel=document.createElement("button");save.type="submit";save.textContent="Save guest details";cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.addEventListener("click",()=>form.remove());actions.append(save,cancel);form.append(actions);
+    const actions=document.createElement("div");actions.className="actions";const save=document.createElement("button"),cancel=document.createElement("button");save.type="submit";save.textContent="Save guest details";cancel.type="button";cancel.className="secondary";cancel.textContent="Cancel";cancel.addEventListener("click",()=>{form.remove();card.style.gridColumn="";});actions.append(save,cancel);form.append(actions);
     form.addEventListener("submit",async event=>{
       event.preventDefault();if(!form.reportValidity())return;
       const attendee={};for(const name of Object.keys(values))attendee[name]=form.elements[name].value.trim();
