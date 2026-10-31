@@ -1,0 +1,202 @@
+
+@font-face{font-family:Aperitif;src:url('../assets/aperitifserif-regular.woff')}
+@font-face{font-family:AperitifItalic;src:url('../assets/aperitifserif-italic.woff')}
+@font-face{font-family:NeueSwiss;src:url('../assets/neueswiss-regular.woff')}
+@font-face{font-family:NeueSwiss;src:url('../assets/neueswiss-semibold.woff');font-weight:600}
+:root{--ink:#090909;--line:rgba(0,0,0,.16);--mute:#6a6a6a;--serif:Aperitif,Georgia,serif;--sans:NeueSwiss,Arial,sans-serif;--pad:clamp(20px,5vw,80px)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;color:var(--ink);background:#fff;font-family:var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit}img{display:block;max-width:100%}
+em{font-family:AperitifItalic;font-style:normal;font-weight:400}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.17em;text-transform:uppercase;margin:0}
+.site-header{height:84px;padding:0 clamp(20px,4vw,64px);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid var(--line);background:#fff;position:sticky;top:0;z-index:20}
+.brand img{width:174px;height:46px;object-fit:contain;object-position:left}
+.event-nav{height:100%;display:flex;gap:38px}
+.event-nav a,.back-link{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;text-decoration:none}
+.event-nav a{height:100%;display:flex;align-items:center;position:relative}
+.event-nav a.active:after{content:"";position:absolute;left:0;right:0;bottom:20px;height:2px;background:currentColor}
+.back-link{justify-self:end;border-bottom:1px solid;padding-bottom:4px;font-size:10px;letter-spacing:.08em}
+.crumb{padding:18px var(--pad);font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.crumb a{text-decoration:none}
+
+/* HEADER = the auction item */
+.lot-head{padding:clamp(56px,8vw,110px) var(--pad) clamp(40px,5vw,64px);text-align:center}
+.lot-head h1{font:clamp(48px,7.4vw,118px)/.9 var(--serif);font-weight:400;letter-spacing:-.045em;margin:30px auto 30px;max-width:1200px}
+.lot-head .sub{font-size:16px;line-height:1.55;color:var(--mute);max-width:640px;margin:0 auto}
+.lot-head .sub b{color:var(--ink);font-weight:600}
+.hostline{display:flex;justify-content:center;align-items:end;gap:28px;margin:38px auto 0}
+.hostline a{text-decoration:none;font:clamp(26px,2.6vw,38px)/1 var(--serif);letter-spacing:-.02em;text-align:center}
+.hostline a span{display:block;font:600 10px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.hostline i{font:clamp(26px,2.6vw,38px)/1 AperitifItalic,serif;font-style:normal;color:var(--mute)}
+.keyfacts{display:flex;justify-content:center;flex-wrap:wrap;gap:0;margin:40px auto 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--line);max-width:980px}
+.keyfacts div{padding:16px 26px;border-right:1px solid var(--line);font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase}
+.keyfacts div:last-child{border-right:0}
+.keyfacts span{display:block;color:var(--mute);font-size:9.5px;margin-bottom:6px}
+
+/* GALLERY under header */
+.gallery{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:repeat(2,minmax(0,1fr));gap:10px;padding:0 var(--pad);height:min(78vh,760px)}
+.gallery figure{margin:0;position:relative;overflow:hidden;background:#eee}
+.gallery img{width:100%;height:100%;object-fit:cover;transition:transform .8s}
+.gallery figure:hover img{transform:scale(1.03)}
+.gallery .g1{grid-row:1/3}.gallery .g2{grid-row:1/3}.gallery .g3{grid-row:1/3}
+.gallery figcaption{position:absolute;left:10px;bottom:10px;background:#fff;font-size:10px;letter-spacing:.06em;padding:6px 9px;line-height:1.35;max-width:calc(100% - 20px)}
+.gallery figcaption i{font-family:AperitifItalic;font-style:normal;font-size:12px;letter-spacing:0}
+
+/* BODY: description + bid */
+.main{display:grid;grid-template-columns:1.35fr 1fr;gap:clamp(40px,6vw,110px);padding:clamp(64px,8vw,110px) var(--pad);border-bottom:1px solid var(--line)}
+.prose p{font-size:16px;line-height:1.7;margin:0 0 18px;max-width:640px}
+.prose .lead{font:clamp(24px,2.3vw,32px)/1.3 var(--serif);letter-spacing:-.015em;margin-bottom:28px}
+.label{display:flex;gap:14px;align-items:center;margin:52px 0 20px}
+.label:after{content:"";flex:1;height:1px;background:var(--line)}
+.details{border-top:1px solid var(--ink);margin:0}
+.details div{display:grid;grid-template-columns:150px 1fr;padding:15px 0;border-bottom:1px solid var(--line);font-size:14px;line-height:1.5}
+.details dt{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);padding-top:3px}
+.details dd{margin:0}
+.bidwrap{position:relative}
+.bidbox{border:1px solid var(--ink);position:sticky;top:110px}
+.bidbox .top{padding:26px 26px 22px;border-bottom:1px solid var(--line)}
+.bidbox .top small,.bidgrid small{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.bidbox .top strong{font:64px/1 var(--serif);font-weight:400;letter-spacing:-.03em}
+.bidgrid{display:grid;grid-template-columns:1fr 1fr}
+.bidgrid div{padding:20px 26px;border-bottom:1px solid var(--line)}
+.bidgrid div:first-child{border-right:1px solid var(--line)}
+.bidgrid strong{font:28px/1 var(--serif);font-weight:400}
+.bidbox .note{padding:18px 26px;font-size:12.5px;line-height:1.55;color:var(--mute)}
+.button{display:block;width:100%;min-height:60px;border:0;background:var(--ink);color:#fff;font:600 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.button.light{background:transparent;color:#fff;border:1px solid #fff;width:auto;padding:0 28px}
+
+/* HOSTS */
+.hosts{padding:clamp(64px,8vw,110px) var(--pad);border-bottom:1px solid var(--line)}
+.hosts-head{display:flex;justify-content:space-between;align-items:end;border-bottom:1px solid var(--ink);padding-bottom:22px;margin-bottom:56px;gap:20px}
+.hosts-head h2{font:clamp(42px,5vw,72px)/.95 var(--serif);font-weight:400;letter-spacing:-.03em;margin:14px 0 0}
+.bios{display:grid;grid-template-columns:1fr 1fr;gap:clamp(40px,6vw,100px)}.person{display:block}
+.person+.person.x{margin-top:clamp(64px,8vw,110px);padding-top:clamp(64px,8vw,110px);border-top:1px solid var(--line)}
+.person.flip{grid-template-columns:1.2fr minmax(260px,.8fr)}
+.person.flip .portrait{order:2}
+.portrait img{width:100%;aspect-ratio:4/5;object-fit:cover}
+.portrait figcaption{font-size:10px;color:var(--mute);letter-spacing:.06em;margin-top:8px}
+.portrait{margin:0}
+.person .role{font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.person h3{font:clamp(40px,4.4vw,64px)/.95 var(--serif);font-weight:400;letter-spacing:-.03em;margin:14px 0 26px}
+.person p{font-size:15.5px;line-height:1.7;margin:0 0 16px;max-width:620px}
+.quote{font:22px/1.35 AperitifItalic,Georgia,serif;border-left:1px solid var(--ink);padding-left:18px;margin:28px 0 !important}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0 0}
+.chips span{border:1px solid var(--line);padding:8px 12px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600}
+.chips-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:26px 0 0 !important}
+
+/* wide image */
+.wide{margin:0;position:relative}
+.wide img{width:100%;height:min(70vh,640px);object-fit:cover}
+.wide figcaption{padding:12px var(--pad);font-size:11px;color:var(--mute);letter-spacing:.05em;border-bottom:1px solid var(--line)}
+.fine{padding:28px var(--pad);font-size:12px;color:var(--mute);font-style:italic;line-height:1.6;border-bottom:1px solid var(--line)}
+.credits{font-style:normal;display:block;margin-top:6px;font-size:10.5px}
+
+.band{background:var(--ink);color:#fff;padding:80px var(--pad);display:grid;grid-template-columns:1fr auto;align-items:end;gap:45px}
+.band h2{font:clamp(40px,5vw,66px)/.97 var(--serif);font-weight:400;letter-spacing:-.025em;margin:15px 0}
+.band p{color:#c8c8c8;font-size:13px;line-height:1.55;margin:0}
+.band .button{min-height:56px}
+footer{background:#000;color:#fff;padding:44px var(--pad);display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;border-top:1px solid #333}
+footer img{height:22px}footer p{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#aaa;margin:0}
+
+@media(max-width:900px){
+ .hostline{flex-direction:column;align-items:flex-start;gap:16px}.hostline a{text-align:left;font-size:30px}.hostline i{display:none}
+ .gallery .g3{grid-row:auto;aspect-ratio:3/4}
+ .site-header{grid-template-columns:1fr auto;height:70px}.back-link{display:none}.event-nav{gap:18px}.brand img{width:118px}
+ .lot-head{text-align:left}.lot-head .sub{margin:0}
+ .keyfacts{justify-content:flex-start;display:grid;grid-template-columns:1fr 1fr}
+ .keyfacts div{border-right:0;border-bottom:1px solid var(--line);padding:14px 4px}
+ .gallery{grid-template-columns:1fr 1fr;grid-template-rows:auto;height:auto;padding:0}
+ .gallery .g1{grid-column:1/-1;grid-row:auto;aspect-ratio:1/1}
+ .gallery .g2{grid-row:auto;aspect-ratio:3/4}.gallery .g3,.gallery .g4{aspect-ratio:3/4}
+ .gallery{grid-template-columns:1fr 1fr}
+ .main{grid-template-columns:minmax(0,1fr)}.main>*{min-width:0}.prose,.details dd,.bidbox .note{overflow-wrap:anywhere}.bidwrap{order:-1}.bidbox{position:static}
+ .details div{grid-template-columns:1fr;gap:4px}
+ .hosts-head{flex-direction:column;align-items:start}
+ .bios{grid-template-columns:1fr}.person+.person{border-top:1px solid var(--line);padding-top:48px}.person.flip .portrait{order:0}
+ .band{grid-template-columns:1fr}.band .button{width:100%}
+}
+
+/* ===== Live auction additions (not in the static mockup) ===== */
+.staging-flag{background:#fff4d6;border-bottom:1px solid #e5c56b;font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:9px 16px;font-weight:600}
+[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.bidbox .top .meta{display:block;margin-top:10px;font-size:12px;color:var(--mute);letter-spacing:.02em}
+.bidgrid div:nth-child(odd){border-right:1px solid var(--line)}
+.bidgrid div:nth-child(even){border-right:0}
+.bidgrid strong.count{font-variant-numeric:tabular-nums}
+.bidstatus{padding:14px 26px;font-size:13px;line-height:1.5;border-bottom:1px solid var(--line)}
+.bidstatus.lead{background:#f1f7f1}.bidstatus.outbid{background:#fbf0ee}.bidstatus.closed{background:#f4f4f4}
+.bidform{padding:20px 26px 6px}
+.bidform label{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+.amount{display:flex;align-items:stretch;border:1px solid var(--ink);height:60px}
+.amount span{display:flex;align-items:center;padding:0 14px;font:28px/1 var(--serif);border-right:1px solid var(--line)}
+.amount input{flex:1;min-width:0;border:0;font:28px/1 var(--serif);padding:0 14px;outline:none;background:#fff;color:var(--ink)}
+.amount input:focus{background:#fafafa}
+.quick{display:flex;gap:8px;margin:12px 0 16px;flex-wrap:wrap}
+.quick button{flex:1;min-width:70px;border:1px solid var(--line);background:#fff;padding:10px 6px;font:600 11px/1 var(--sans);letter-spacing:.08em;cursor:pointer}
+.quick button:hover{border-color:var(--ink)}
+.button[disabled]{opacity:.45;cursor:not-allowed}
+.button.outline{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.formmsg{min-height:20px;font-size:13px;line-height:1.45;margin:12px 0 0}
+.formmsg.error{color:#b42318}.formmsg.ok{color:#146c2e}
+.bidbox .note a{color:inherit}
+.whoami{padding:12px 26px 16px;font-size:12px;color:var(--mute);border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.whoami button{background:none;border:0;padding:0;font:inherit;text-decoration:underline;cursor:pointer;color:inherit}
+.countdown{font-variant-numeric:tabular-nums}
+.pulse{animation:pulse 1.2s ease 1}
+@keyframes pulse{0%{background:#fff7cc}100%{background:transparent}}
+
+/* dialog */
+dialog.bidder{border:1px solid var(--ink);padding:0;width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 24px);overflow:auto}
+dialog.bidder::backdrop{background:rgba(0,0,0,.45)}
+dialog.bidder .dhead{display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid var(--line)}
+dialog.bidder .dhead button{border:0;background:none;font-size:26px;line-height:1;cursor:pointer}
+dialog.bidder .dbody{padding:24px}
+dialog.bidder h2{font:34px/1 var(--serif);font-weight:400;letter-spacing:-.02em;margin:0 0 12px}
+dialog.bidder p{font-size:14px;line-height:1.6;margin:0 0 14px}
+dialog.bidder .field{display:block;margin:0 0 14px;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+dialog.bidder .field input{display:block;width:100%;margin-top:8px;height:50px;border:1px solid var(--ink);padding:0 12px;font:16px var(--sans);color:var(--ink);letter-spacing:0;text-transform:none}
+dialog.bidder .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.5;margin:4px 0 16px}
+dialog.bidder .check input{margin-top:3px;width:18px;height:18px;flex:none}
+dialog.bidder .steps{display:flex;gap:6px;margin:0 0 18px}
+dialog.bidder .steps i{flex:1;height:3px;background:var(--line)}dialog.bidder .steps i.on{background:var(--ink)}
+dialog.bidder .fine2{font-size:12px;color:var(--mute);line-height:1.55}
+.turnstile-slot{min-height:66px;margin:6px 0 12px}
+
+/* index */
+.auction-hero{padding:clamp(56px,8vw,110px) var(--pad) clamp(36px,4vw,56px);text-align:center;border-bottom:1px solid var(--line)}
+.auction-hero h1{font:clamp(56px,8vw,128px)/.9 var(--serif);font-weight:400;letter-spacing:-.045em;margin:26px 0 24px}
+.auction-hero p.sub{font-size:16px;line-height:1.6;color:var(--mute);max-width:640px;margin:0 auto}
+.statusbar{display:flex;justify-content:center;flex-wrap:wrap;margin:36px auto 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--line);max-width:980px}
+.statusbar div{padding:16px 26px;border-right:1px solid var(--line);font-size:11px;font-weight:600;letter-spacing:.13em;text-transform:uppercase}
+.statusbar div:last-child{border-right:0}
+.statusbar span{display:block;color:var(--mute);font-size:9.5px;margin-bottom:6px}
+.lots{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:clamp(24px,3vw,44px);padding:clamp(48px,6vw,90px) var(--pad);border-bottom:1px solid var(--line)}
+.lotcard{display:flex;flex-direction:column;text-decoration:none;border-top:1px solid var(--ink)}
+.lotcard figure{margin:0;aspect-ratio:4/3;overflow:hidden;background:#eee}
+.lotcard img{width:100%;height:100%;object-fit:cover;transition:transform .8s}
+.lotcard:hover img{transform:scale(1.03)}
+.lotcard .meta{padding:18px 0 0}
+.lotcard .cat{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.lotcard h2{font:clamp(26px,2.2vw,34px)/1.05 var(--serif);font-weight:400;letter-spacing:-.02em;margin:12px 0 18px}
+.lotcard .nums{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.lotcard .nums div{padding:12px 0;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.lotcard .nums strong{display:block;margin-top:6px;font:22px/1 var(--serif);letter-spacing:0;text-transform:none;color:var(--ink)}
+.lotcard .cta{margin-top:14px;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase}
+.empty{padding:80px var(--pad);text-align:center;color:var(--mute);font-size:15px;border-bottom:1px solid var(--line)}
+.terms-note{padding:22px var(--pad);font-size:12.5px;line-height:1.6;color:var(--mute);border-bottom:1px solid var(--line)}
+
+/* terms page */
+.legal{max-width:760px;margin:0 auto;padding:clamp(48px,6vw,90px) var(--pad)}
+.legal h1{font:clamp(44px,6vw,80px)/.95 var(--serif);font-weight:400;letter-spacing:-.04em;margin:20px 0 26px}
+.legal h2{font:26px/1.1 var(--serif);font-weight:400;margin:38px 0 12px}
+.legal p,.legal li{font-size:15.5px;line-height:1.7}
+.draft-banner{background:#fff4d6;border:1px solid #e5c56b;padding:14px 18px;font-size:13px;line-height:1.5;margin:0 0 24px}
+
+@media(max-width:900px){
+ .statusbar{display:grid;grid-template-columns:1fr 1fr;justify-content:flex-start;text-align:left}
+ .statusbar div{border-right:0;border-bottom:1px solid var(--line);padding:14px 4px}
+ .auction-hero{text-align:left}.auction-hero p.sub{margin:0}
+ .lots{grid-template-columns:1fr;padding-left:20px;padding-right:20px}
+ .bidbox .top strong{font-size:52px}
+}

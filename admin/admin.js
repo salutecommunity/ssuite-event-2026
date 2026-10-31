@@ -231,13 +231,29 @@ function clearWorkspace() {
 }
 
 function tabMeta(tab) {
-  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Submitted items", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
+  return ({ overview: ["Private dashboard", "Overview"], orders: ["Commerce records", "Orders"], attendees: ["Guest book", "Attendees"], invitations: ["Community requests", "Invitation requests"], membercodes: ["Member rate requests", "Member codes"], tables: ["Seating operations", "Tables"], email: ["Delivery ledger", "Email delivery"], auction: ["Silent auction", "Auction"], donations: ["Giving ledger", "Donations"], audit: ["Append-only activity", "Audit"] })[tab];
 }
 async function loadTab(tab, page = 1, search = "") {
   activeTab = tab; currentPage = page; lastSearch = search;
   for (const button of document.querySelectorAll("#tabs button")) button.classList.toggle("active", button.dataset.tab === tab);
   const [kicker, title] = tabMeta(tab); $("section-kicker").textContent = kicker; $("section-title").textContent = title;
   clear($("dashboard-content")); status("Loading private data…");
+  if (tab === "auction") {
+    // Auction tab: lots, bidding window, bid log, bidders, close-out/charge and audit come from
+    // the auction-admin function; the original intake submissions list stays as one sub-view.
+    try {
+      const auction = await import("./auction-admin.js?v=20261031b");
+      await auction.renderAuction($("dashboard-content"), {
+        token: accessToken, apiBase, status,
+        loadSubmissions: async (target) => { const payload = await call({ action: "auction", page, limit: 50, search }); render("auction", payload, target); status(""); },
+      });
+    } catch (error) {
+      // Until the auction backend is deployed, fall back to the original intake submissions list.
+      try { clear($("dashboard-content")); const payload = await call({ action: "auction", page, limit: 50, search }); render("auction", payload); status("Online bidding tools are unavailable; showing submitted items.", "error"); }
+      catch { status(error.message || "Unable to load the auction workspace.", "error"); }
+    }
+    return;
+  }
   try {
     const body = { action: tab === "invitations" ? "invitation_requests" : tab === "membercodes" ? "member_code_requests" : tab, page, limit: 50, search };
     if (tab === "invitations") body.status = invitationStatus;
@@ -247,8 +263,8 @@ async function loadTab(tab, page = 1, search = "") {
   } catch (error) { status(error.message || "Unable to load this private view.", "error"); }
 }
 
-function render(tab, payload) {
-  const host = $("dashboard-content"); clear(host);
+function render(tab, payload, target) {
+  const host = target || $("dashboard-content"); clear(host);
   if (tab === "overview") return renderOverview(host, payload.overview);
   if (tab === "invitations") return renderInvitationRequests(host, payload);
   if (tab === "membercodes") return renderMemberCodeRequests(host, payload);
