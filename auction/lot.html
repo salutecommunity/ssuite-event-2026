@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex"><!-- remove at production launch -->
+  <title>Silent Auction | S.Suite 2026</title>
+  <meta name="description" content="S.Suite 2026 silent auction lot. Every winning bid supports SALUTE.">
+  <link rel="icon" href="../assets/favicon.png?v=20260902b" sizes="any">
+  <link rel="stylesheet" href="./auction.css?v=20261031b">
+</head>
+<body data-auction-page="lot">
+<div class="staging-flag" id="staging-flag" hidden>Staging — test mode. No real bids, cards or emails.</div>
+<header class="site-header">
+  <a class="brand" href="../"><img src="../assets/ssuite-logo-header.png" alt="S.Suite"></a>
+  <nav class="event-nav" aria-label="Event navigation"><a href="../#attend">Attend</a><a href="../#give">Give</a><a class="active" href="./" aria-current="page">Auction</a></nav>
+  <a class="back-link" href="https://ssuite.org/">S.SUITE.ORG ↗</a>
+</header>
+<div class="crumb"><a href="./">← Back to auction</a><span>Silent Auction · S.Suite 2026</span></div>
+
+<div class="empty" id="auction-off" hidden>Online bidding is not open yet. Please check back soon.</div>
+<div class="empty" id="lot-missing" hidden>This lot is not available. <a href="./">See all lots →</a></div>
+
+<div id="lot-root" hidden>
+  <!-- HEADER: the auction item -->
+  <section class="lot-head">
+    <p class="eyebrow" id="lot-eyebrow">Silent Auction</p>
+    <h1 id="lot-title"></h1>
+    <p class="sub" id="lot-sub"></p>
+    <div class="keyfacts" id="lot-facts"></div>
+  </section>
+
+  <!-- PHOTOS under header -->
+  <section class="gallery" id="lot-gallery" aria-label="Photos"></section>
+
+  <!-- DESCRIPTION + LIVE BID PANEL -->
+  <section class="main">
+    <div>
+      <p class="eyebrow" id="lot-intro-eyebrow">The experience</p>
+      <div class="prose" id="lot-prose" style="margin-top:22px"></div>
+      <div id="lot-details"></div>
+    </div>
+    <div class="bidwrap">
+      <div class="bidbox" aria-live="polite">
+        <div class="top"><small id="bb-top-label">Opening bid</small><strong id="bb-top">—</strong><span class="meta" id="bb-top-meta"></span></div>
+        <div class="bidgrid">
+          <div><small>Next minimum bid</small><strong id="bb-next">—</strong></div>
+          <div><small id="bb-value-label">Market value</small><strong id="bb-value">—</strong></div>
+          <div><small>Bid increment</small><strong id="bb-inc">—</strong></div>
+          <div><small id="bb-closes-label">Closes in</small><strong id="bb-closes" class="countdown">—</strong></div>
+        </div>
+        <div class="bidstatus" id="bb-status" role="status" hidden></div>
+        <form class="bidform" id="bid-form" novalidate hidden>
+          <label for="bid-amount">Your bid (whole dollars)</label>
+          <div class="amount"><span aria-hidden="true">$</span><input id="bid-amount" name="amount" type="text" inputmode="numeric" autocomplete="off" maxlength="9" aria-describedby="bid-msg"></div>
+          <div class="quick" id="quick" aria-label="Quick bid amounts"></div>
+          <button class="button" id="bid-button" type="submit">Place bid</button>
+        </form>
+        <div class="bidform" style="padding-top:0"><p class="formmsg" id="bid-msg" role="alert"></p></div>
+        <button class="button" id="bb-cta" type="button" disabled>Bidding opens soon</button>
+        <div class="note"><span id="value-note"></span> Bids are binding. To bid you verify your email and save a card with Stripe; it is charged only if you win and S.Suite staff approve the charge after the auction closes. Every winning bid supports SALUTE. <a href="./terms.html">Auction terms</a>.</div>
+        <div class="whoami" id="whoami" hidden><span id="who-text"></span><button type="button" id="sign-out">Sign out</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOSTS / BIOS -->
+  <section class="hosts" id="lot-hosts" hidden>
+    <div class="hosts-head"><div><p class="eyebrow" id="hosts-eyebrow">Your hosts</p><h2 id="hosts-heading"></h2></div></div>
+    <div class="bios" id="lot-bios"></div>
+  </section>
+  <div id="lot-wide"></div>
+  <p class="fine" id="lot-fine" hidden></p>
+</div>
+
+<section class="band"><div><p class="eyebrow">CONTRIBUTE</p><h2>Have something special to offer?</h2><p>Submit an item or experience for consideration by the auction committee.</p></div><a class="button light" style="display:flex;align-items:center;min-height:56px;text-decoration:none" href="../#auction">Submit an item</a></section>
+<footer><img src="../assets/salute-wordmark-white-hires.png" alt="SALUTE"><p>Prince George Ballroom · New York City</p></footer>
+
+<dialog class="bidder" id="bidder-dialog" aria-labelledby="dlg-title">
+  <div class="dhead"><p class="eyebrow" id="dlg-title">Register to bid</p><button type="button" id="dlg-close" aria-label="Close">×</button></div>
+  <div class="dbody">
+    <div class="steps" id="dlg-steps" aria-hidden="true"></div>
+    <div id="v-email">
+      <h2>Your email.</h2>
+      <p>We will email you a 6-digit code. Your name and email are never shown publicly; other bidders see only your bidder number.</p>
+      <form id="f-email" novalidate>
+        <label class="field">Email<input id="e-email" type="email" autocomplete="email" maxlength="320" required></label>
+        <div class="turnstile-slot" id="ts-email"></div>
+        <button class="button" type="submit">Email me a code</button>
+      </form>
+    </div>
+    <div id="v-code" hidden>
+      <h2>Check your email.</h2>
+      <p>Enter the code we sent to <b id="code-to"></b>. It expires in 10 minutes.</p>
+      <form id="f-code" novalidate>
+        <label class="field">6-digit code<input id="c-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" pattern="[0-9 ]{6,7}" required></label>
+        <button class="button" type="submit">Verify</button>
+        <p class="fine2" style="margin-top:12px"><button type="button" id="c-back" class="linklike" style="background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;font:inherit;color:inherit">Use a different email or send a new code</button></p>
+      </form>
+    </div>
+    <div id="v-profile" hidden>
+      <h2>About you.</h2>
+      <p>Staff use these details to arrange your lot if you win. They are never shown publicly.</p>
+      <form id="f-profile" novalidate>
+        <label class="field">Full name<input id="p-name" type="text" autocomplete="name" maxlength="200" required></label>
+        <label class="field">Mobile phone (optional)<input id="p-phone" type="tel" autocomplete="tel" maxlength="32" placeholder="(212) 555-0147"></label>
+        <label class="check"><input id="p-terms" type="checkbox" required><span>I agree to the <a href="./terms.html" target="_blank" rel="noopener">auction terms</a>. Bids are binding, all sales are final, and my saved card will be charged the winning amount if I win.</span></label>
+        <button class="button" type="submit">Continue</button>
+      </form>
+    </div>
+    <div id="v-card" hidden>
+      <h2>Save a card.</h2>
+      <p>Stripe saves your card securely; S.Suite never sees the number. Nothing is charged now. If you win a lot, staff confirm the result and then charge the winning amount to this card.</p>
+      <form id="f-card" novalidate>
+        <div class="turnstile-slot" id="ts-card"></div>
+        <button class="button" type="submit">Continue to Stripe</button>
+      </form>
+    </div>
+    <p class="formmsg" id="dlg-msg" role="alert"></p>
+  </div>
+</dialog>
+
+<script src="../config.js?v=20261031a"></script>
+<script src="./auction.js?v=20261031b"></script>
+</body>
+</html>

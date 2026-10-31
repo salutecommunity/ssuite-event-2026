@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex"><!-- remove at production launch -->
+  <title>Silent Auction | S.Suite 2026</title>
+  <meta name="description" content="Bid online in the S.Suite 2026 silent auction. Every winning bid supports SALUTE.">
+  <link rel="icon" href="../assets/favicon.png?v=20260902b" sizes="any">
+  <link rel="stylesheet" href="./auction.css?v=20261031b">
+</head>
+<body data-auction-page="index">
+<div class="staging-flag" id="staging-flag" hidden>Staging — test mode. No real bids, cards or emails.</div>
+<header class="site-header">
+  <a class="brand" href="../"><img src="../assets/ssuite-logo-header.png" alt="S.Suite"></a>
+  <nav class="event-nav" aria-label="Event navigation"><a href="../#attend">Attend</a><a href="../#give">Give</a><a class="active" href="./" aria-current="page">Auction</a></nav>
+  <a class="back-link" href="https://ssuite.org/">S.SUITE.ORG ↗</a>
+</header>
+
+<section class="auction-hero">
+  <p class="eyebrow">Silent Auction · S.Suite 2026</p>
+  <h1>The <em>silent</em> auction.</h1>
+  <p class="sub">Experiences and pieces offered by friends of SALUTE. Bid online before the auction closes on the night of S.Suite. Every winning bid supports SALUTE.</p>
+  <div class="statusbar">
+    <div><span>Status</span><b id="st-state">—</b></div>
+    <div><span>Opens</span><b id="st-opens">—</b></div>
+    <div><span>Closes</span><b id="st-closes">—</b></div>
+    <div><span>Lots</span><b id="st-count">—</b></div>
+  </div>
+</section>
+
+<div class="empty" id="auction-off" hidden>Online bidding is not open yet. Please check back soon.</div>
+<div class="empty" id="lots-empty" hidden>Lots will be announced soon.</div>
+<section class="lots" id="lots" aria-label="Auction lots"></section>
+<p class="terms-note">How it works: verify your email, save a card with Stripe (nothing is charged), then bid in whole dollars. A bid in the last 2 minutes of a lot extends that lot by 2 minutes. When bidding closes, S.Suite staff confirm each winner before charging the saved card. <a href="./terms.html">Auction terms</a>.</p>
+
+<section class="band"><div><p class="eyebrow">CONTRIBUTE</p><h2>Have something special to offer?</h2><p>Submit an item or experience for consideration by the auction committee.</p></div><a class="button light" style="display:flex;align-items:center;min-height:56px;text-decoration:none" href="../#auction">Submit an item</a></section>
+<footer><img src="../assets/salute-wordmark-white-hires.png" alt="SALUTE"><p>Prince George Ballroom · New York City</p></footer>
+<script src="../config.js?v=20261031a"></script>
+<script src="./auction.js?v=20261031b"></script>
+</body>
+</html>
