@@ -414,7 +414,7 @@ function vidRender(){
     $('#vid-remove').hidden=false;$('#vid-btn').textContent='Replace video';
   }else{
     $('#vid-name').textContent='No video uploaded yet';
-    $('#vid-meta').textContent='MP4 or MOV, up to 800 MB. Only the SALUTE team can see it.';
+    $('#vid-meta').textContent='MP4 or MOV, up to 5 GB. Only the SALUTE team can see it.';
     $('#vid-remove').hidden=true;$('#vid-btn').textContent='Upload video';
   }
 }
@@ -433,19 +433,29 @@ vidIn.addEventListener('change',function(){
   var ext=(f.name.split('.').pop()||'').toLowerCase();
   var type=VTYPES[ext]||f.type||'';
   if(!/^video\/(mp4|quicktime|x-m4v)$/.test(type)){$('#vid-meta').textContent='Please choose an MP4 or MOV video.';return}
-  if(f.size>800*1024*1024){$('#vid-meta').textContent='That video is over 800 MB. Please share a download link below instead.';return}
+  if(f.size>5*1024*1024*1024){$('#vid-meta').textContent='That video is over 5 GB. Please share a download link below instead.';return}
   vidBusy=true;$('#vid-name').textContent=f.name;$('#vid-meta').textContent='Uploading '+fmtSize(f.size)+'… Please keep this page open.';
   var bar=$('#vid-bar'),fill=$('#vid-fill');bar.hidden=false;fill.style.width='0%';
   function prog(q){var p=Math.min(100,Math.round(q*100));fill.style.width=p+'%';$('#vid-meta').textContent='Uploading '+fmtSize(f.size)+' · '+p+'%. Please keep this page open.'}
-  api({action:'video_upload_url',content_type:type,size_bytes:f.size}).then(function(p){
-    var sz=p.part_bytes,i=0,doneBytes=0;
-    function one(){
-      if(i>=p.parts.length) return api({action:'video_recorded',upload_id:p.upload_id,filename:f.name,content_type:type,size_bytes:f.size});
-      var part=p.parts[i],blob=f.slice(i*sz,Math.min(f.size,(i+1)*sz));
-      return putWithProgress(part.upload_url,type,blob,function(q){prog((doneBytes+q*blob.size)/f.size)}).then(function(){doneBytes+=blob.size;i++;return one()});
-    }
-    return one();
-  }).then(function(r){VID=r.video;vidRender()})
+  /* Nov 1: links are fetched 10 parts at a time (fresh, so long uploads don't expire), and each part retries up to 3 times. */
+  var URLS={},UPID=null,TOTAL=0,SZ=0;
+  function fetchFrom(start){
+    var body={action:'video_upload_url',batch:true,content_type:type,size_bytes:f.size};
+    if(UPID){body.upload_id=UPID;body.start=start}
+    return api(body).then(function(p){UPID=p.upload_id;TOTAL=p.total_parts;SZ=p.part_bytes;(p.parts||[]).forEach(function(x){URLS[x.index]=x.upload_url})});
+  }
+  var i=0,doneBytes=0;
+  function send(blob,tries){
+    var go=URLS[i]?Promise.resolve():fetchFrom(i);
+    return go.then(function(){return putWithProgress(URLS[i],type,blob,function(q){prog((doneBytes+q*blob.size)/f.size)})})
+      .catch(function(e){delete URLS[i];if(tries>=3)throw e;return new Promise(function(r){setTimeout(r,1500*tries)}).then(function(){return send(blob,tries+1)})});
+  }
+  function one(){
+    if(i>=TOTAL) return api({action:'video_recorded',upload_id:UPID,filename:f.name,content_type:type,size_bytes:f.size});
+    var blob=f.slice(i*SZ,Math.min(f.size,(i+1)*SZ));
+    return send(blob,1).then(function(){delete URLS[i];doneBytes+=blob.size;i++;return one()});
+  }
+  fetchFrom(0).then(one).then(function(r){VID=r.video;vidRender()})
   .catch(function(e){vidRender();$('#vid-meta').textContent='The upload didn’t go through, which can happen on some company networks. Please share a download link below instead, or email ssuite@salute.community.'})
   .then(function(){vidBusy=false});
 });
