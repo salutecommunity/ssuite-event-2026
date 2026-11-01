@@ -108,6 +108,17 @@
         memberCodeStatus(memberOnInvitation ? "" : "Your member access code is recognized.");
       } else if (state && state.result === "rate_limited") {
         memberCodeStatus("Too many code checks from this connection. Please wait a few minutes and try again.");
+      } else if (state && state.result === "ok" && state.ticket_type_code === "member_early_bird" && !memberOnInvitation) {
+        // The member early-bird code is carried by the Community path. A member
+        // naturally types it into the member box, so move it there for her.
+        memberCodeStatus("");
+        const community = document.querySelector(`.choose[data-ticket-code="${PARTNER_HOST_TIER}"]`);
+        if (community && !community.disabled) {
+          community.click();
+          const partnerInput = byId("partner-code");
+          if (partnerInput) { revealPartnerFields(); partnerInput.value = code; applyPartnerCode().catch(() => {}); }
+        }
+        return;
       } else if (state && state.result === "ok") {
         memberCodeStatus("That is an invitation code, not a SALUTE member access code.");
       } else if (state) {
@@ -1100,13 +1111,6 @@
     // and check it, so her rate is settled before she types a single field. The
     // link proves nothing on its own -- the server checks the code again, and
     // checks it once more before any payment is taken.
-    // A member link without a code: open the member ticket and let the server
-    // check the purchaser email against the member list. Nothing is filled in,
-    // so a forwarded link grants no rate on its own.
-    if (!memberLinkCode && params.get("ticket") === "member" && !params.get("checkout")) {
-      const memberTile = document.querySelector('.choose[data-ticket-code="salute_member"]');
-      if (memberTile && !memberTile.disabled) memberTile.click();
-    }
     if (memberLinkCode && !params.get("checkout")) {
       const memberTile = document.querySelector('.choose[data-ticket-code="salute_member"]');
       if (memberTile && !memberTile.disabled) {
