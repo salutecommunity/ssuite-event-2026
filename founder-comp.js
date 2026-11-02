@@ -19,6 +19,7 @@
   const cfg = window.SSUITE_CONFIG || {};
   const api = (name) => `${String(cfg.apiBase || "").replace(/\/+$/, "")}/functions/v1/${name}`;
   const byId = (id) => document.getElementById(id);
+  const COMP_KEY = String(document.body.dataset.compKey || "neha-singh-invite");
   const PAID_CODE = String(document.body.dataset.paidInvitationCode || "");
   const PAID_PAGE = String(document.body.dataset.paidInvitationPage || "");
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -140,7 +141,7 @@
     const note = byId("fc-state-note");
     try {
       const r = await fetch(api("founder-comp"), { method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
-        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "state" }) });
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "state", key: COMP_KEY }) });
       const j = await r.json().catch(() => ({}));
       if (!r.ok || typeof j.state !== "string") throw new Error();
       if (j.state === "open") {
@@ -207,7 +208,7 @@
       const token = await turnstileToken("fc-claim-turnstile", "founder-comp");
       const r = await fetch(api("founder-comp"), { method: "POST", mode: "cors", credentials: "omit", cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "claim", ...a, how_heard: val(claimForm, "referral-source"), combined_agreement: true, turnstile_token: token }) });
+        body: JSON.stringify({ action: "claim", key: COMP_KEY, ...a, how_heard: val(claimForm, "referral-source"), combined_agreement: true, turnstile_token: token }) });
       const j = await r.json().catch(() => ({}));
       if (j.status === "full") { close(); showFull(); return; }
       if (j.status === "closed") { close(); showClosed(); return; }
