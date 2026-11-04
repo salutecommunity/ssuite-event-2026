@@ -46,6 +46,8 @@ function onFile(){return !!(H&&H.prefill&&H.prefill.on_file)}
 function neutralOK(){return !!(H&&H.prefill&&H.prefill.neutral)}
 function gn(s){return neutralOK()?String(s).replace(/South Asian women leaders and allies/g,'South Asian leaders and allies').replace(/South Asian women and allies/g,'South Asian leaders and allies'):s}
 function applyNeutral(){if(!neutralOK())return;var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),n,t;while((n=w.nextNode())){t=gn(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t}}
+/* Neha, Nov 4: Travel tab (Dr. Makhija only). Set prefill.travel = {hotel, address, check_in, check_out}. Hotel details, an extra-night request and airfare receipt uploads; each saves and alerts the team on its own, separate from the numbered steps. */
+function travelOK(){var t=H&&H.prefill&&H.prefill.travel;return !!(t&&typeof t==='object'&&t.check_in&&t.check_out)}
 function submitLabel(){return onFile()?'Send my details ':'Submit my response '}
 function onFileCopy(){
   NAMES[0]='Welcome';
@@ -156,7 +158,8 @@ function startReveal(){
 
 /* ── Portal core ─────────────────────────────────── */
 var pf=$('#pf'),F=pf.elements;
-var stepEls=$$('.step',pf),navBtns=$$('.p-step');
+var stepEls=$$('.step',pf),navBtns=$$('.p-step[data-i]');
+var inTravel=false,trPanel=$('#travel-panel'),trTab=$('#p-travel');
 var NAMES=['Response','Profile','Evening','Guests','Support','Review'];
 var LAST=NAMES.length-1;
 var cur=0,done={},submitted=false;
@@ -195,6 +198,7 @@ function updateNav(){
   if(!views.portal.hidden) sc.scrollTo?sc.scrollTo({left:Math.max(0,b.parentNode.offsetLeft-(sc.clientWidth-b.offsetWidth)/2),behavior:reduce?'auto':'smooth'}):(sc.scrollLeft=b.parentNode.offsetLeft);
   $$('[data-count]').forEach(function(c){c.textContent='Step '+(cur+1)+' of '+NAMES.length+' · '+NAMES[cur]});
   var ck=$('#p-cur-k'),ct=$('#p-cur-t');if(ck){ck.textContent=(cur+1)+' of '+NAMES.length;ct.textContent=NAMES[cur]}
+  if(trTab){trTab.classList.toggle('is-current',inTravel);if(inTravel){trTab.setAttribute('aria-current','page');navBtns.forEach(function(b){b.classList.remove('is-current');b.removeAttribute('aria-current')});if(ck){ck.textContent='';ct.textContent='Travel'}}else trTab.removeAttribute('aria-current')}
   closeStepMenu();
 }
 function closeStepMenu(){var n=$('#p-steps'),c=$('#p-cur');if(n)n.classList.remove('is-open');if(c)c.setAttribute('aria-expanded','false')}
@@ -207,6 +211,7 @@ function goto(i,opts){
   opts=opts||{};
   if(!opts.keepConfirm){submitted=false;$('#confirm').hidden=true;$('#review-body').hidden=false}
   cur=i;
+  inTravel=false;if(trPanel)trPanel.hidden=true;
   stepEls.forEach(function(s,k){s.hidden=(k!==i)});
   if(i===LAST){renderReview();
     var al=$('.alert',stepEls[LAST]);
@@ -345,7 +350,8 @@ function syncReveals(){
   $('#diet-legend').textContent=px?'Their meal':'Your meal';
   $('#diet-d').textContent=px?'For '+(rn||'the person accepting on your behalf')+'.':'For you.';
   $('#access-lbl').textContent=px?'Their allergies or dietary needs':'Your allergies or dietary needs';
-  $('#guest-d').innerHTML=px?'Tickets for '+(rn?esc(rn):'the person accepting on your behalf')+' and <b>one</b> guest are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.':'Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. Travel and accommodations are not included. Any additional guests pay $300 per ticket, and you can invite them in the next step.';
+  var trv=travelOK()?'Your hotel and air travel details are in the Travel tab.':'Travel and accommodations are not included.';
+  $('#guest-d').innerHTML=px?'Tickets for '+(rn?esc(rn):'the person accepting on your behalf')+' and <b>one</b> guest are complimentary. '+trv+' Any additional guests pay $300 per ticket, and you can invite them in the next step.':'Your ticket and <b>one</b> guest’s ticket to the evening are complimentary. '+trv+' Any additional guests pay $300 per ticket, and you can invite them in the next step.';
   $('#guest-box').hidden=!chk('guest');
   listSummary('#invite-sum',val('inviteList'),'guest');
   $('#guests-lead').firstChild.innerHTML=(declined()||noSeat())?'Even though you can’t attend, if there’s anyone you think should be in the room, you can invite them. Each guest pays the honoree rate of <b>$300 per ticket</b> (regular $400).':'Additional guests are not complimentary. Beyond your one complimentary guest, each person you invite pays the honoree rate of <b>$300 per ticket</b> (regular $400).';
@@ -467,6 +473,92 @@ $('#vid-remove').addEventListener('click',function(){
   if(vidBusy)return;vidBusy=true;
   api({action:'video_remove'}).then(function(){VID=null;vidRender();vidIn.focus()})
   .catch(function(e){$('#vid-meta').textContent=e.message}).then(function(){vidBusy=false});
+});
+
+/* ── Travel tab (prefill.travel only) ────────────── */
+var TRV={receipts:[],request:null},trBusy=false,TF=$('#tf')?$('#tf').elements:null;
+function isoDay(iso,n){var d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+(n||0));return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function dayLong(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}
+function dayShort(iso){return new Date(iso+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric'})}
+var EXT_LABEL={none:'No change, these dates work',early:'Arrive a day early',late:'Stay an extra night'};
+function travelBind(){
+  if(!travelOK())return;
+  var t=H.prefill.travel;
+  $('#p-travel-li').hidden=false;
+  $('#tr-hotel').textContent=t.hotel||'';
+  $('#tr-addr').textContent=t.address||'';
+  $('#tr-in').textContent=dayLong(t.check_in);
+  $('#tr-out').textContent=dayLong(t.check_out);
+  if(t.walk===false)$('#tr-walk').hidden=true;
+  $('#tr-none-d').textContent='Check in '+dayLong(t.check_in)+', check out '+dayLong(t.check_out)+'.';
+  $('#tr-early-d').textContent='Check in '+dayLong(isoDay(t.check_in,-1))+' instead.';
+  $('#tr-late-d').textContent='Check out '+dayLong(isoDay(t.check_out,1))+' instead.';
+  $('#travel-eve-text').textContent='Your room at '+(t.hotel||'the hotel')+' is set for '+dayShort(t.check_in)+' to '+dayShort(t.check_out)+'. You can request an extra night or upload your air travel receipt in the Travel tab.';
+  $('#travel-eve').hidden=false;
+  $('#c-travel').hidden=false;
+}
+function trRender(){
+  var ul=$('#tr-list');ul.replaceChildren();
+  (TRV.receipts||[]).forEach(function(r){
+    var li=document.createElement('li'),sp=document.createElement('span');
+    sp.appendChild(document.createTextNode(r.filename||'Receipt'));
+    var sm=document.createElement('small');sm.textContent=(r.size_bytes?fmtSize(r.size_bytes)+' · ':'')+'Uploaded'+(r.uploaded_at?' '+fmtWhen(r.uploaded_at):'')+'. Only the SALUTE team can see it.';sp.appendChild(sm);
+    var b=document.createElement('button');b.type='button';b.className='textbtn';b.textContent='Remove';b.setAttribute('aria-label','Remove '+(r.filename||'receipt'));
+    b.addEventListener('click',function(){trRemove(r.id)});
+    li.appendChild(sp);li.appendChild(b);ul.appendChild(li);
+  });
+  var n=(TRV.receipts||[]).length;
+  $('#tr-name').textContent=n?'Add another receipt':'Add a receipt';
+  $('#tr-btn').textContent=n?'Upload another':'Upload receipt';
+  if(!trBusy)$('#tr-meta').textContent='PDF, JPG or PNG, up to 25 MB. Only the SALUTE team can see it.';
+  var q=TRV.request;
+  if(q&&TF){Array.prototype.forEach.call(TF.namedItem('trExtend')||[],function(x){x.checked=(x.value===q.extend)});if(TF.namedItem('trNote')&&!TF.namedItem('trNote').value)TF.namedItem('trNote').value=q.note||''}
+  $('#tr-msg').textContent=q&&q.requested_at?'Sent to the SALUTE team '+fmtWhen(q.requested_at)+': '+(EXT_LABEL[q.extend]||'')+(q.note?', with your note':'')+'. We’ll confirm with you. You can update it and send again anytime.':'';
+}
+function openTravel(){
+  if(!travelOK())return;
+  if(currentView!=='portal'){inviteY=window.scrollY;setView('portal')}
+  inTravel=true;
+  stepEls.forEach(function(s){s.hidden=true});
+  trPanel.hidden=false;
+  updateNav();
+  window.scrollTo({top:0,behavior:reduce?'auto':'smooth'});
+  var t=$('#t-tr');if(t)t.focus({preventScroll:true});
+}
+if(trTab)trTab.addEventListener('click',openTravel);
+$$('[data-open-travel]').forEach(function(b){b.addEventListener('click',openTravel)});
+$('#tr-back').addEventListener('click',function(){goto(cur,{noSave:true})});
+var TRTYPES={pdf:'application/pdf',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',heic:'image/heic',heif:'image/heif'};
+$('#tr-input').addEventListener('change',function(){
+  var inp=this,f=inp.files&&inp.files[0];inp.value='';
+  if(!f||trBusy)return;
+  var ext=(f.name.split('.').pop()||'').toLowerCase();
+  var type=(f.type&&/^(application\/pdf|image\/(jpeg|png|webp|heic|heif))$/.test(f.type))?f.type:(TRTYPES[ext]||'');
+  if(!type){$('#tr-meta').textContent='Please choose a PDF, JPG or PNG file.';return}
+  if(f.size>25*1024*1024){$('#tr-meta').textContent='Please choose a file under 25 MB, or email it to ssuite@salute.community.';return}
+  if((TRV.receipts||[]).length>=10){$('#tr-meta').textContent='You’ve reached the limit of 10 receipts. Please email any others to ssuite@salute.community.';return}
+  trBusy=true;$('#tr-meta').textContent='Uploading '+f.name+' ('+fmtSize(f.size)+')…';
+  api({action:'travel_upload_url',content_type:type,size_bytes:f.size}).then(function(p){
+    return fetch(p.upload_url,{method:'PUT',headers:{'Content-Type':type},body:f}).then(function(r){
+      if(!r.ok)throw new Error('x');
+      return api({action:'travel_recorded',object_path:p.object_path,filename:f.name,content_type:type,size_bytes:f.size});
+    });
+  }).then(function(r){TRV=r.travel||TRV;trBusy=false;trRender();$('#tr-meta').textContent='Thank you. Your receipt was uploaded and the SALUTE team has been notified.'})
+  .catch(function(){trBusy=false;trRender();$('#tr-meta').textContent='The upload didn’t go through, which can happen on some networks. Please try again, or email your receipt to ssuite@salute.community.'});
+});
+function trRemove(id){
+  if(trBusy)return;trBusy=true;
+  api({action:'travel_remove',id:id}).then(function(r){TRV=r.travel||TRV}).catch(function(e){$('#tr-meta').textContent=e.message})
+  .then(function(){trBusy=false;trRender()});
+}
+$('#tr-send').addEventListener('click',function(){
+  var btn=this,ext='',note=(TF.namedItem('trNote').value||'').trim();
+  Array.prototype.forEach.call(TF.namedItem('trExtend'),function(x){if(x.checked)ext=x.value});
+  if(!ext){$('#tr-msg').textContent='Please choose whether you’d like an extra night.';return}
+  btn.disabled=true;$('#tr-msg').textContent='Sending…';
+  api({action:'travel_request',extend:ext,note:note}).then(function(r){TRV=r.travel||TRV;trRender()})
+  .catch(function(e){$('#tr-msg').textContent=e.message||'That didn’t send. Please try again, or email ssuite@salute.community.'})
+  .then(function(){btn.disabled=false});
 });
 
 /* ── Guest link ──────────────────────────────────── */
@@ -827,10 +919,10 @@ $('#c-invite').addEventListener('click',toInvite);
 if(!token){gate('This private invitation link is incomplete. Please open it again from your email, or write to ssuite@salute.community.');return}
 api({action:'get'}).then(function(d){
   H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;TABLE_INCL_CODE=d.table_incl_code||null;HS=d.headshot||null;VID=d.video||null;
-  bind();applyNeutral();
+  bind();applyNeutral();travelBind();if(d.travel)TRV=d.travel;
   var saved=d.response&&Object.keys(d.response).length?d.response:null;
   restore(saved,H.prefill);
-  hsRender();vidRender();showGuestLink();statusBar();
+  hsRender();vidRender();showGuestLink();statusBar();if(travelOK())trRender();
   $('#gate').hidden=true;views.invite.hidden=false;document.body.setAttribute('data-view','invite');
   startReveal();updateNav();onScroll();
   ready=true;

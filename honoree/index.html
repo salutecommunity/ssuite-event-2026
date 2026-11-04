@@ -432,6 +432,17 @@ a{color:inherit}
 
 /* v16 mobile navigation */
 .p-cur,.p-inv-li{display:none}
+/* Nov 4: Travel tab (prefill.travel only) */
+.tr-hotel p{margin:0 0 8px}
+.tr-dates{display:flex;flex-wrap:wrap;gap:10px 28px;margin:14px 0 4px}
+.tr-dates div{min-width:150px}
+.tr-dates small{display:block;font:500 10.5px/1.3 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-bottom:4px}
+.tr-dates b{font:400 19px/1.3 var(--serif);color:var(--black);font-weight:400}
+.tr-list{list-style:none;margin:0 0 14px;padding:0}
+.tr-list li{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line);font:400 15px/1.45 var(--sans)}
+.tr-list li span small{display:block;color:var(--mute);font-size:13px}
+.tr-sent{font:400 14px/1.5 var(--sans);color:var(--ink2);margin:12px 0 0}
+@media(min-width:1000px){.p-travel-li{margin-top:22px;border-top:1px solid var(--black)}}
 @media(max-width:899px){
   .p-top{display:flex;flex-wrap:wrap;align-items:center}
   .p-bar{flex:0 0 auto;min-height:58px;padding:0 0 0 20px}
@@ -622,6 +633,7 @@ a{color:inherit}
         <li><button type="button" class="p-step" data-i="3"><span class="n">04</span><span class="t">Guests</span></button></li>
         <li><button type="button" class="p-step" data-i="4"><span class="n">05</span><span class="t">Support</span></button></li>
         <li><button type="button" class="p-step" data-i="5"><span class="n">06</span><span class="t">Review</span></button></li>
+        <li class="p-travel-li" id="p-travel-li" hidden><button type="button" class="p-step p-travel" id="p-travel"><span class="n">✈</span><span class="t">Travel</span></button></li>
         <li class="p-inv-li"><button type="button" class="p-inv" data-back-invite><span aria-hidden="true">←</span> Back to the invitation</button></li>
       </ol>
     </nav>
@@ -774,6 +786,11 @@ a{color:inherit}
         </header>
         <div class="ps-body">
           <div class="alert" role="alert" tabindex="-1" hidden></div>
+          <div class="must" role="note" id="travel-eve" hidden>
+            <p class="eyebrow">Your travel</p>
+            <p id="travel-eve-text"></p>
+            <p><button type="button" class="textbtn" data-open-travel>Open the Travel tab</button></p>
+          </div>
           <div class="must" role="note" id="virt-eve" hidden>
             <p class="eyebrow">Joining virtually</p>
             <p>Since you’re accepting by video, there’s nothing to choose here. If someone will attend in person on your behalf, you can add them in step 1.</p>
@@ -977,6 +994,7 @@ a{color:inherit}
             <p class="small" id="c-small">Nothing has been announced. Questions? Write to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
             <div class="cacts">
               <button type="button" class="btn btn-wf" id="c-review">Review or update</button>
+              <button type="button" class="btn btn-wl" id="c-travel" data-open-travel hidden>Travel details</button>
               <button type="button" class="btn btn-wl" id="c-invite">Back to Invitation</button>
               
             </div>
@@ -984,9 +1002,63 @@ a{color:inherit}
         </div>
       </section>
     </form>
+
+    <!-- Travel (prefill.travel only; not one of the numbered steps) -->
+    <section class="step tstep" id="travel-panel" aria-labelledby="t-tr" hidden>
+      <header class="ps-head">
+        <p class="ps-num" aria-hidden="true">✈</p>
+        <h2 class="ps-title" id="t-tr" tabindex="-1">Your travel</h2>
+        <p class="ps-lead">Your hotel for the evening, and a place to send your air travel receipt.</p>
+      </header>
+      <div class="ps-body">
+        <div class="must tr-hotel" role="note">
+          <p class="eyebrow">Your hotel</p>
+          <p><b id="tr-hotel"></b><br><span id="tr-addr"></span></p>
+          <div class="tr-dates">
+            <div><small>Check in</small><b id="tr-in"></b></div>
+            <div><small>Check out</small><b id="tr-out"></b></div>
+          </div>
+          <p id="tr-walk">A short walk from the Prince George Ballroom.</p>
+        </div>
+        <form id="tf" novalidate autocomplete="off">
+          <fieldset class="grp">
+            <legend>Need an extra night?</legend>
+            <p class="grp-d">If you’d like to extend your stay by a night, let us know which night and our team will confirm with you.</p>
+            <div class="choices">
+              <label class="choice"><input type="radio" name="trExtend" value="none"><span><b>No, these dates work</b><small id="tr-none-d"></small></span></label>
+              <label class="choice"><input type="radio" name="trExtend" value="early"><span><b>Arrive a day early</b><small id="tr-early-d"></small></span></label>
+              <label class="choice"><input type="radio" name="trExtend" value="late"><span><b>Stay an extra night</b><small id="tr-late-d"></small></span></label>
+            </div>
+            <label class="fld" style="margin-top:18px"><span class="lbl">Anything else our team should know <span class="opt">optional</span></span>
+              <textarea name="trNote" rows="3" maxlength="1000"></textarea></label>
+            <div class="acts" style="margin-top:6px">
+              <button type="button" class="btn btn-fill" id="tr-send">Send to the SALUTE team <span class="arrow" aria-hidden="true">→</span></button>
+            </div>
+            <p class="tr-sent" id="tr-msg" role="status" aria-live="polite"></p>
+          </fieldset>
+          <fieldset class="grp">
+            <legend>Air travel receipt</legend>
+            <p class="grp-d">Once you’ve booked your flight, please upload your receipt here so our team can reimburse you. You can add more than one, for example your outbound and return flights.</p>
+            <ul class="tr-list" id="tr-list"></ul>
+            <div class="upload" id="tr-up">
+              <div class="up-info">
+                <p class="up-name" id="tr-name">Add a receipt</p>
+                <p class="up-meta" id="tr-meta" role="status">PDF, JPG or PNG, up to 25 MB. Only the SALUTE team can see it.</p>
+              </div>
+              <input class="sr" type="file" id="tr-input" accept="application/pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" aria-describedby="tr-meta">
+              <label class="btn btn-line btn-sm up-btn" for="tr-input" id="tr-btn">Upload receipt</label>
+            </div>
+            <p class="grp-d" style="margin-top:14px">If the upload doesn’t work on your network, you can email your receipt to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p>
+          </fieldset>
+        </form>
+        <div class="acts">
+          <button type="button" class="btn btn-line" id="tr-back">Back to your portal</button>
+        </div>
+      </div>
+    </section>
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261104neutral"></script>
+<script src="/honoree/honoree.js?v=20261104travel"></script>
 </body>
 </html>
