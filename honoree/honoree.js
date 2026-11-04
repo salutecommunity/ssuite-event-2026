@@ -189,7 +189,7 @@ function updateNav(){
     n.appendChild(document.createTextNode(base));
     var st=$('.sr',b);if(st)st.remove();
     var s=document.createElement('span');s.className='sr';
-    s.textContent=i===cur?' (current step)':(off?' (not needed)':(done[i]?' (completed)':''));
+    s.textContent=(i===cur&&!inTravel)?' (current step)':(off?' (not needed)':(done[i]?' (completed)':''));
     b.appendChild(s);
   });
   var pct=submitted?100:Math.round(((cur+1)/NAMES.length)*100);
