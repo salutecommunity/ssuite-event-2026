@@ -42,6 +42,10 @@ function proxyOK(){return !!(H&&H.prefill&&H.prefill.allow_proxy)}
 function virtualOK(){return !!(H&&H.prefill&&H.prefill.virtual)}
 /* Neha, Oct 20: some honorees (Indra) have already accepted and SALUTE already has their bio and headshot; set prefill.on_file=true. The portal skips the decision and the bio/headshot requests. */
 function onFile(){return !!(H&&H.prefill&&H.prefill.on_file)}
+/* Neha, Nov 4: some honorees (DJ Rekha) use they/them; set prefill.neutral=true. Their portal's event and SALUTE descriptions read "South Asian leaders and allies". */
+function neutralOK(){return !!(H&&H.prefill&&H.prefill.neutral)}
+function gn(s){return neutralOK()?String(s).replace(/South Asian women leaders and allies/g,'South Asian leaders and allies').replace(/South Asian women and allies/g,'South Asian leaders and allies'):s}
+function applyNeutral(){if(!neutralOK())return;var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),n,t;while((n=w.nextNode())){t=gn(n.nodeValue);if(t!==n.nodeValue)n.nodeValue=t}}
 function submitLabel(){return onFile()?'Send my details ':'Submit my response '}
 function onFileCopy(){
   NAMES[0]='Welcome';
@@ -470,7 +474,8 @@ function copyText(txt,msgEl,ok){
   function fb(){msgEl.textContent='Please select and copy it manually.'}
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){msgEl.textContent=ok||'Link copied.'},fb)}else fb();
 }
-function guestNote(){
+function guestNote(){return gn(guestNote0())}
+function guestNote0(){
   if(!accepting()) return 'SALUTE (South Asian Leaders Unite to Empower) is hosting S.SUITE, its inaugural honors evening celebrating South Asian women leaders and allies, on Friday, November 20, 2026, at 6:30 p.m. at the Prince George Ballroom in New York City. The evening includes a fireside conversation with Indra Nooyi, moderated by Anu Aiyengar.\n\nI think you would be a wonderful addition to the room. SALUTE has extended a special guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+H.full_name;
   return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+((proxy()||virt())?' and I would love for you to join the celebration on Friday, November 20, 2026,':' and I would love for you to join me on Friday, November 20, 2026,')+' at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+((proxy()||virt())?'I hope you can be there.':'I hope you can join me.')+'\n\n'+H.full_name;
 }
@@ -822,7 +827,7 @@ $('#c-invite').addEventListener('click',toInvite);
 if(!token){gate('This private invitation link is incomplete. Please open it again from your email, or write to ssuite@salute.community.');return}
 api({action:'get'}).then(function(d){
   H=d.honoree;STATE=d.status;SUBMITTED_AT=d.submitted_at;GUEST_URL=d.guest_page_url||null;GUEST_CODE=d.guest_code||null;TABLE_CODE=d.table_code||null;TABLE_INCL_CODE=d.table_incl_code||null;HS=d.headshot||null;VID=d.video||null;
-  bind();
+  bind();applyNeutral();
   var saved=d.response&&Object.keys(d.response).length?d.response:null;
   restore(saved,H.prefill);
   hsRender();vidRender();showGuestLink();statusBar();
