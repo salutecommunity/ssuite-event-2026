@@ -291,7 +291,10 @@ function validate(i){
   }
   if(i===1){
     if(!val('pubName')) push('pubName','Add the name you’d like to appear publicly.');
-    if(words(val('bio'))>250) push('bio','Please keep your bio to 250 words or fewer.');
+    /* Neha, Nov 5: bio and headshot are required (except on_file). If the upload fails on a company network, a box lets the team email it instead. */
+    if(!onFile()&&!val('bio')) push('bio','Add a short bio.');
+    else if(words(val('bio'))>250) push('bio','Please keep your bio to 250 words or fewer.');
+    if(!onFile()&&!HS&&!chk('hsEmail')) push('headshot','Upload a headshot.');
     if(val('teamEmail')&&!EMAIL.test(val('teamEmail'))) push('teamEmail','Enter a valid email for your team contact.');
   }
   if(i===2&&!noSeat()){
@@ -385,7 +388,7 @@ function hsRender(){
   }else{
     t.hidden=true;t.removeAttribute('src');
     $('#hs-name').textContent='No file selected';
-    $('#hs-meta').textContent='Optional. If the upload doesn’t work on your network, email it to ssuite@salute.community.';
+    $('#hs-meta').textContent='Required. JPG, PNG or HEIC.';
     $('#hs-remove').hidden=true;$('#hs-btn').textContent='Choose image';
   }
 }
@@ -404,7 +407,7 @@ hsIn.addEventListener('change',function(){
       return api({action:'headshot_recorded',object_path:p.object_path,filename:f.name,content_type:type,size_bytes:f.size});
     });
   }).then(function(r){HS=r.headshot;if(HS&&!HS.url)HS.url=local;hsRender()})
-  .catch(function(e){hsRender();$('#hs-meta').textContent='The upload didn’t go through, which can happen on some company networks. You can continue without it and email the headshot to ssuite@salute.community.'})
+  .catch(function(e){hsRender();$('#hs-meta').textContent='The upload didn’t go through, which can happen on some company networks. Please try again, or tick the box below and email it to ssuite@salute.community.';var w=$('#hs-email-wrap');if(w)w.hidden=false})
   .then(function(){hsBusy=false});
 });
 $('#hs-remove').addEventListener('click',function(){
@@ -744,7 +747,7 @@ wireListUpload('sup-file','supportList','sup-file-msg','person');
 
 /* ── Save / restore ──────────────────────────────── */
 var FIELDS=['response','declineNote','videoLink','rFirst','rLast','rEmail','rTitle','rOrg','pubName','pubTitle','pubOrg','bio','teamName','teamEmail','gFirst','gLast','gEmail','gTitle','gOrg','gMeal','gAccess','gMode','diet','access','inviteList','inviteMode','supportList','supportMode','tFirst','tLast','tEmail','tPhone','tTitle','tOrg','tMeal','tableKind'];
-var BOOLS=['guest','repAttend'];
+var BOOLS=['guest','repAttend','hsEmail'];
 function collect(){
   var r={};
   FIELDS.forEach(function(k){r[k]=val(k)});
@@ -772,6 +775,7 @@ function restore(r,prefill){
     TABLE_STATUS=r.tableStatus||'';TABLE_REF=r.tableRef||'';
   }
   if(onFile())setField('response','accept');
+  if(chk('hsEmail')){var hw=$('#hs-email-wrap');if(hw)hw.hidden=false}
   bioCount();syncReveals();
 }
 var saveTimer=null,saving=false,dirty=false,ready=false;
@@ -836,8 +840,8 @@ function renderReview(){
   var bw=words(val('bio'));
   sec('Profile',1,[
     ['Listed as',[val('pubName'),val('pubTitle'),val('pubOrg')].filter(Boolean).join(' · ')],
-    bw?['Bio','Provided · '+plural(bw,'word')]:(onFile()?['Bio','On file with SALUTE']:null),
-    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:(onFile()?['Headshot','On file with SALUTE']:['Headshot','Not uploaded · you can email it to ssuite@salute.community']),
+    bw?['Bio','Provided · '+plural(bw,'word')]:(onFile()?['Bio','On file with SALUTE']:['Bio',noneSpan('Not added yet')]),
+    HS?['Headshot',(HS.filename||'Headshot')+' · uploaded']:(onFile()?['Headshot','On file with SALUTE']:(chk('hsEmail')?['Headshot','Your team will email it to ssuite@salute.community']:['Headshot',noneSpan('Not uploaded yet')])),
     val('teamName')||val('teamEmail')?['Team contact',[val('teamName'),val('teamEmail')].filter(Boolean).join(' · ')]:null
   ]);
   if(noSeat()) sec('Evening',2,[['Evening','Joining virtually by video']]); else sec('Evening',2,[

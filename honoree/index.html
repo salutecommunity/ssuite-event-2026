@@ -741,23 +741,24 @@ a{color:inherit}
             <label class="fld"><span class="lbl">Name</span><input type="text" name="pubName" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Title</span><input type="text" name="pubTitle" autocomplete="off"></label>
             <label class="fld"><span class="lbl">Organization(s)</span><input type="text" name="pubOrg" autocomplete="off"></label>
-            <label class="fld"><span class="lbl">Short bio <span class="opt">optional</span></span>
+            <label class="fld"><span class="lbl">Short bio</span>
               <span class="hint">Up to 250 words · <span id="bio-count">0 words</span></span>
               <textarea name="bio" rows="8"></textarea></label>
           </fieldset>
           <fieldset class="grp">
-            <legend>Headshot <span class="opt">optional</span></legend>
-            <p class="grp-d">For the program. A high-resolution image works best. If you’d rather, email it to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> instead.</p>
+            <legend>Headshot</legend>
+            <p class="grp-d">For the program. A high-resolution image works best.</p>
             <div class="upload" id="hs">
               <img class="thumb" id="hs-thumb" alt="" hidden>
               <div class="up-info" id="hs-info">
                 <p class="up-name" id="hs-name">No file selected</p>
-                <p class="up-meta" id="hs-meta" role="status">Optional. JPG, PNG or HEIC.</p>
+                <p class="up-meta" id="hs-meta" role="status">JPG, PNG or HEIC.</p>
               </div>
               <input class="sr" type="file" id="hs-input" name="headshot" accept="image/*" aria-describedby="hs-meta">
               <label class="btn btn-line btn-sm up-btn" for="hs-input" id="hs-btn">Choose image</label>
               <button type="button" class="textbtn" id="hs-remove" hidden>Remove</button>
             </div>
+            <div class="choices" id="hs-email-wrap" style="margin-top:14px" hidden><label class="choice"><input type="checkbox" name="hsEmail"><span><b>My team will email my headshot instead</b><small>If the upload isn’t working on your network, send it to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</small></span></label></div>
           </fieldset>
           <fieldset class="grp">
             <legend>Someone on your team <span class="opt">optional</span></legend>
@@ -1059,6 +1060,6 @@ a{color:inherit}
   </main>
 </div>
 
-<script src="/honoree/honoree.js?v=20261104travel4"></script>
+<script src="/honoree/honoree.js?v=20261105req1"></script>
 </body>
 </html>
