@@ -3,7 +3,7 @@
  const deadline = Date.parse('2026-11-07T04:59:00Z');
  const message = 'The event is now at capacity. Thank you so much for your interest.';
  const normalize = value => String(value || '').replace(/[^a-z0-9]/gi, '').toUpperCase();
- const codes = new Set(["DESAIPARTNER234Y","CULTURETREEPARTNER523F43","SAYAPARTNERB0DB82","SAKHIPARTNER2231B5","NEYTHRIPARTNERUJ5V","MALAIPARTNER7K3Q","CHARPARTNER4W9M","SAYAPARTNERA2KC","BOOMIEPARTNER7R8T","SEHGALPARTNER5N3V","SSUITEMUBARAK2026","SSUITEKNEADSOMELOVENY2026","SSUITEKULTUREKHAZANA2026","SSUITEBROWNGIRLANGELS2026","SSUITEPRATHAM2026"]);
+ const codes = new Set(["DESAIPARTNER234Y","CULTURETREEPARTNER523F43","SAYAPARTNERB0DB82","SAKHIPARTNER2231B5","NEYTHRIPARTNERUJ5V","MALAIPARTNER7K3Q","CHARPARTNER4W9M","SAYAPARTNERA2KC","BOOMIEPARTNER7R8T","SEHGALPARTNER5N3V","SSUITEMUBARAK2026","SSUITEKNEADSOMELOVENY2026","SSUITEKULTUREKHAZANA2026","SSUITEBROWNGIRLANGELS2026","SSUITEPRATHAM2026","SSUITESOUTHASIANSOAR2026"]);
  const guide = /^\/community-partners\//.test(location.pathname) && !/^\/community-partners\/ascend(?:\/|$)/.test(location.pathname);
  function eligible() { const query=new URLSearchParams(location.search); if(query.has('checkout'))return false; return guide || codes.has(normalize(document.body.dataset.invitationCode)) || codes.has(normalize(query.get('code'))); }
  function close() {
