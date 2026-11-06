@@ -353,11 +353,11 @@
       <p class="host-name">Neythri</p>
       <p class="host-role">Nonprofit Partner</p>
       <div class="invite-lockup">
-        <p class="to">You are invited to an evening with SALUTE at the inaugural</p>
+        <p class="to">An evening with SALUTE at the inaugural</p>
         <h1 class="event-name">S.Suite</h1>
         <p class="event-kind">Honors Ceremony</p>
       </div>
-      <a class="text-link" href="#seat">Accept your invitation ↓</a>
+      <p class="neythri-capacity-notice" role="status" style="max-width:540px;margin:28px auto 0;padding:22px 26px;border:1px solid #c6a264;border-radius:4px;background:#faf7f0;color:#25211b;font-size:clamp(18px,2vw,22px);line-height:1.6;text-align:center">The event is now at capacity. Thank you so much for your interest.</p>
     </div>
   </section>
 
@@ -370,35 +370,16 @@
 
   <section class="seat" id="seat">
     <div class="seat-copy">
-      <p class="eyebrow">Attend</p>
-      <h2>Join us for S.Suite.</h2>
+      <p class="eyebrow">The occasion</p>
+      <h2>An evening of recognition.</h2>
       <p class="seat-lead">SALUTE’s honors ceremony recognizing South Asian women leaders and allies across business, capital, &amp; culture.</p>
       <p>S.Suite is our way of making visible the leaders SALUTE was built for — and the future we’re investing in.</p>
     </div>
-    <aside class="seat-card" data-price-locked data-partner-early-price="300" data-partner-regular-price="300" data-partner-cutover="2026-01-01T00:00:00Z">
-      <p class="micro">Reserved seat</p>
-      <div class="price-row" hidden>
-        <p class="price"></p>
-        <p class="original-price" hidden></p>
-      </div>
-      <p class="price-note" hidden></p>
-      <p class="fineprint" id="org-rate-trouble" hidden>The partner rate cannot be shown in this browser right now. Please email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p>
-      <ul>
-        <li>Your seat at the S.Suite dinner and honors ceremony</li>
-        <li>Neythri partner rate, applied for you</li>
-        <li>One seat per person — 9 seats are held for Neythri, first come</li>
-        <li>Arrival details and event communications</li>
-      </ul>
-      <button class="button button-dark choose" type="button"
-        data-ticket-code="community" data-ticket="Community Ticket"
-        data-public-sale-open="true" data-access-code-required="true"
-        data-live-label="Accept this invitation" data-gated-label="Accept this invitation"
-        data-withheld-label="Registration opens soon"
-        disabled aria-disabled="true">Accept this invitation</button>
-      <p class="sale-window-note" hidden></p>
-      <p class="fineprint" id="attend-sales-note">Registration is completed through secure checkout.</p>
-      <noscript><p class="fineprint">Accepting needs JavaScript, which is switched off in this browser. Turn it on to register here, or email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a> and we will register you.</p></noscript>
-      <p class="card-from">Partner rate extended by <strong>Neythri</strong></p>
+    <aside class="seat-card" aria-label="Registration status">
+      <p class="micro">Registration status</p>
+      <h3 style="font-size:28px;margin:16px 0">At capacity</h3>
+      <p>Registration through this invitation is now closed.</p>
+      <p class="card-from">With thanks to <strong>Neythri</strong></p>
     </aside>
   </section>
 
@@ -719,38 +700,8 @@
   });
 })();
 </script>
-<div class="drawer-backdrop" hidden></div>
-<aside class="checkout-drawer" aria-hidden="true" aria-labelledby="checkout-title">
-  <button class="close" aria-label="Close registration">×</button>
-  <div class="drawer-head"><p class="eyebrow">REGISTRATION / BEFORE CHECKOUT</p><h2 id="checkout-title">Tell us who is attending.</h2><p id="drawer-intro">Secure checkout is unavailable on this page right now. No registration or payment is created.</p></div>
-  <form id="registration-form">
-    <div class="selection"><div><span id="ticket-name">Event ticket</span><small id="selection-note">Ticket selection</small></div><label class="quantity-wrap">WHO’S COMING<select id="ticket-quantity" aria-label="How many seats, including your own"><option value="1">Just me</option><option value="2">Me and 1 guest</option><option value="3">Me and 2 guests</option><option value="4">Me and 3 guests</option></select></label></div>
-        <div id="guest-fields"></div>
-    <section class="table-options" hidden>
-      <div class="form-section-head"><p class="micro" id="table-head-eyebrow">TABLE MANAGEMENT</p><h3 id="table-head-title">Set up your table.</h3><p id="table-head-note">After your payment is verified, you will receive a private link to manage your table: name it, assign each of your seats, invite your guests by email, and resend or revoke a link at any time.</p></div>
-      <!-- No table name is asked for here. The box that used to stand in this
-           place was read by nothing and sent nowhere: a host could type her
-           company name, pay, and find it had never been recorded. Naming the
-           table is done on the private table page, exactly as the line above
-           says, where the name is actually saved. -->
-      <div class="table-preview"><div><p class="micro" id="table-page-eyebrow">YOUR PRIVATE TABLE PAGE</p><strong id="table-page-note">10 seats · Guest status · Seating controls</strong></div></div>
-    </section>
-    <section class="legal-consent" aria-label="Registration agreement">
-      <label><input type="checkbox" name="combined_agreement" required><span>I agree to the <a data-policy-link="terms" href="/event-terms.html" target="_blank" rel="noopener noreferrer">Event Terms</a>, <a data-policy-link="privacy" href="/event-privacy.html" target="_blank" rel="noopener noreferrer">Privacy Notice</a> and <a data-policy-link="media" href="/media-release.html" target="_blank" rel="noopener noreferrer">Media Release</a>, and to event texts<span id="agree-guests" hidden> — for myself and, with their permission, for my guests</span>. Message and data rates may apply; reply STOP to stop.</span></label>
-    </section>
-    <div class="total"><span>Total</span><strong id="ticket-total">$350</strong></div>
-    <div id="checkout-turnstile" class="turnstile-slot" aria-live="polite"></div>
-    <p id="live-checkout-status" class="live-status" role="status" aria-live="polite" hidden></p>
-    <button class="button button-dark full" type="submit" id="checkout-submit">Checkout unavailable</button>
-    <p class="fineprint" id="checkout-fineprint">Secure checkout is unavailable right now. No payment can be started from this page.</p>
-  </form>
-</aside>
 <div class="toast" role="status" aria-live="polite"></div>
 <script src="/config.js?v=20260910a"></script>
 <script src="/guest-card.js?v=20260911h"></script>
-<script src="/invitation-checkout.js?v=20260916a"></script>
-<script src="/live-chain.js?v=20260916b"></script>
-<script src="/live-pricing.js?v=20260916a"></script>
-<script src="/org-invitation.js?v=20260916a"></script>
 </body>
 </html>
