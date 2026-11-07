@@ -13,6 +13,9 @@
     document.body.classList.remove('public-registration-closed');
     return;
   }
+  const closureStyle = document.createElement('style');
+  closureStyle.textContent = '.public-registration-closed .ticket-grid,.public-registration-closed [data-request-invitation],.public-registration-closed #invitation-dialog{display:none!important}';
+  document.head.appendChild(closureStyle);
   document.addEventListener('click', event => {
     if (event.target.closest('.choose')) { event.preventDefault(); event.stopImmediatePropagation(); }
   }, true);
