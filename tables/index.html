@@ -350,8 +350,10 @@
     .table-choices .seat-card .sales-note{margin-top:auto}
   }
 </style>
+<style>.public-registration-notice{display:none;margin:2rem auto;padding:clamp(1.5rem,4vw,3rem);max-width:1100px;background:#f6f1e9;border:1px solid #ded3c3;color:#25221e;border-radius:3px}.public-registration-notice a{color:inherit;overflow-wrap:anywhere}.public-registration-closed .public-registration-notice{display:block}.public-registration-closed .choose,.public-registration-closed .checkout-drawer,.public-registration-closed .drawer-backdrop,.public-registration-closed #attend-sales-note,.public-registration-closed .sales-note,.public-registration-closed .ticket-section noscript,.public-registration-closed #seat noscript{display:none!important}</style>
 </head>
-<body>
+<body class="public-registration-closed">
+<script src="/public-registration-closed.js?v=20261107a"></script>
 
 
 <header class="invite-header">
@@ -388,7 +390,7 @@
       <p>Hosts are recognized as partners of S.Suite. After checkout you name your table and invite each guest, and you can send the logo or name you would like featured to <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>. You can see who has confirmed at any time, and edit guest details until November 13, 2026.</p>
       <p>We encourage table hosts to think beyond filling seats. Bring together people who should know one another, people whose work deserves greater visibility, and people who can open doors for others.</p>
     </div>
-    <div class="table-choices">
+    <aside class="public-registration-notice" role="status"><p style="letter-spacing:.12em;text-transform:uppercase;font-size:.75rem">Registration update</p><h2>Public registration is now closed.</h2><p>For inquiries, please email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p></aside><div class="table-choices">
     <aside class="seat-card" data-price-display>
       <p class="micro">Associate Partner / ten seats</p>
       <div class="price-row">
