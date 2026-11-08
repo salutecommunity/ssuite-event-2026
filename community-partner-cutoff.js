@@ -1,10 +1,10 @@
-/* Paid Community Partner invitation closure. Ascend, Anu Sehgal and Knead Some Love NY are intentionally exempt. */
+/* Paid Community Partner invitation closure. Ascend and Anu Sehgal are intentionally exempt. Knead closed November 7 at 11:59 p.m. Eastern. */
 (() => { 'use strict';
  const deadline = Date.parse('2026-11-07T04:59:00Z');
  const message = 'The event is now at capacity. Thank you so much for your interest.';
  const normalize = value => String(value || '').replace(/[^a-z0-9]/gi, '').toUpperCase();
- const codes = new Set(["DESAIPARTNER234Y","CULTURETREEPARTNER523F43","SAYAPARTNERB0DB82","SAKHIPARTNER2231B5","NEYTHRIPARTNERUJ5V","MALAIPARTNER7K3Q","CHARPARTNER4W9M","SAYAPARTNERA2KC","BOOMIEPARTNER7R8T","SSUITEMUBARAK2026","SSUITEKULTUREKHAZANA2026","SSUITEBROWNGIRLANGELS2026","SSUITEPRATHAM2026","SSUITESOUTHASIANSOAR2026"]);
- const guide = /^\/community-partners\//.test(location.pathname) && !/^\/community-partners\/(?:ascend|anu-sehgal|knead-some-love-ny)(?:\/|$)/.test(location.pathname);
+ const codes = new Set(["DESAIPARTNER234Y","CULTURETREEPARTNER523F43","SAYAPARTNERB0DB82","SAKHIPARTNER2231B5","NEYTHRIPARTNERUJ5V","MALAIPARTNER7K3Q","CHARPARTNER4W9M","SAYAPARTNERA2KC","BOOMIEPARTNER7R8T","SSUITEMUBARAK2026","SSUITEKULTUREKHAZANA2026","SSUITEBROWNGIRLANGELS2026","SSUITEPRATHAM2026","SSUITESOUTHASIANSOAR2026","SSUITEKNEADSOMELOVENY2026"]);
+ const guide = /^\/community-partners\//.test(location.pathname) && !/^\/community-partners\/(?:ascend|anu-sehgal)(?:\/|$)/.test(location.pathname);
  const closedNow = new Set(["SAYAPARTNERA2KC","SAYAPARTNERB0DB82"]);
  function closedEarly() { const query=new URLSearchParams(location.search); if(query.has('checkout'))return false; return /^\/community-partners\/saya(?:\/|$)/.test(location.pathname) || closedNow.has(normalize(document.body.dataset.invitationCode)) || closedNow.has(normalize(query.get('code'))); }
  function eligible() { const query=new URLSearchParams(location.search); if(query.has('checkout'))return false; return guide || codes.has(normalize(document.body.dataset.invitationCode)) || codes.has(normalize(query.get('code'))); }
