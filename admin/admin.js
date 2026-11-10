@@ -491,6 +491,7 @@ async function resendMemberCode(request, button) {
 
 function renderOverview(host, overview) {
   const event = overview.event || {}; const counts = overview.counts || {};
+  if(overview.guestCounts){const C=overview.guestCounts;host.append(element('h2','','Guest headcount'),element('p','notice',C.namedGuests+' named guests · '+C.detailsComplete+' registration complete · '+C.detailsPending+' registration pending'),element('p','notice',C.invitationPlaceholders+' invitation placeholders · '+C.emptyTableSeats+' empty table seats (not included in named guests). Same live count across admin dashboards; manual seating drafts are separate.'));}
   if (overview.notice) host.append(element("p", "notice", overview.notice));
   const eventCard = element("article", "event-card"); eventCard.append(element("span", "record-label", "Launch status"), element("h2", "", text(event.name)), element("p", "", `${[text(event.display_date), text(event.display_time)].filter(Boolean).join(" · ")} · ${text(event.venue_name)}, ${text(event.city)}`), chip(event.sales_status)); host.append(eventCard);
   const revenue = overview.revenue;
@@ -509,7 +510,7 @@ function renderOverview(host, overview) {
     host.append(moneyGrid);
     host.append(element("p", "band-note", "Figures are net of refunds reconciled from Stripe. Isolated validation transactions are excluded."));
   }
-  const fields = [["Operational paid orders", counts.paid_orders], ["Registered guests", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Member code requests pending", counts.member_code_requests_pending], ["Auction pending", counts.auction_pending]];
+  const fields = [["Operational paid orders", counts.paid_orders], ["Attendee database records", counts.attendees], ["Completed profiles", counts.completed_attendees], ["Checked in", counts.checked_in], ["Active tables", counts.tables], ["Email queued", counts.email_queued], ["Invitation requests pending", counts.invitation_requests_pending], ["Member code requests pending", counts.member_code_requests_pending], ["Auction pending", counts.auction_pending]];
   if (!revenue) fields.push(["Donations received", money(counts.donations_paid_cents)]);
   host.append(element("h2", "band-title", "Operations"));
   const grid = element("div", "summary"); for (const [label, value] of fields) { const card = element("article", "metric"); card.append(element("span", "", label), element("strong", "", String(value ?? 0))); grid.append(card); } host.append(grid);
