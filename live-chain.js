@@ -604,7 +604,7 @@
     }
     applyCodedTotal();
     syncAgreementText();
-    const seats = Number.isInteger(partnerRate.seatsRemaining)
+    const seats = document.body.dataset.hidePartnerAllocation !== "true" && Number.isInteger(partnerRate.seatsRemaining)
       ? ` ${partnerRate.seatsRemaining} ${partnerRate.seatsRemaining === 1 ? "seat remains" : "seats remain"} on this code.`
       : "";
     const who = partnerRate.organization ? `${partnerRate.organization} rate` : "Invitation";
