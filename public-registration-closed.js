@@ -9,7 +9,7 @@
   } catch (_) {}
   // Query/storage is routing convenience only, never eligibility. The original
   // code verification, partner cutoff, caps and server checks remain authoritative.
-  if (code || tableInvitation) {
+  if (['SSUITENEHA2026','SSUITECOMMUNITYPARTNER2026'].includes(code.toUpperCase()) || (tableInvitation && (()=>{try{return ['SSUITENEHA2026','SSUITECOMMUNITYPARTNER2026'].includes(String(JSON.parse(sessionStorage.getItem('ssuite.table.invitation')).code||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase())}catch(_){return false}})())) {
     document.body.classList.remove('public-registration-closed');
     return;
   }

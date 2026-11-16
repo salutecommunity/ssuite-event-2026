@@ -294,6 +294,11 @@
 </style>
 </head>
 <body data-comp-key="indra-nooyi-table" data-no-addon="1">
+<!-- Neha Nov16: new bookings closed; existing guest access remains separate. -->
+<style id="nov16-booking-closure">body.booking-closed> *:not(header):not(footer):not(#booking-closure-notice):not(script):not(style):not(link){display:none!important}#booking-closure-notice{display:block!important;box-sizing:border-box;max-width:760px;margin:64px auto;padding:48px 24px;text-align:center;color:#191919;background:#fcfbf9}#booking-closure-notice h1{font:clamp(28px,5vw,44px)/1.3 Georgia,serif}#booking-closure-notice p{font:16px/1.7 Arial,sans-serif}</style>
+<section id="booking-closure-notice" role="status"><p>S.SUITE · SALUTE</p><h1>The event is now at capacity.</h1><p>For inquiries, please email <a href="mailto:ssuite@salute.community">ssuite@salute.community</a>.</p></section>
+<script>document.body.classList.add('booking-closed');document.addEventListener('click',function(e){if(e.target.closest('.choose,#fc-open,[data-request-invitation]')){e.preventDefault();e.stopImmediatePropagation()}},true);document.addEventListener('submit',function(e){if(e.target.closest('#registration-form,#fc-form')){e.preventDefault();e.stopImmediatePropagation()}},true);</script>
+
 
 
 <header class="invite-header">

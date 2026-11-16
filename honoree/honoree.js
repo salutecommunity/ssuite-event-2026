@@ -575,6 +575,8 @@ function guestNote0(){
   return (isChair()?'I’m honored to receive the S.SUITE Chair, SALUTE’s lifetime achievement honor,':'I’m honored to be recognized as an inaugural S.SUITE '+H.honor+' Honoree by SALUTE,')+((proxy()||virt())?' and I would love for you to join the celebration on Friday, November 20, 2026,':' and I would love for you to join me on Friday, November 20, 2026,')+' at 6:30 p.m. at the Prince George Ballroom in New York City.\n\nSALUTE has extended a special honoree guest rate of $300 per person (regular price $400). Seats are confirmed once registration and payment are complete. You can register here:\n\n'+GUEST_URL+'\n\n'+((proxy()||virt())?'I hope you can be there.':'I hope you can join me.')+'\n\n'+H.full_name;
 }
 function showGuestLink(){
+  $('#gl-box').hidden=false;$('#gl-desc').textContent='The event is now at capacity. For inquiries, email ssuite@salute.community.';['gl-field','gl-copy','gl-note'].forEach(function(id){var e=document.getElementById(id);if(e)e.hidden=true});return;
+
   if(!GUEST_URL) return;
   $('#gl-field').value=GUEST_URL;$('#gl-box').hidden=false;
   $('#gl-desc').textContent=declined()?'Share it with anyone you think should be in the room. It applies the $300 rate at checkout.':'Share it with anyone you’d like to invite. It applies the $300 honoree rate at checkout.';
@@ -622,6 +624,8 @@ function prefillTable(){
   if(!val('tMeal')&&val('diet')) setField('tMeal',val('diet'));
 }
 function tableView(){
+  if(TABLE_STATUS!=='paid'){['table-buy','table-form','table-kind-grp'].forEach(function(id){var e=document.getElementById(id);if(e)e.hidden=true});var n=document.getElementById('table-done');if(n){n.textContent='The event is now at capacity. For inquiries, email ssuite@salute.community.';n.hidden=false}return;}
+
   var done=$('#table-done'), paid=TABLE_STATUS==='paid';
   $('#table-buy').hidden=paid; if(paid){$('#table-form').hidden=true}
   var kg=$('#table-kind-grp');if(kg)kg.hidden=paid;
@@ -631,13 +635,15 @@ function tableView(){
   else if(TABLE_STATUS==='pending'){done.textContent='Your payment is still being recorded. Your receipt will arrive by email shortly.';done.hidden=false}
   else done.hidden=true;
 }
-$('#table-buy').addEventListener('click',function(){
+$('#table-buy').addEventListener('click',function(){ return; // New bookings closed Nov16
+
   var f=$('#table-form'), open=f.hidden;
   f.hidden=!open;this.setAttribute('aria-expanded',String(open));
   if(open){prefillTable();renderTurnstile().catch(function(){});var e=F.namedItem('tFirst');if(e&&!e.value)e.focus();else if(F.namedItem('tEmail'))F.namedItem('tEmail').focus()}
 });
 function tableErr(m){var e=$('#table-err');e.textContent=m||'';e.hidden=!m;if(m)e.focus&&e.setAttribute('tabindex','-1')}
-$('#table-pay').addEventListener('click',function(){
+$('#table-pay').addEventListener('click',function(){ return; // New bookings closed Nov16
+
   var btn=this;
   var t={first:val('tFirst').trim(),last:val('tLast').trim(),email:val('tEmail').trim().toLowerCase(),phone:val('tPhone').trim(),title:val('tTitle').trim(),org:val('tOrg').trim(),meal:val('tMeal')};
   var miss=[];
@@ -903,7 +909,7 @@ function showConfirm(){
     :(isChair()?'We are honored to celebrate you as the inaugural recipient of the S.SUITE Chair on November 20.':'We are honored to celebrate you as an inaugural S.SUITE '+H.honor+' Honoree on November 20.')+(virt()?' We look forward to sharing your video acceptance with the room.':'')+(repIn()&&repName()?' We look forward to welcoming '+repName()+' on your behalf.':'')+(onFile()?' Thank you for sharing your details. The SALUTE team will be in touch personally to confirm your seats and the evening’s plans.':' The SALUTE team will be in touch personally to confirm your seats and announcement timing.');
   $('#c-stamp').textContent=SUBMITTED_AT?'Received '+fmtWhen(SUBMITTED_AT):'';
   $('#c-gl-desc').textContent=dec?'Share it with anyone you think should be in the room. They pay the $300 rate (regular $400).':'For guests beyond your complimentary one. They pay the $300 honoree rate (regular $400).';
-  var showGl=!!GUEST_URL;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
+  var showGl=false;$('#c-gl').hidden=!showGl;if(showGl)$('#c-gl-field').value=GUEST_URL;
   $('#review-body').hidden=true;$('#confirm').hidden=false;
   cur=LAST;stepEls.forEach(function(s,k){s.hidden=(k!==LAST)});
   updateNav();
