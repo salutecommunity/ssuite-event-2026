@@ -1,5 +1,5 @@
 /* S.SUITE 2026 silent auction: live bidding. Bids are stored privately; the page
- * shows only the current high bid and number of bids. */
+ * shows the current high bid without bid counts. */
 (() => {
   "use strict";
   const API = "https://iddzcbknnddkonrcwgpt.supabase.co/functions/v1/ssuite-auction-bid";
@@ -105,7 +105,7 @@
     document.querySelectorAll(".card[id]").forEach((card) => {
       const l = state[card.id]; if (!l) return;
       const ob = card.querySelector(".ob");
-      if (ob) ob.innerHTML = `<span class="sa-live">${l.high_bid ? "Current bid " + fmt(l.high_bid) : "Opening bid " + fmt(l.opening_bid)}</span><span class="sa-count">${l.bid_count ? l.bid_count + (l.bid_count === 1 ? " bid" : " bids") : "No bids yet"}${l.is_open ? "" : " · Bidding closed"}</span>`;
+      if (ob) ob.innerHTML = `<span class="sa-live">${l.high_bid ? "Current bid " + fmt(l.high_bid) : "Opening bid " + fmt(l.opening_bid)}</span>${l.is_open ? "" : '<span class="sa-count">Bidding closed</span>'}`;
       let b = card.querySelector(".sa-bidbtn");
       if (!b) {
         b = document.createElement("button"); b.type = "button"; b.className = "sa-bidbtn";
@@ -121,7 +121,7 @@
       if (top) top.innerHTML = `<small>${l.high_bid ? "Current bid" : "Opening bid"}</small><strong>${fmt(l.high_bid || l.opening_bid)}</strong>`;
       box.querySelectorAll(".bidgrid > div").forEach((d) => { const s = d.querySelector("small"); if (s && /increment/i.test(s.textContent)) { const st = d.querySelector("strong"); if (st) st.textContent = "$25 / $50"; } });
       const note = box.querySelector(".note");
-      if (note) note.textContent = l.is_open ? `${l.bid_count ? l.bid_count + (l.bid_count === 1 ? " bid" : " bids") + " so far. " : "Be the first to bid. "}Minimum next bid ${fmt(l.min_next)}. Every winning bid supports SALUTE.` : "Bidding on this lot has closed. Thank you for supporting SALUTE.";
+      if (note) note.textContent = l.is_open ? `Minimum next bid ${fmt(l.min_next)}. Every winning bid supports SALUTE.` : "Bidding on this lot has closed. Thank you for supporting SALUTE.";
       let b = box.querySelector("button.button, .sa-bidbtn");
       if (b && !b.dataset.saBound) { const nb = document.createElement("button"); nb.type = "button"; nb.className = "button sa-bidbtn"; nb.dataset.saBound = "1"; nb.addEventListener("click", () => open(pageLot)); b.replaceWith(nb); b = nb; }
       if (b) { b.textContent = l.is_open ? "Place a bid" : "Bidding closed"; b.disabled = !l.is_open; b.style.cursor = l.is_open ? "pointer" : "default"; }
